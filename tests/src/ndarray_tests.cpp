@@ -67,7 +67,7 @@ TEST_CASE("Test Array View 1")
     CHECK(a.size(0) == 2);
     CHECK(a.size(1) == 4);
 
-    subarray<double,2> v(a,{1,1},{1,3});
+    ndarray_view<double,2> v(a,{1,1},{1,3});
 
     CHECK(v(0,0) == 6.0); 
     CHECK(v(0,1) == 7.0); 
@@ -78,14 +78,14 @@ TEST_CASE("Test Array View 1")
     CHECK(v.size(1) == 3); 
 }
 
-TEST_CASE("Test subarray 2")
+TEST_CASE("Test ndarray_view 2")
 {
     ndarray<double,2> a = {{1.0,2.0,3.0,4.0},{5.0,6.0,7.0,8.0},{9.0,10.0,11.0,12.0}};
 
     CHECK(a.size(0) == 3);
     CHECK(a.size(1) == 4);
 
-    subarray<double,1> v(a,{1,1},{2});
+    ndarray_view<double,1> v(a,{1,1},{2});
 
     CHECK(v(0) == 6.0); 
     CHECK(v(1) == 10.0); 

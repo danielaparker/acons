@@ -192,35 +192,35 @@ private:
 // ndarray
 
 template <class T>
-struct array_variant
+struct array_item
 {
-    typedef typename std::vector<array_variant<T>>::iterator iterator;
-    typedef typename std::vector<array_variant<T>>::const_iterator const_iterator;
+    typedef typename std::vector<array_item<T>>::iterator iterator;
+    typedef typename std::vector<array_item<T>>::const_iterator const_iterator;
 
     bool is_array_;
-    std::vector<array_variant<T>> v_;
+    std::vector<array_item<T>> v_;
     T val_;
 
-    array_variant(const std::vector<array_variant<T>>& a)
+    array_item(const std::vector<array_item<T>>& a)
         : is_array_(true), v_(a), val_(0)
     {
     }
 
-    array_variant(std::initializer_list<array_variant<T>> list)
+    array_item(std::initializer_list<array_item<T>> list)
         : is_array_(true), v_(list), val_(0)
     {
     }
-    array_variant(T val)
+    array_item(T val)
         : is_array_(false), val_(val)
     {
     }
 
-    array_variant() 
+    array_item() 
         : is_array_(false)
     {
     }
-    array_variant(const array_variant&)  = default;
-    array_variant(array_variant&&)  = default;
+    array_item(const array_item&)  = default;
+    array_item(array_item&&)  = default;
 
     bool is_array() const
     {
@@ -350,7 +350,7 @@ public:
         set_data(data_.data());
     }
 
-    ndarray(std::initializer_list<array_variant<T>> list) 
+    ndarray(std::initializer_list<array_item<T>> list) 
         : ndarray_base<T,N,Order>() 
     {
         bool is_array = false;
@@ -414,7 +414,7 @@ private:
         Order::calculate_strides(dim_, strides_, size_);
     }
 
-    void init_dim(const array_variant<T>& init, size_t& dim)
+    void init_dim(const array_item<T>& init, size_t& dim)
     {
         bool is_array = false;
 
@@ -444,7 +444,7 @@ private:
         }
     }
 
-    void init_data(const array_variant<T>& init, size_t& i)
+    void init_data(const array_item<T>& init, size_t& i)
     {
         for (const auto& item : init)
         {
@@ -465,11 +465,11 @@ private:
 };
 
 template <typename T, size_t M, typename Order=row_major>
-class subarray  : public ndarray_base<T,M,Order>
+class ndarray_view  : public ndarray_base<T,M,Order>
 {
 public:
     template<size_t m = M, size_t N>
-    subarray(ndarray_base<T,N,Order>& a, const std::array<size_t,N>& indices, const std::array<size_t,M>& dim, 
+    ndarray_view(ndarray_base<T,N,Order>& a, const std::array<size_t,N>& indices, const std::array<size_t,M>& dim, 
                typename std::enable_if<m <= N>::type* = 0)
         : ndarray_base<T,M,Order>(dim)
     {
@@ -487,12 +487,7 @@ public:
             this->strides_[i] = a.strides()[i];
         }
     }
-};
 
-template <typename T, size_t M, typename Order=row_major>
-class ndarray_view  : public ndarray_base<T,M,Order>
-{
-public:
     ndarray_view(T* data, const std::array<size_t,M>& dim) 
         : ndarray_base<T,M,Order>(dim)
     {
