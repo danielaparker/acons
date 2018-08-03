@@ -1,5 +1,5 @@
-#ifndef ARRCONS_ARRAY_HPP
-#define ARRCONS_ARRAY_HPP
+#ifndef ACONS_ARRAY_HPP
+#define ACONS_ARRAY_HPP
 
 #include <memory>
 #include <array>
@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <initializer_list>
   
-namespace risksnap { namespace math {
+namespace acons {
 
 template <class T, size_t N>
 class array;
@@ -111,7 +111,7 @@ public:
     }
 
     template <size_t M>
-    typename std::enable_if<(M < N),math::array_ref<T,M>>::type 
+    typename std::enable_if<(M < N),array_ref<T,M>>::type 
     subarray(const std::array<size_t,N>& indices, const std::array<size_t,M>& dim);
 
     bool operator==(const array_ref<T,N>& rhs) const 
@@ -523,12 +523,12 @@ private:
 
 template <class T,size_t N>
 template <size_t M>
-typename std::enable_if<(M < N),math::array_ref<T,M>>::type 
-math::array_ref<T, N>::subarray(const std::array<size_t,N>& indices, const std::array<size_t,M>& dim)
+typename std::enable_if<(M < N),array_ref<T,M>>::type 
+array_ref<T, N>::subarray(const std::array<size_t,N>& indices, const std::array<size_t,M>& dim)
 {
     return array_view<T,M>(*this, indices, dim);
 }
 
-}}
+}
 
 #endif

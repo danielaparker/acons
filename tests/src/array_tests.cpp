@@ -3,8 +3,7 @@
 #include "acons/array.hpp"
 #include <iostream>
 
-namespace risksnap {
-namespace math {
+using namespace acons;
 
 TEST_CASE("2D Array")
 {
@@ -87,7 +86,7 @@ TEST_CASE("3D Array")
 
 TEST_CASE("TestArrayInitializerList")
 {
-    math::array<double,1> a = {1.0,2.0,3.0,4.0};
+    array<double,1> a = {1.0,2.0,3.0,4.0};
     CHECK(a.size(0) == 4);
 
     std::cout << "a" << std::endl;
@@ -96,7 +95,7 @@ TEST_CASE("TestArrayInitializerList")
 
 TEST_CASE("TestArray2DInitializerList")
 {
-    math::array<double,2> a = {{1.0,2.0,3.0,4.0},{5.0,6.0,7.0,8.0}};
+    array<double,2> a = {{1.0,2.0,3.0,4.0},{5.0,6.0,7.0,8.0}};
 
     CHECK(a.size(0) == 2);
     CHECK(a.size(1) == 4);
@@ -107,12 +106,12 @@ TEST_CASE("TestArray2DInitializerList")
 
 TEST_CASE("Test Array View 1")
 {
-    math::array<double,2> a = {{1.0,2.0,3.0,4.0},{5.0,6.0,7.0,8.0}};
+    array<double,2> a = {{1.0,2.0,3.0,4.0},{5.0,6.0,7.0,8.0}};
 
     CHECK(a.size(0) == 2);
     CHECK(a.size(1) == 4);
 
-    math::array_view<double,2> v(a,{1,1},{1,3});
+    array_view<double,2> v(a,{1,1},{1,3});
 
     CHECK(v(0,0) == 6.0); 
     CHECK(v(0,1) == 7.0); 
@@ -125,12 +124,12 @@ TEST_CASE("Test Array View 1")
 
 TEST_CASE("Test Array View 2")
 {
-    math::array<double,2> a = {{1.0,2.0,3.0,4.0},{5.0,6.0,7.0,8.0}};
+    array<double,2> a = {{1.0,2.0,3.0,4.0},{5.0,6.0,7.0,8.0}};
 
     CHECK(a.size(0) == 2);
     CHECK(a.size(1) == 4);
 
-    math::array_view<double,1> v(a,{1,1},{3});
+    array_view<double,1> v(a,{1,1},{3});
 
     CHECK(v(0) == 6.0); 
     CHECK(v(1) == 7.0); 
@@ -143,7 +142,7 @@ TEST_CASE("Test Array View 3")
 {
     std::vector<double> a = {0.0,1.0,2.0,3.0,4.0,5.0};
 
-    math::array_view<double,2> v(&a[0],{2,3});
+    array_view<double,2> v(&a[0],{2,3});
 
     CHECK(v(0,0) == 0.0); 
     CHECK(v(0,1) == 1.0); 
@@ -154,6 +153,4 @@ TEST_CASE("Test Array View 3")
     CHECK(v.size(1) == 3); 
 
 }
-
-}}
 
