@@ -1,13 +1,13 @@
 #define CATCH_CONFIG_MAIN
 #include <catch/catch.hpp>
-#include "acons/array.hpp"
+#include "acons/ndarray.hpp"
 #include <iostream>
 
 using namespace acons;
 
 TEST_CASE("2D Array")
 {
-    array<double, 2> a(3, 2);
+    ndarray<double, 2> a(3, 2);
 
     a(0, 0) = 0;
     a(0, 1) = 1;
@@ -20,7 +20,7 @@ TEST_CASE("2D Array")
 
     //array_ref<double, 1> b(a.data() + 2, 2 );
 
-    array_view<double,1> b(a,{1,0},{2});
+    ndarray_view<double,1> b(a,{1,0},{2});
     CHECK(b(0) == 2);
     CHECK(b(1) == 3);
     //std::cout << "b=" << b << std::endl;
@@ -28,7 +28,7 @@ TEST_CASE("2D Array")
 
 TEST_CASE("2D Array 2")
 {
-    array<double, 2> a(std::array<size_t,2>{3, 2});
+    ndarray<double, 2> a(std::array<size_t,2>{3, 2});
 
     a(0, 0) = 0;
     a(0, 1) = 1;
@@ -41,7 +41,7 @@ TEST_CASE("2D Array 2")
 
     //array_ref<double, 1> b(a.data() + 2, { 2 });
 
-    array_view<double,1> b(a,{1,0},{2});
+    ndarray_view<double,1> b(a,{1,0},{2});
     CHECK(b(0) == 2);
     CHECK(b(1) == 3);
     std::cout << "b=" << b << std::endl;
@@ -49,7 +49,7 @@ TEST_CASE("2D Array 2")
 
 TEST_CASE("2D Array 3")
 {
-    array<size_t, 2> a(3, 2, 7);
+    ndarray<size_t, 2> a(3, 2, 7);
 
     a(1,0) = 6;
     CHECK(a(0, 0) == 7);
@@ -61,7 +61,7 @@ TEST_CASE("2D Array 3")
 
 TEST_CASE("2D Array 4")
 {
-    array<size_t, 2> a(3, 2);
+    ndarray<size_t, 2> a(3, 2);
 
     a(0,0) = 6;
     CHECK(a(0, 0) == 6);
@@ -72,7 +72,7 @@ TEST_CASE("2D Array 4")
 
 TEST_CASE("3D Array")
 {
-    array<double, 3> a(2, 2, 2);
+    ndarray<double, 3> a(2, 2, 2);
 
     double n1 = a(0, 0, 0);
     double n2 = a(0, 0, 1);
@@ -86,7 +86,7 @@ TEST_CASE("3D Array")
 
 TEST_CASE("TestArrayInitializerList")
 {
-    array<double,1> a = {1.0,2.0,3.0,4.0};
+    ndarray<double,1> a = {1.0,2.0,3.0,4.0};
     CHECK(a.size(0) == 4);
 
     std::cout << "a" << std::endl;
@@ -95,7 +95,7 @@ TEST_CASE("TestArrayInitializerList")
 
 TEST_CASE("TestArray2DInitializerList")
 {
-    array<double,2> a = {{1.0,2.0,3.0,4.0},{5.0,6.0,7.0,8.0}};
+    ndarray<double,2> a = {{1.0,2.0,3.0,4.0},{5.0,6.0,7.0,8.0}};
 
     CHECK(a.size(0) == 2);
     CHECK(a.size(1) == 4);
@@ -106,12 +106,12 @@ TEST_CASE("TestArray2DInitializerList")
 
 TEST_CASE("Test Array View 1")
 {
-    array<double,2> a = {{1.0,2.0,3.0,4.0},{5.0,6.0,7.0,8.0}};
+    ndarray<double,2> a = {{1.0,2.0,3.0,4.0},{5.0,6.0,7.0,8.0}};
 
     CHECK(a.size(0) == 2);
     CHECK(a.size(1) == 4);
 
-    array_view<double,2> v(a,{1,1},{1,3});
+    ndarray_view<double,2> v(a,{1,1},{1,3});
 
     CHECK(v(0,0) == 6.0); 
     CHECK(v(0,1) == 7.0); 
@@ -124,12 +124,12 @@ TEST_CASE("Test Array View 1")
 
 TEST_CASE("Test Array View 2")
 {
-    array<double,2> a = {{1.0,2.0,3.0,4.0},{5.0,6.0,7.0,8.0}};
+    ndarray<double,2> a = {{1.0,2.0,3.0,4.0},{5.0,6.0,7.0,8.0}};
 
     CHECK(a.size(0) == 2);
     CHECK(a.size(1) == 4);
 
-    array_view<double,1> v(a,{1,1},{3});
+    ndarray_view<double,1> v(a,{1,1},{3});
 
     CHECK(v(0) == 6.0); 
     CHECK(v(1) == 7.0); 
@@ -142,7 +142,7 @@ TEST_CASE("Test Array View 3")
 {
     std::vector<double> a = {0.0,1.0,2.0,3.0,4.0,5.0};
 
-    array_view<double,2> v(&a[0],{2,3});
+    ndarray_view<double,2> v(&a[0],{2,3});
 
     CHECK(v(0,0) == 0.0); 
     CHECK(v(0,1) == 1.0); 

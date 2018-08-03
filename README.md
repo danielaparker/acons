@@ -1,2 +1,2 @@
 # acons
-Multidimensional array construction
+Multidimensional ndarray construction

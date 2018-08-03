@@ -1,5 +1,5 @@
-#ifndef ACONS_ARRAY_HPP
-#define ACONS_ARRAY_HPP
+#ifndef ACONS_NDARRAY_HPP
+#define ACONS_NDARRAY_HPP
 
 #include <memory>
 #include <array>
@@ -12,10 +12,18 @@
   
 namespace acons {
 
-template <class T, size_t N>
-class array;
+template <typename T, size_t N, typename Order>
+class ndarray;
 
-template <class T, size_t N>
+class row_major
+{
+};
+
+class column_major
+{
+};
+
+template <typename T, size_t N, typename Order=row_major>
 class array_ref
 {
     T* data_;
@@ -111,10 +119,10 @@ public:
     }
 
     template <size_t M>
-    typename std::enable_if<(M < N),array_ref<T,M>>::type 
+    typename std::enable_if<(M < N),array_ref<T,M,Order>>::type 
     subarray(const std::array<size_t,N>& indices, const std::array<size_t,M>& dim);
 
-    bool operator==(const array_ref<T,N>& rhs) const 
+    bool operator==(const array_ref<T,N,Order>& rhs) const 
     {
         if (std::equal(std::begin(dim_), std::end(dim_), std::begin(rhs.dim_), std::end(rhs.dim_)))
         {
@@ -126,7 +134,7 @@ public:
         }
     }
 
-    bool operator!=(const array_ref<T,N>& rhs) const 
+    bool operator!=(const array_ref<T,N,Order>& rhs) const 
     {
         return !(*this == rhs);
     }
@@ -194,7 +202,7 @@ protected:
 private:
 };
 
-// array
+// ndarray
 
 template <class T>
 struct array_variant
@@ -263,8 +271,8 @@ struct array_variant
     }
 };
 
-template <class T, size_t N>
-class array : public array_ref<T,N>
+template <typename T, size_t N, typename Order=row_major>
+class ndarray : public array_ref<T,N,Order>
 {
     template<size_t Pos>
     struct init_helper
@@ -272,7 +280,7 @@ class array : public array_ref<T,N>
         using next = init_helper<Pos - 1>;
 
         template <typename... Args>
-        static void init(array<T,N>& a, size_t n, Args... args)
+        static void init(ndarray<T,N,Order>& a, size_t n, Args... args)
         {
             a.dim_[N-Pos] = n;
             next::init(a, args...);
@@ -282,13 +290,13 @@ class array : public array_ref<T,N>
     template<>
     struct init_helper<0>
     {
-        static void init(array<T,N>& a)
+        static void init(ndarray<T,N,Order>& a)
         {
             a.init();
             a.data_.resize(a.size());
             a.set_data(a.data_.data());
         }
-        static void init(array<T,N>& a, const T& val)
+        static void init(ndarray<T,N,Order>& a, const T& val)
         {
             a.init();
             a.data_.resize(a.size(),val);
@@ -298,66 +306,66 @@ class array : public array_ref<T,N>
 
     std::vector<T> data_;
 public:
-    using array_ref<T,N>::size;
-    using array_ref<T,N>::set_data;
-    using array_ref<T, N>::get_offset;
+    using array_ref<T,N,Order>::size;
+    using array_ref<T,N,Order>::set_data;
+    using array_ref<T,N,Order>::get_offset;
 
-    array()
-        : array_ref<T,N>()
+    ndarray()
+        : array_ref<T,N,Order>()
     {
     }
-    array(const array& a)
-        : array_ref<T,N>(a), data_(a.data_) 
+    ndarray(const ndarray& a)
+        : array_ref<T,N,Order>(a), data_(a.data_) 
     {
         set_data(data_.data());
     }
-    array(array&& a)
-        : array_ref<T,N>(a), data_(std::move(a.data_)) 
+    ndarray(ndarray&& a)
+        : array_ref<T,N,Order>(a), data_(std::move(a.data_)) 
     {
         set_data(data_.data());
     }
 
     template <typename... Args>
-    array(size_t k, Args... args)
-        : array_ref<T,N>()
+    ndarray(size_t k, Args... args)
+        : array_ref<T,N,Order>()
     {
         init_helper<N>::init(*this, k, args ...);
     }
 
-    array(const std::array<size_t,N>& a)
-        : array_ref<T,N>(a) 
+    ndarray(const std::array<size_t,N>& a)
+        : array_ref<T,N,Order>(a) 
     {
         init();
         data_.resize(size());
         set_data(data_.data());
     }
 
-    array(const std::array<size_t,N>& dim, T val)
-        : array_ref<T,N>(dim) 
+    ndarray(const std::array<size_t,N>& dim, T val)
+        : array_ref<T,N,Order>(dim) 
     {
         init();
         data_.resize(size(),val);
         set_data(data_.data());
     }
 
-    array(std::array<size_t,N>&& dim)
-        : array_ref<T,N>(std::move(dim))
+    ndarray(std::array<size_t,N>&& dim)
+        : array_ref<T,N,Order>(std::move(dim))
     {
         init();
         data_.resize(size());
         set_data(data_.data());
     }
 
-    array(std::array<size_t,N>&& dim, T val)
-        : array_ref<T,N>(std::move(dim))
+    ndarray(std::array<size_t,N>&& dim, T val)
+        : array_ref<T,N,Order>(std::move(dim))
     {
         init();
         data_.resize(size(),val);
         set_data(data_.data());
     }
 
-    array(std::initializer_list<array_variant<T>> list) 
-        : array_ref<T,N>() 
+    ndarray(std::initializer_list<array_variant<T>> list) 
+        : array_ref<T,N,Order>() 
     {
         bool is_array = false;
 
@@ -412,8 +420,8 @@ public:
         set_data(data_.data());
     }
 
-    array& operator=(const array&) = default;
-    array& operator=(array&&) = default;
+    ndarray& operator=(const ndarray&) = default;
+    ndarray& operator=(ndarray&&) = default;
 private:
     void init()
     {
@@ -475,14 +483,14 @@ private:
     }
 };
 
-template <class T, size_t M>
-class array_view  : public array_ref<T,M>
+template <typename T, size_t M, typename Order=row_major>
+class ndarray_view  : public array_ref<T,M,Order>
 {
 public:
     template<size_t m = M, size_t N>
-    array_view(array_ref<T,N>& a, const std::array<size_t,N>& indices, const std::array<size_t,M>& dim, 
+    ndarray_view(array_ref<T,N,Order>& a, const std::array<size_t,N>& indices, const std::array<size_t,M>& dim, 
                typename std::enable_if<m <= N>::type* = 0)
-        : array_ref<T,M>(dim)
+        : array_ref<T,M,Order>(dim)
     {
         this->set_data(a.data() + get_offset2(a.index_multipliers(), indices));
 
@@ -494,8 +502,8 @@ public:
         }
     }
 
-    array_view(T* data, const std::array<size_t,M>& dim) 
-        : array_ref<T,M>(dim)
+    ndarray_view(T* data, const std::array<size_t,M>& dim) 
+        : array_ref<T,M,Order>(dim)
     {
         this->set_data(data);
 
@@ -521,12 +529,12 @@ private:
 
 };
 
-template <class T,size_t N>
+template <class T,size_t N,typename Order>
 template <size_t M>
-typename std::enable_if<(M < N),array_ref<T,M>>::type 
-array_ref<T, N>::subarray(const std::array<size_t,N>& indices, const std::array<size_t,M>& dim)
+typename std::enable_if<(M < N),array_ref<T,M,Order>>::type 
+array_ref<T,N,Order>::subarray(const std::array<size_t,N>& indices, const std::array<size_t,M>& dim)
 {
-    return array_view<T,M>(*this, indices, dim);
+    return ndarray_view<T,M,Order>(*this, indices, dim);
 }
 
 }
