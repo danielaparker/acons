@@ -73,7 +73,6 @@ TEST_CASE("Test Array View 1")
     CHECK(v(0,1) == 7.0); 
     CHECK(v(0,2) == 8.0); 
 
-    CHECK(v.size() == a.size()); 
     CHECK(v.size(0) == 1); 
     CHECK(v.size(1) == 3); 
 }
@@ -89,7 +88,6 @@ TEST_CASE("Test ndarray_view 2")
 
     CHECK(v(0) == 6.0); 
     CHECK(v(1) == 10.0); 
-    CHECK(v.size() == a.size()); 
     CHECK(v.size(0) == 2); 
 }
 
@@ -103,7 +101,6 @@ TEST_CASE("Test Array View")
     CHECK(v(0,1) == 1.0); 
     CHECK(v(0,2) == 2.0); 
     CHECK(v(1,0) == 3.0); 
-    CHECK(v.size() == a.size()); 
     CHECK(v.size(0) == 2); 
     CHECK(v.size(1) == 3); 
 
