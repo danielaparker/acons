@@ -269,8 +269,8 @@ public:
         return data_.size();
     }
 
-    std::array<size_t,N> dimensions() const {return dim_;}
-    std::array<size_t,N> strides() {return strides_;}
+    const std::array<size_t,N>& dimensions() const {return dim_;}
+    const std::array<size_t,N>& strides() const {return strides_;}
 
     T* data()
     {
@@ -457,17 +457,17 @@ public:
         return size_;
     }
 
-    std::array<size_t,M> dimensions() const {return dim_;}
-    std::array<size_t,M> strides() {return strides_;}
+    const std::array<size_t,M>& dimensions() const {return dim_;}
+    const std::array<size_t,M>& strides() const {return strides_;}
 
     T* data()
     {
-        return data_.data();
+        return data_;
     }
 
     const T* data() const 
     {
-        return data_.data();
+        return data_;
     }
 
     size_t size(size_t i) const
@@ -529,13 +529,74 @@ public:
         assert(off < size());
         return &data_[off] + dim_[n];
     }
-/*
-    bool operator!=(const ndarray_base<T,M,Order>& rhs) const 
-    {
-        return !(*this == rhs);
-    }
-*/
 };
+
+template <typename T, size_t N, typename Order>
+bool operator==(const ndarray<T,N,Order>& lhs, const ndarray<T,N,Order>& rhs)
+{
+    if (&lhs == &rhs)
+    {
+        return true;
+    }
+    for (size_t i = 0; i < N; ++i)
+    {
+        if (lhs.size(i) != rhs.size(i))
+        {
+            return false;
+        }
+    }
+    for (size_t i = 0; i < lhs.size(); ++i)
+    {
+        if (lhs.data()[i] != rhs.data()[i])
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+template <typename T, size_t N, typename Order>
+bool operator!=(const ndarray<T,N,Order>& lhs, const ndarray<T,N,Order>& rhs)
+{
+    return !(lhs == rhs);
+}
+
+template <typename T, size_t M, typename Order>
+bool operator==(const ndarray_view<T,M,Order>& lhs, const ndarray_view<T,M,Order>& rhs)
+{
+    if (&lhs == &rhs)
+    {
+        return true;
+    }
+    for (size_t i = 0; i < M; ++i)
+    {
+        if (lhs.size(i) != rhs.size(i))
+        {
+            return false;
+        }
+    }
+    for (size_t i = 0; i < M; ++i)
+    {
+        size_t stride1 = lhs.strides()[i];
+        size_t stride2 = rhs.strides()[i];
+        for (size_t j = 0; j < lhs.size(i); ++j)
+        {
+            size_t index1 = j*stride1;
+            size_t index2 = j*stride2;
+            if (lhs.data()[index1] != rhs.data()[index2])
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+template <typename T, size_t M, typename Order>
+bool operator!=(const ndarray_view<T,M,Order>& lhs, const ndarray_view<T,M,Order>& rhs)
+{
+    return !(lhs == rhs);
+}
 
 }
 
