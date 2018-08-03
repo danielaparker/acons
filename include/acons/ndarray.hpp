@@ -31,6 +31,16 @@ struct row_major
 
 struct column_major
 {
+    template <size_t N>
+    static void calculate_strides(const std::array<size_t,N>& dim, std::array<size_t,N>& strides, size_t& size)
+    {
+        size = 1;
+        for (size_t i = 0, j = N; j >= 1; ++i, --j)
+        {
+            strides[j-1] = size;
+            size *= dim[i];
+        }
+    }
 };
 
 template <typename T, size_t N, typename Order=row_major>
@@ -128,41 +138,9 @@ public:
         return &data_[off] + dim_[n];
     }
 
-    template <size_t M>
-    typename std::enable_if<(M < N),array_ref<T,M,Order>>::type 
-    subarray(const std::array<size_t,N>& indices, const std::array<size_t,M>& dim);
-
-    bool operator==(const array_ref<T,N,Order>& rhs) const 
-    {
-        if (std::equal(std::begin(dim_), std::end(dim_), std::begin(rhs.dim_), std::end(rhs.dim_)))
-        {
-            return result = std::equal(data(), data()+size(), rhs.data(), rhs.data()+rhs.size());
-        }
-        else
-        {
-            return false;
-        }
-    }
-
     bool operator!=(const array_ref<T,N,Order>& rhs) const 
     {
         return !(*this == rhs);
-    }
-
-    friend std::ostream& operator<<(std::ostream& os, const array_ref& a)
-    {
-        os << '[';
-        for (size_t i = 0; i < a.size_; ++i)
-        {
-            if (i > 0)
-            {
-                os << ',';
-            }
-            os << a.data_[i];
-        }
-        os << ']' << std::endl;
-
-        return os;
     }
         
     array_ref()
@@ -489,34 +467,23 @@ private:
 };
 
 template <typename T, size_t M, typename Order=row_major>
-class ndarray_view  : public array_ref<T,M,Order>
+class subarray  : public array_ref<T,M,Order>
 {
 public:
     template<size_t m = M, size_t N>
-    ndarray_view(array_ref<T,N,Order>& a, const std::array<size_t,N>& indices, const std::array<size_t,M>& dim, 
+    subarray(array_ref<T,N,Order>& a, const std::array<size_t,N>& indices, const std::array<size_t,M>& dim, 
                typename std::enable_if<m <= N>::type* = 0)
         : array_ref<T,M,Order>(dim)
     {
         this->set_data(a.data() + get_offset2(a.strides(), indices));
 
-        this->size_ = 1;
+        this->size_ = a.size();
+
+        size_t size = 1;
         for (size_t i = M, j = 0; j < M; --i, ++j)
         {
             this->strides_[j] = a.strides()[j];
-            this->size_ *= this->dim_[i - 1];
-        }
-    }
-
-    ndarray_view(T* data, const std::array<size_t,M>& dim) 
-        : array_ref<T,M,Order>(dim)
-    {
-        this->set_data(data);
-
-        this->size_ = 1;
-        for (size_t i = M, j = 0; j < M; --i, ++j)
-        {
-            this->strides_[j] = this->size_;
-            this->size_ *= this->dim_[i - 1];
+            size *= this->dim_[i - 1];
         }
     }
 
@@ -534,13 +501,23 @@ private:
 
 };
 
-template <class T,size_t N,typename Order>
-template <size_t M>
-typename std::enable_if<(M < N),array_ref<T,M,Order>>::type 
-array_ref<T,N,Order>::subarray(const std::array<size_t,N>& indices, const std::array<size_t,M>& dim)
+template <typename T, size_t M, typename Order=row_major>
+class ndarray_view  : public array_ref<T,M,Order>
 {
-    return ndarray_view<T,M,Order>(*this, indices, dim);
-}
+public:
+    ndarray_view(T* data, const std::array<size_t,M>& dim) 
+        : array_ref<T,M,Order>(dim)
+    {
+        this->set_data(data);
+
+        this->size_ = 1;
+        for (size_t i = M, j = 0; j < M; --i, ++j)
+        {
+            this->strides_[j] = this->size_;
+            this->size_ *= this->dim_[i - 1];
+        }
+    }
+};
 
 }
 

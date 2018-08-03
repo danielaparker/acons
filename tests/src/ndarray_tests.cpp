@@ -16,11 +16,9 @@ TEST_CASE("2D Array")
     a(2, 0) = 4;
     a(2, 1) = 5;
 
-    std::cout << "a=" << a << std::endl;
-
     //array_ref<double, 1> b(a.data() + 2, 2 );
 
-    ndarray_view<double,1> b(a,{1,0},{2});
+    subarray<double,1> b(a,{1,0},{2});
     CHECK(b(0) == 2);
     CHECK(b(1) == 3);
     //std::cout << "b=" << b << std::endl;
@@ -37,14 +35,11 @@ TEST_CASE("2D Array 2")
     a(2, 0) = 4;
     a(2, 1) = 5;
 
-    std::cout << "a=" << a << std::endl;
-
     //array_ref<double, 1> b(a.data() + 2, { 2 });
 
-    ndarray_view<double,1> b(a,{1,0},{2});
+    subarray<double,1> b(a,{1,0},{2});
     CHECK(b(0) == 2);
     CHECK(b(1) == 3);
-    std::cout << "b=" << b << std::endl;
 }
 
 TEST_CASE("2D Array 3")
@@ -55,8 +50,6 @@ TEST_CASE("2D Array 3")
     CHECK(a(0, 0) == 7);
     CHECK(a(1, 0) == 6);
 
-    std::cout << "a=" << a << std::endl;
-
 }
 
 TEST_CASE("2D Array 4")
@@ -65,8 +58,6 @@ TEST_CASE("2D Array 4")
 
     a(0,0) = 6;
     CHECK(a(0, 0) == 6);
-
-    std::cout << "a=" << a << std::endl;
 
 }
 
@@ -89,8 +80,6 @@ TEST_CASE("TestArrayInitializerList")
     ndarray<double,1> a = {1.0,2.0,3.0,4.0};
     CHECK(a.size(0) == 4);
 
-    std::cout << "a" << std::endl;
-    std::cout << a << std::endl;
 }
 
 TEST_CASE("TestArray2DInitializerList")
@@ -100,8 +89,6 @@ TEST_CASE("TestArray2DInitializerList")
     CHECK(a.size(0) == 2);
     CHECK(a.size(1) == 4);
 
-    std::cout << "a" << std::endl;
-    std::cout << a << std::endl;
 }
 
 TEST_CASE("Test Array View 1")
@@ -111,13 +98,13 @@ TEST_CASE("Test Array View 1")
     CHECK(a.size(0) == 2);
     CHECK(a.size(1) == 4);
 
-    ndarray_view<double,2> v(a,{1,1},{1,3});
+    subarray<double,2> v(a,{1,1},{1,3});
 
     CHECK(v(0,0) == 6.0); 
     CHECK(v(0,1) == 7.0); 
     CHECK(v(0,2) == 8.0); 
 
-    CHECK(v.size() == 3); 
+    CHECK(v.size() == a.size()); 
     CHECK(v.size(0) == 1); 
     CHECK(v.size(1) == 3); 
 }
@@ -129,12 +116,12 @@ TEST_CASE("Test Array View 2")
     CHECK(a.size(0) == 2);
     CHECK(a.size(1) == 4);
 
-    ndarray_view<double,1> v(a,{1,1},{3});
+    subarray<double,1> v(a,{1,1},{3});
 
     CHECK(v(0) == 6.0); 
     CHECK(v(1) == 7.0); 
     CHECK(v(2) == 8.0); 
-    CHECK(v.size() == 3); 
+    CHECK(v.size() == a.size()); 
     CHECK(v.size(0) == 3); 
 }
 
@@ -148,7 +135,7 @@ TEST_CASE("Test Array View 3")
     CHECK(v(0,1) == 1.0); 
     CHECK(v(0,2) == 2.0); 
     CHECK(v(1,0) == 3.0); 
-    CHECK(v.size() == 6); 
+    CHECK(v.size() == a.size()); 
     CHECK(v.size(0) == 2); 
     CHECK(v.size(1) == 3); 
 
