@@ -15,11 +15,21 @@ namespace acons {
 template <typename T, size_t N, typename Order>
 class ndarray;
 
-class row_major
+struct row_major
 {
+    template <size_t N>
+    static void calculate_strides(const std::array<size_t,N>& dim, std::array<size_t,N>& strides, size_t& size)
+    {
+        size = 1;
+        for (size_t i = N, j = 0; i >= 1; --i, ++j)
+        {
+            strides[j] = size;
+            size *= dim[i - 1];
+        }
+    }
 };
 
-class column_major
+struct column_major
 {
 };
 
@@ -29,14 +39,14 @@ class array_ref
     T* data_;
 protected:
     std::array<size_t,N> dim_;
-    std::array<size_t,N> index_multipliers_;
+    std::array<size_t,N> strides_;
     size_t size_;
 public:
     typedef T* iterator;
     typedef const T* const_iterator;
 
     std::array<size_t,N> dimensions() const {return dim_;}
-    std::array<size_t,N> index_multipliers() {return index_multipliers_;}
+    std::array<size_t,N> strides() {return strides_;}
 
     array_ref& operator=(const array_ref&) = default;
     array_ref& operator=(array_ref&&) = default;
@@ -186,7 +196,7 @@ protected:
     typename std::enable_if<n == 1, size_t>::type
         get_offset(size_t index) const
     {
-        return index*index_multipliers_[0];
+        return index*strides_[0];
     }
 
     template <size_t n, typename... Indices>
@@ -195,7 +205,7 @@ protected:
     {
         const size_t nminus1 = n - 1;
 
-        size_t i = index*index_multipliers_[nminus1] + get_offset<nminus1>(indices...);
+        size_t i = index*strides_[nminus1] + get_offset<nminus1>(indices...);
 
         return i;
     }
@@ -425,12 +435,7 @@ public:
 private:
     void init()
     {
-        this->size_ = 1;
-        for (size_t i = N, j = 0; i >= 1; --i, ++j)
-        {
-            this->index_multipliers_[j] = this->size_;
-            this->size_ *= this->dim_[i - 1];
-        }
+        Order::calculate_strides(dim_, strides_, size_);
     }
 
     void init_dim(const array_variant<T>& init, size_t& dim)
@@ -492,12 +497,12 @@ public:
                typename std::enable_if<m <= N>::type* = 0)
         : array_ref<T,M,Order>(dim)
     {
-        this->set_data(a.data() + get_offset2(a.index_multipliers(), indices));
+        this->set_data(a.data() + get_offset2(a.strides(), indices));
 
         this->size_ = 1;
         for (size_t i = M, j = 0; j < M; --i, ++j)
         {
-            this->index_multipliers_[j] = a.index_multipliers()[j];
+            this->strides_[j] = a.strides()[j];
             this->size_ *= this->dim_[i - 1];
         }
     }
@@ -510,19 +515,19 @@ public:
         this->size_ = 1;
         for (size_t i = M, j = 0; j < M; --i, ++j)
         {
-            this->index_multipliers_[j] = this->size_;
+            this->strides_[j] = this->size_;
             this->size_ *= this->dim_[i - 1];
         }
     }
 
 private:
     template <size_t N>
-    size_t get_offset2(const std::array<size_t,N>& index_multipliers, const std::array<size_t,N>& indices) const
+    size_t get_offset2(const std::array<size_t,N>& strides, const std::array<size_t,N>& indices) const
     {
         size_t offset = 0;
         for (size_t i = N, j = 0; i >= 1; --i, ++j)
         {
-            offset += index_multipliers[j]*indices[i-1];
+            offset += strides[j]*indices[i-1];
         }
         return offset;
     }
