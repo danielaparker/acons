@@ -21,10 +21,10 @@ struct row_major
     static void calculate_strides(const std::array<size_t,N>& dim, std::array<size_t,N>& strides, size_t& size)
     {
         size = 1;
-        for (size_t i = N, j = 0; i >= 1; --i, ++j)
+        for (size_t i = 0; i < N; ++i)
         {
-            strides[j] = size;
-            size *= dim[i - 1];
+            strides[N-i-1] = size;
+            size *= dim[N-i-1];
         }
     }
 };
@@ -35,13 +35,37 @@ struct column_major
     static void calculate_strides(const std::array<size_t,N>& dim, std::array<size_t,N>& strides, size_t& size)
     {
         size = 1;
-        for (size_t i = 0, j = N; j >= 1; ++i, --j)
+        for (size_t i = 0; i < N; ++i)
         {
-            strides[j-1] = size;
+            strides[i] = size;
             size *= dim[i];
         }
     }
 };
+
+template <size_t n,size_t m>
+typename std::enable_if<m == n, size_t>::type
+    get_offset(const std::array<size_t,n>& strides) 
+{
+    return 0;
+}
+
+template <size_t n,size_t m>
+typename std::enable_if<m+1 == n, size_t>::type
+    get_offset(const std::array<size_t,n>& strides, size_t index) 
+{
+    return index*strides[n-1];
+}
+
+template <size_t n,size_t m,typename... Indices>
+typename std::enable_if<(m+1 < n), size_t>::type
+    get_offset(const std::array<size_t,n>& strides, size_t index, Indices... indices)
+{
+    const size_t mplus1 = m + 1;
+    size_t i = index*strides[m] + get_offset<n,mplus1>(strides,indices...);
+
+    return i;
+}
 
 template <typename T, size_t N, typename Order=row_major>
 class ndarray_base
@@ -88,7 +112,7 @@ public:
     typename std::enable_if<(n == N),T&>::type 
     operator()(Indices... indices) 
     {
-        size_t off = get_offset<n>(indices...);
+        size_t off = get_offset<n,0>(strides_,indices...);
         assert(off < size_);
         return data_[off];
     }
@@ -97,7 +121,7 @@ public:
     typename std::enable_if<(n == N),const T&>::type 
     operator()(Indices... indices) const
     {
-        size_t off = get_offset<n>(indices...);
+        size_t off = get_offset<n,0>(strides_,indices...);
         assert(off < size_);
         return data_[off];
     }
@@ -106,7 +130,7 @@ public:
     typename std::enable_if<(n == N-1),iterator>::type 
     begin(Indices... indices) 
     {
-        size_t off = get_offset<n>(indices...);
+        size_t off = get_offset<n,0>(strides_,indices...);
         assert(off < size_);
         return &data_[off];
     }
@@ -115,7 +139,7 @@ public:
     typename std::enable_if<(n == N-1),iterator>::type 
     end(Indices... indices) 
     {
-        size_t off = get_offset<n>(indices...);
+        size_t off = get_offset<n,0>(strides_,indices...);
         assert(off < size_);
         return &data_[off] + dim_[n];
     }
@@ -124,7 +148,7 @@ public:
     typename std::enable_if<(n == N-1),const_iterator>::type 
     begin(Indices... indices) const
     {
-        size_t off = get_offset<n>(indices...);
+        size_t off = get_offset<n,0>(strides_,indices...);
         assert(off < size_);
         return &data_[off];
     }
@@ -133,7 +157,7 @@ public:
     typename std::enable_if<(n == N-1),const_iterator>::type 
     end(Indices... indices) const
     {
-        size_t off = get_offset<n>(indices...);
+        size_t off = get_offset<n,0>(strides_,indices...);
         assert(off < size_);
         return &data_[off] + dim_[n];
     }
@@ -161,31 +185,6 @@ protected:
     void set_data(T* p)
     {
         data_ = p;
-    }
-
-    template <size_t n>
-    typename std::enable_if<n == 0, size_t>::type
-        get_offset() const
-    {
-        return 0;
-    }
-
-    template <size_t n>
-    typename std::enable_if<n == 1, size_t>::type
-        get_offset(size_t index) const
-    {
-        return index*strides_[0];
-    }
-
-    template <size_t n, typename... Indices>
-    typename std::enable_if<(n > 1), size_t>::type
-        get_offset(size_t index, Indices... indices) const
-    {
-        const size_t nminus1 = n - 1;
-
-        size_t i = index*strides_[nminus1] + get_offset<nminus1>(indices...);
-
-        return i;
     }
 private:
 };
@@ -296,7 +295,6 @@ class ndarray : public ndarray_base<T,N,Order>
 public:
     using ndarray_base<T,N,Order>::size;
     using ndarray_base<T,N,Order>::set_data;
-    using ndarray_base<T,N,Order>::get_offset;
 
     ndarray()
         : ndarray_base<T,N,Order>()
@@ -475,30 +473,20 @@ public:
                typename std::enable_if<m <= N>::type* = 0)
         : ndarray_base<T,M,Order>(dim)
     {
-        this->set_data(a.data() + get_offset2(a.strides(), indices));
+        size_t offset = 0;
+        for (size_t i = 0; i < N; ++i)
+        {
+            offset += a.strides()[i]*indices[i];
+        }
+        this->set_data(a.data() + offset);
 
         this->size_ = a.size();
 
-        size_t size = 1;
-        for (size_t i = M, j = 0; j < M; --i, ++j)
+        for (size_t i = 0; i < M; ++i)
         {
-            this->strides_[j] = a.strides()[j];
-            size *= this->dim_[i - 1];
+            this->strides_[i] = a.strides()[i];
         }
     }
-
-private:
-    template <size_t N>
-    size_t get_offset2(const std::array<size_t,N>& strides, const std::array<size_t,N>& indices) const
-    {
-        size_t offset = 0;
-        for (size_t i = N, j = 0; i >= 1; --i, ++j)
-        {
-            offset += strides[j]*indices[i-1];
-        }
-        return offset;
-    }
-
 };
 
 template <typename T, size_t M, typename Order=row_major>
