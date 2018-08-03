@@ -258,6 +258,38 @@ struct array_item
     }
 };
 
+template <typename T, size_t M, typename Order=row_major>
+class ndarray_view  : public ndarray_base<T,M,Order>
+{
+public:
+    template<size_t m = M, size_t N>
+    ndarray_view(ndarray_base<T,N,Order>& a, const std::array<size_t,N>& indices, const std::array<size_t,M>& dim, 
+               typename std::enable_if<m <= N>::type* = 0)
+        : ndarray_base<T,M,Order>(dim)
+    {
+        size_t offset = 0;
+        for (size_t i = 0; i < N; ++i)
+        {
+            offset += a.strides()[i]*indices[i];
+        }
+        this->set_data(a.data() + offset);
+
+        this->size_ = a.size();
+
+        for (size_t i = 0; i < M; ++i)
+        {
+            this->strides_[i] = a.strides()[i];
+        }
+    }
+
+    ndarray_view(T* data, const std::array<size_t,M>& dim) 
+        : ndarray_base<T,M,Order>(dim)
+    {
+        this->set_data(data);
+        Order::calculate_strides(dim_,this->strides_,this->size_);
+    }
+};
+
 template <typename T, size_t N, typename Order=row_major>
 class ndarray : public ndarray_base<T,N,Order>
 {
@@ -406,6 +438,10 @@ public:
         set_data(data_.data());
     }
 
+    template <size_t M>
+    typename std::enable_if<(M < N),ndarray_view<T,M,Order>>::type 
+    subarray(const std::array<size_t,N>& indices, const std::array<size_t,M>& dim);
+
     ndarray& operator=(const ndarray&) = default;
     ndarray& operator=(ndarray&&) = default;
 private:
@@ -464,37 +500,13 @@ private:
     }
 };
 
-template <typename T, size_t M, typename Order=row_major>
-class ndarray_view  : public ndarray_base<T,M,Order>
+template <class T,size_t N,typename Order>
+template <size_t M>
+typename std::enable_if<(M < N),ndarray_view<T,M,Order>>::type 
+ndarray<T, N, Order>::subarray(const std::array<size_t,N>& indices, const std::array<size_t,M>& dim)
 {
-public:
-    template<size_t m = M, size_t N>
-    ndarray_view(ndarray_base<T,N,Order>& a, const std::array<size_t,N>& indices, const std::array<size_t,M>& dim, 
-               typename std::enable_if<m <= N>::type* = 0)
-        : ndarray_base<T,M,Order>(dim)
-    {
-        size_t offset = 0;
-        for (size_t i = 0; i < N; ++i)
-        {
-            offset += a.strides()[i]*indices[i];
-        }
-        this->set_data(a.data() + offset);
-
-        this->size_ = a.size();
-
-        for (size_t i = 0; i < M; ++i)
-        {
-            this->strides_[i] = a.strides()[i];
-        }
-    }
-
-    ndarray_view(T* data, const std::array<size_t,M>& dim) 
-        : ndarray_base<T,M,Order>(dim)
-    {
-        this->set_data(data);
-        Order::calculate_strides(dim_,this->strides_,this->size_);
-    }
-};
+    return ndarray_view<T,M,Order>(*this, indices, dim);
+}
 
 }
 
