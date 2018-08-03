@@ -509,13 +509,7 @@ public:
         : array_ref<T,M,Order>(dim)
     {
         this->set_data(data);
-
-        this->size_ = 1;
-        for (size_t i = M, j = 0; j < M; --i, ++j)
-        {
-            this->strides_[j] = this->size_;
-            this->size_ *= this->dim_[i - 1];
-        }
+        Order::calculate_strides(dim_,this->strides_,this->size_);
     }
 };
 
