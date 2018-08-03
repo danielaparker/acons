@@ -16,7 +16,7 @@ TEST_CASE("2D Array")
     a(2, 0) = 4;
     a(2, 1) = 5;
 
-    //array_ref<double, 1> b(a.data() + 2, 2 );
+    //ndarray_base<double, 1> b(a.data() + 2, 2 );
 
     subarray<double,1> b(a,{1,0},{2});
     CHECK(b(0) == 2);
@@ -35,7 +35,7 @@ TEST_CASE("2D Array 2")
     a(2, 0) = 4;
     a(2, 1) = 5;
 
-    //array_ref<double, 1> b(a.data() + 2, { 2 });
+    //ndarray_base<double, 1> b(a.data() + 2, { 2 });
 
     subarray<double,1> b(a,{1,0},{2});
     CHECK(b(0) == 2);

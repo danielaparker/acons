@@ -44,7 +44,7 @@ struct column_major
 };
 
 template <typename T, size_t N, typename Order=row_major>
-class array_ref
+class ndarray_base
 {
     T* data_;
 protected:
@@ -58,10 +58,10 @@ public:
     std::array<size_t,N> dimensions() const {return dim_;}
     std::array<size_t,N> strides() {return strides_;}
 
-    array_ref& operator=(const array_ref&) = default;
-    array_ref& operator=(array_ref&&) = default;
+    ndarray_base& operator=(const ndarray_base&) = default;
+    ndarray_base& operator=(ndarray_base&&) = default;
 
-    virtual ~array_ref() = default;
+    virtual ~ndarray_base() = default;
 
     T* data()
     {
@@ -138,23 +138,23 @@ public:
         return &data_[off] + dim_[n];
     }
 
-    bool operator!=(const array_ref<T,N,Order>& rhs) const 
+    bool operator!=(const ndarray_base<T,N,Order>& rhs) const 
     {
         return !(*this == rhs);
     }
         
-    array_ref()
+    ndarray_base()
         : data_(nullptr), size_(0)
     {
     }
-    array_ref(const array_ref& a) = default;
-    array_ref(array_ref&& a) = default;
+    ndarray_base(const ndarray_base& a) = default;
+    ndarray_base(ndarray_base&& a) = default;
 protected:
-    array_ref(const std::array<size_t,N>& dim)
+    ndarray_base(const std::array<size_t,N>& dim)
         : data_(nullptr), dim_(dim), size_(0)
     {
     }
-    array_ref(std::array<size_t,N>&& dim)
+    ndarray_base(std::array<size_t,N>&& dim)
         : data_(nullptr), dim_(std::move(dim)), size_(0)
     {
     }
@@ -260,7 +260,7 @@ struct array_variant
 };
 
 template <typename T, size_t N, typename Order=row_major>
-class ndarray : public array_ref<T,N,Order>
+class ndarray : public ndarray_base<T,N,Order>
 {
     template<size_t Pos>
     struct init_helper
@@ -294,34 +294,34 @@ class ndarray : public array_ref<T,N,Order>
 
     std::vector<T> data_;
 public:
-    using array_ref<T,N,Order>::size;
-    using array_ref<T,N,Order>::set_data;
-    using array_ref<T,N,Order>::get_offset;
+    using ndarray_base<T,N,Order>::size;
+    using ndarray_base<T,N,Order>::set_data;
+    using ndarray_base<T,N,Order>::get_offset;
 
     ndarray()
-        : array_ref<T,N,Order>()
+        : ndarray_base<T,N,Order>()
     {
     }
     ndarray(const ndarray& a)
-        : array_ref<T,N,Order>(a), data_(a.data_) 
+        : ndarray_base<T,N,Order>(a), data_(a.data_) 
     {
         set_data(data_.data());
     }
     ndarray(ndarray&& a)
-        : array_ref<T,N,Order>(a), data_(std::move(a.data_)) 
+        : ndarray_base<T,N,Order>(a), data_(std::move(a.data_)) 
     {
         set_data(data_.data());
     }
 
     template <typename... Args>
     ndarray(size_t k, Args... args)
-        : array_ref<T,N,Order>()
+        : ndarray_base<T,N,Order>()
     {
         init_helper<N>::init(*this, k, args ...);
     }
 
     ndarray(const std::array<size_t,N>& a)
-        : array_ref<T,N,Order>(a) 
+        : ndarray_base<T,N,Order>(a) 
     {
         init();
         data_.resize(size());
@@ -329,7 +329,7 @@ public:
     }
 
     ndarray(const std::array<size_t,N>& dim, T val)
-        : array_ref<T,N,Order>(dim) 
+        : ndarray_base<T,N,Order>(dim) 
     {
         init();
         data_.resize(size(),val);
@@ -337,7 +337,7 @@ public:
     }
 
     ndarray(std::array<size_t,N>&& dim)
-        : array_ref<T,N,Order>(std::move(dim))
+        : ndarray_base<T,N,Order>(std::move(dim))
     {
         init();
         data_.resize(size());
@@ -345,7 +345,7 @@ public:
     }
 
     ndarray(std::array<size_t,N>&& dim, T val)
-        : array_ref<T,N,Order>(std::move(dim))
+        : ndarray_base<T,N,Order>(std::move(dim))
     {
         init();
         data_.resize(size(),val);
@@ -353,7 +353,7 @@ public:
     }
 
     ndarray(std::initializer_list<array_variant<T>> list) 
-        : array_ref<T,N,Order>() 
+        : ndarray_base<T,N,Order>() 
     {
         bool is_array = false;
 
@@ -467,13 +467,13 @@ private:
 };
 
 template <typename T, size_t M, typename Order=row_major>
-class subarray  : public array_ref<T,M,Order>
+class subarray  : public ndarray_base<T,M,Order>
 {
 public:
     template<size_t m = M, size_t N>
-    subarray(array_ref<T,N,Order>& a, const std::array<size_t,N>& indices, const std::array<size_t,M>& dim, 
+    subarray(ndarray_base<T,N,Order>& a, const std::array<size_t,N>& indices, const std::array<size_t,M>& dim, 
                typename std::enable_if<m <= N>::type* = 0)
-        : array_ref<T,M,Order>(dim)
+        : ndarray_base<T,M,Order>(dim)
     {
         this->set_data(a.data() + get_offset2(a.strides(), indices));
 
@@ -502,11 +502,11 @@ private:
 };
 
 template <typename T, size_t M, typename Order=row_major>
-class ndarray_view  : public array_ref<T,M,Order>
+class ndarray_view  : public ndarray_base<T,M,Order>
 {
 public:
     ndarray_view(T* data, const std::array<size_t,M>& dim) 
-        : array_ref<T,M,Order>(dim)
+        : ndarray_base<T,M,Order>(dim)
     {
         this->set_data(data);
         Order::calculate_strides(dim_,this->strides_,this->size_);
