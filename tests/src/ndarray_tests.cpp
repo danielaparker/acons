@@ -27,7 +27,7 @@ TEST_CASE("2D Array 4")
 
 TEST_CASE("3D Array")
 {
-    ndarray<double, 3> a(2, 3, 4, 1.0);
+    ndarray<double,3> a(2, 3, 4, 1.0);
     CHECK(a.size(0) == 2);
     CHECK(a.size(1) == 3);
     CHECK(a.size(2) == 4);

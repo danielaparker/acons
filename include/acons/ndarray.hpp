@@ -191,24 +191,28 @@ public:
         init_helper<N>::init(*this, k, args ...);
     }
 
-    ndarray(const std::array<size_t,N>& a)
+    ndarray(const std::array<size_t,N>& dim)
+        : dim_(dim)
     {
         init();
     }
 
     ndarray(const std::array<size_t,N>& dim, T val)
+        : dim_(dim)
     {
-        init();
+        init(val);
     }
 
     ndarray(std::array<size_t,N>&& dim)
+        : dim_(std::move(dim))
     {
         init();
     }
 
     ndarray(std::array<size_t,N>&& dim, T val)
+        : dim_(std::move(dim))
     {
-        init();
+        init(val);
     }
 
     ndarray(std::initializer_list<array_item<T>> list) 
@@ -341,12 +345,7 @@ public:
         assert(off < size());
         return &data_[off] + dim_[n];
     }
-/*
-    bool operator!=(const ndarray_base<T,N,Order>& rhs) const 
-    {
-        return !(*this == rhs);
-    }
-*/
+
     ndarray& operator=(const ndarray&) = default;
     ndarray& operator=(ndarray&&) = default;
 private:
