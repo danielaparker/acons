@@ -67,14 +67,13 @@ TEST_CASE("Test Array View 1")
     CHECK(a.size(0) == 2);
     CHECK(a.size(1) == 4);
 
-    ndarray_view<double,2> v(a,{1,1},{1,3});
+    CHECK(a(1,1) == 6.0);
 
-    CHECK(v(0,0) == 6.0); 
-    CHECK(v(0,1) == 7.0); 
-    CHECK(v(0,2) == 8.0); 
+    ndarray_view<double,1> v(a,{1,1},{1});
+
+    CHECK(v(0) == 6.0); 
 
     CHECK(v.size(0) == 1); 
-    CHECK(v.size(1) == 3); 
 }
 
 TEST_CASE("Test ndarray_view 2")

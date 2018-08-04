@@ -30,12 +30,6 @@ TEST_CASE("compare row major ndarray")
     ndarray_view<double,1,row_major> v(c,{0,2},{2});
     ndarray_view<double,1,row_major> w(c,{0,0},{2});
 
-    std::cout << "row major" << std::endl;
-    for (size_t i = 0; i < u.size(0); ++i)
-    {
-        std::cout << u(i) << "," << v(i) << std::endl;
-    }
-
     bool test7 = u == v;
     bool test8 = u != v;
     CHECK(test7);
@@ -72,12 +66,6 @@ TEST_CASE("compare column major ndarray")
     ndarray_view<double,1,column_major> u(a,{0,1},{2});
     ndarray_view<double,1,column_major> v(c,{0,2},{2});
     ndarray_view<double,1,column_major> w(c,{0,0},{2});
-
-    std::cout << "column major" << std::endl;
-    for (size_t i = 0; i < u.size(0); ++i)
-    {
-        std::cout << u(i) << "," << v(i) << std::endl;
-    }
 
     bool test7 = u == v;
     bool test8 = u != v;

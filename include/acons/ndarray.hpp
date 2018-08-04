@@ -67,6 +67,18 @@ typename std::enable_if<(m+1 < n), size_t>::type
     return i;
 }
 
+template <size_t N>
+size_t get_offset(const std::array<size_t,N>& strides, const std::array<size_t,N>& indices)
+{
+    size_t offset = 0;
+    for (size_t i = 0; i < N; ++i)
+    {
+        offset += indices[i]*strides[i];
+    }
+
+    return offset;
+}
+
 // ndarray
 
 template <class T>
@@ -247,25 +259,8 @@ public:
 
         // Initialize multipliers and size
         init();
-
-        {
-            size_t i = 0;
-            for (const auto& item : list)
-            {
-                if (item.is_array())
-                {
-                    init_data(item,i);
-                }
-                else 
-                {
-                    if (i < data_.size())
-                    {
-                        data_[i] = item.value();
-                        ++i;
-                    }
-                }
-            }
-        }
+        std::array<size_t,N> indices;
+        from_initializer_list(list,indices,0);
     }
 
     size_t size() const
@@ -393,22 +388,25 @@ private:
         }
     }
 
-    void init_data(const array_item<T>& init, size_t& i)
+    void from_initializer_list(const array_item<T>& init, std::array<size_t,N>& indices, size_t index)
     {
+        size_t i = 0;
         for (const auto& item : init)
         {
+            indices[index] = i;
             if (item.is_array())
             {
-                init_data(item,i);
+                from_initializer_list(item,indices,index+1);
             }
             else 
             {
-                if (i < size())
+                size_t offset = get_offset(strides_,indices);
+                if (offset < size())
                 {
-                    data_[i] = item.value();
-                    ++i;
+                    data_[offset] = item.value();
                 }
             }
+            ++i;
         }
     }
 };
@@ -429,15 +427,12 @@ public:
                typename std::enable_if<m <= N>::type* = 0)
         : dim_(dim)
     {
-        size_t offset = 0;
-        for (size_t i = 0; i < N; ++i)
-        {
-            offset += a.strides()[i]*indices[i];
-        }
+        size_t offset = get_offset(a.strides(),indices);
 
         data_ = a.data() + offset;
         size_ = a.size() - offset;
 
+        size_t diff = N - M;
         for (size_t i = 0; i < M; ++i)
         {
             strides_[i] = a.strides()[i];
