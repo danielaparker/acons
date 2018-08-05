@@ -16,12 +16,12 @@ TEST_CASE("row major stride tests")
     CHECK(strides[0] == 3);
     CHECK(strides[1] == 1);
 
-    CHECK(0 == get_offset<2, 0>(strides, 0, 0));
-    CHECK(1 == get_offset<2, 0>(strides, 0, 1));
-    CHECK(2 == get_offset<2, 0>(strides, 0, 2));
-    CHECK(3 == get_offset<2, 0>(strides, 1, 0));
-    CHECK(4 == get_offset<2, 0>(strides, 1, 1));
-    CHECK(5 == get_offset<2, 0>(strides, 1, 2));
+    CHECK(0 == get_offset<2, zero_based, 0>(strides, 0, 0));
+    CHECK(1 == get_offset<2, zero_based, 0>(strides, 0, 1));
+    CHECK(2 == get_offset<2, zero_based, 0>(strides, 0, 2));
+    CHECK(3 == get_offset<2, zero_based, 0>(strides, 1, 0));
+    CHECK(4 == get_offset<2, zero_based, 0>(strides, 1, 1));
+    CHECK(5 == get_offset<2, zero_based, 0>(strides, 1, 2));
 }
 
 TEST_CASE("column major stride tests")
@@ -36,12 +36,12 @@ TEST_CASE("column major stride tests")
     CHECK(strides[0] == 1);
     CHECK(strides[1] == 2);
 
-    CHECK(0 == get_offset<2, 0>(strides, 0, 0));
-    CHECK(1 == get_offset<2, 0>(strides, 1, 0));
-    CHECK(2 == get_offset<2, 0>(strides, 0, 1));
-    CHECK(3 == get_offset<2, 0>(strides, 1, 1));
-    CHECK(4 == get_offset<2, 0>(strides, 0, 2));
-    CHECK(5 == get_offset<2, 0>(strides, 1, 2));
+    CHECK(0 == get_offset<2, zero_based, 0>(strides, 0, 0));
+    CHECK(1 == get_offset<2, zero_based, 0>(strides, 1, 0));
+    CHECK(2 == get_offset<2, zero_based, 0>(strides, 0, 1));
+    CHECK(3 == get_offset<2, zero_based, 0>(strides, 1, 1));
+    CHECK(4 == get_offset<2, zero_based, 0>(strides, 0, 2));
+    CHECK(5 == get_offset<2, zero_based, 0>(strides, 1, 2));
 }
 
 TEST_CASE("row major tests")
