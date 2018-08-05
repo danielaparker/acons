@@ -229,38 +229,12 @@ public:
 
     ndarray(std::initializer_list<array_item<T>> list) 
     {
-        bool is_array = false;
-
-        size_t i = 0;
-        size_t dim = 0;
-        for (const auto& item : list)
-        {
-            if (i == 0)
-            {
-                is_array = item.is_array();
-                if (dim < N)
-                {
-                    this->dim_[dim++] = list.size();
-                    if (is_array)
-                    {
-                        init_dim(item, dim);
-                    }
-                }
-            }
-            else
-            {
-                if (is_array != item.is_array())
-                {
-                    throw std::runtime_error("Invalid initializer list");
-                }
-            }
-            ++i;
-        }
+        dim_from_initializer_list(list, 0);
 
         // Initialize multipliers and size
         init();
         std::array<size_t,N> indices;
-        from_initializer_list(list,indices,0);
+        data_from_initializer_list(list,indices,0);
     }
 
     size_t size() const
@@ -358,7 +332,7 @@ private:
         data_.resize(size, val);
     }
 
-    void init_dim(const array_item<T>& init, size_t& dim)
+    void dim_from_initializer_list(const array_item<T>& init, size_t dim)
     {
         bool is_array = false;
 
@@ -373,7 +347,7 @@ private:
                     this->dim_[dim++] = init.size();
                     if (is_array)
                     {
-                        init_dim(item, dim);
+                        dim_from_initializer_list(item, dim);
                     }
                 }
             }
@@ -388,7 +362,7 @@ private:
         }
     }
 
-    void from_initializer_list(const array_item<T>& init, std::array<size_t,N>& indices, size_t index)
+    void data_from_initializer_list(const array_item<T>& init, std::array<size_t,N>& indices, size_t index)
     {
         size_t i = 0;
         for (const auto& item : init)
@@ -396,7 +370,7 @@ private:
             indices[index] = i;
             if (item.is_array())
             {
-                from_initializer_list(item,indices,index+1);
+                data_from_initializer_list(item,indices,index+1);
             }
             else 
             {
