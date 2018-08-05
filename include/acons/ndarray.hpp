@@ -261,6 +261,13 @@ public:
         return dim_[i];
     }
 
+    T& operator()(const std::array<size_t,N>& indices)
+    {
+        size_t off = get_offset<n,0>(strides_,indices);
+        assert(off < size());
+        return data_[off];
+    }
+
     template <size_t n=N, typename... Indices>
     typename std::enable_if<(n == N),T&>::type 
     operator()(Indices... indices) 
@@ -384,6 +391,55 @@ private:
         }
     }
 };
+
+template <typename T, size_t N, typename Order=row_major,typename CharT>
+void output(std::basic_ostream<CharT>& os, const T* data, const std::array<size_t,N>& strides, const std::array<size_t,N>& dimensions, size_t index, std::array<size_t,N>& indices)
+{
+    if (index+1 < strides.size())
+    {
+        //if (index > 0)
+        //{
+        //    os << ',';
+        //}
+        os << '[';
+        for (size_t i = 0; i < dimensions[index]; ++i)
+        {
+            if (i > 0)
+            {
+                os << ',';
+            }
+            indices[index] = i; 
+            {
+                output(os,data,strides,dimensions,index+1,indices);
+            }
+        }
+        os << ']';
+    }
+    else
+    {
+        os << '[';
+        for (size_t i = 0; i < dimensions[index]; ++i)
+        {
+            indices[index] = i; 
+            if (i > 0)
+            {
+                os << ',';
+            }
+            size_t offset = get_offset(strides,indices);
+
+            os << data[get_offset(strides,indices)];
+        }
+        os << ']';
+    }
+}
+
+template <typename T, size_t N, typename Order=row_major,typename CharT>
+std::basic_ostream<CharT>& operator <<(std::basic_ostream<CharT>& os, ndarray<T,N,Order>& a)
+{
+    std::array<size_t, N> indices;
+    output(os, a.data(), a.strides(), a.dimensions(), 0, indices);
+    return os;
+}
 
 template <typename T, size_t M, typename Order=row_major>
 class ndarray_view  
