@@ -161,7 +161,7 @@ struct array_item
     }
 };
 
-template <typename T, size_t N, typename Order=row_major, typename Base=zero_based>
+template <typename T, size_t N, typename Order=row_major, typename Base=zero_based, typename Allocator=std::allocator<T>>
 class ndarray 
 {
     template<size_t Pos>
@@ -170,7 +170,7 @@ class ndarray
         using next = init_helper<Pos - 1>;
 
         template <typename... Args>
-        static void init(ndarray<T,N,Order,Base>& a, size_t n, Args... args)
+        static void init(ndarray<T, N, Order, Base, Allocator>& a, size_t n, Args... args)
         {
             a.dim_[N-Pos] = n;
             next::init(a, args...);
@@ -180,11 +180,11 @@ class ndarray
     template<>
     struct init_helper<0>
     {
-        static void init(ndarray<T, N, Order, Base>& a)
+        static void init(ndarray<T, N, Order, Base, Allocator>& a)
         {
             a.init();
         }
-        static void init(ndarray<T, N, Order, Base>& a, const T& val)
+        static void init(ndarray<T, N, Order, Base, Allocator>& a, const T& val)
         {
             a.init(val);
         }
@@ -200,6 +200,7 @@ public:
     ndarray()
     {
     }
+
     ndarray(const ndarray& a)
         : data_(a.data_), dim_(a.dim_), strides_(a.strides_)
     {
@@ -442,8 +443,8 @@ void output(std::basic_ostream<CharT>& os, const T* data, const std::array<size_
     }
 }
 
-template <typename T, size_t N, typename Order, typename Base, typename CharT>
-std::basic_ostream<CharT>& operator <<(std::basic_ostream<CharT>& os, ndarray<T, N, Order, Base>& a)
+template <typename T, size_t N, typename Order, typename Base, typename Allocator, typename CharT>
+std::basic_ostream<CharT>& operator <<(std::basic_ostream<CharT>& os, ndarray<T, N, Order, Base, Allocator>& a)
 {
     std::array<size_t, N> indices;
     output<T,N,Order,Base,CharT>(os, a.data(), a.strides(), a.dimensions(), 0, indices);
@@ -461,8 +462,8 @@ public:
     typedef T* iterator;
     typedef const T* const_iterator;
 
-    template<size_t m = M, size_t N>
-    ndarray_view(ndarray<T,N,Order,Base>& a, const std::array<size_t,N>& indices, const std::array<size_t,M>& dim, 
+    template<size_t m = M, size_t N, typename Allocator>
+    ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, const std::array<size_t,N>& indices, const std::array<size_t,M>& dim, 
                typename std::enable_if<m <= N>::type* = 0)
         : dim_(dim)
     {
@@ -564,8 +565,8 @@ public:
     }
 };
 
-template <typename T, size_t N, typename Order, typename Base>
-bool operator==(const ndarray<T, N, Order, Base>& lhs, const ndarray<T, N, Order, Base>& rhs)
+template <typename T, size_t N, typename Order, typename Base, typename Allocator>
+bool operator==(const ndarray<T, N, Order, Base, Allocator>& lhs, const ndarray<T, N, Order, Base, Allocator>& rhs)
 {
     if (&lhs == &rhs)
     {
@@ -588,8 +589,8 @@ bool operator==(const ndarray<T, N, Order, Base>& lhs, const ndarray<T, N, Order
     return true;
 }
 
-template <typename T, size_t N, typename Order, typename Base>
-bool operator!=(const ndarray<T, N, Order, Base>& lhs, const ndarray<T, N, Order, Base>& rhs)
+template <typename T, size_t N, typename Order, typename Base, typename Allocator>
+bool operator!=(const ndarray<T, N, Order, Base, Allocator>& lhs, const ndarray<T, N, Order, Base, Allocator>& rhs)
 {
     return !(lhs == rhs);
 }
