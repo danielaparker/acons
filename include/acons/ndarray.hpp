@@ -261,8 +261,22 @@ public:
         init();
     }
 
+    ndarray(const std::array<size_t,N>& dim, const Allocator& allocator)
+        : ndarray_base(allocator), 
+          dim_(dim)
+    {
+        init();
+    }
+
     ndarray(const std::array<size_t,N>& dim, T val)
         : ndarray_base(allocator_type()), 
+          dim_(dim)
+    {
+        init(val);
+    }
+
+    ndarray(const std::array<size_t,N>& dim, T val, const Allocator& allocator)
+        : ndarray_base(allocator), 
           dim_(dim)
     {
         init(val);
@@ -275,6 +289,13 @@ public:
         init();
     }
 
+    ndarray(std::array<size_t,N>&& dim, const Allocator& allocator)
+        : ndarray_base(allocator), 
+          dim_(std::move(dim))
+    {
+        init();
+    }
+
     ndarray(std::array<size_t,N>&& dim, T val)
         : ndarray_base(allocator_type()), 
           dim_(std::move(dim))
@@ -282,8 +303,26 @@ public:
         init(val);
     }
 
+    ndarray(std::array<size_t,N>&& dim, T val, const Allocator& allocator)
+        : ndarray_base(allocator), 
+          dim_(std::move(dim))
+    {
+        init(val);
+    }
+
     ndarray(std::initializer_list<array_item<T>> list) 
         : ndarray_base(allocator_type())
+    {
+        dim_from_initializer_list(list, 0);
+
+        // Initialize multipliers and size
+        init();
+        std::array<size_t,N> indices;
+        data_from_initializer_list(list,indices,0);
+    }
+
+    ndarray(std::initializer_list<array_item<T>> list, const Allocator& allocator) 
+        : ndarray_base(allocator)
     {
         dim_from_initializer_list(list, 0);
 
