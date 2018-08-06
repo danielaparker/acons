@@ -25,6 +25,7 @@ add_definitions(-DJSONCONS_NO_DEPRECATED)
 endif()
 
 target_include_directories (acons_tests PUBLIC ../../../include
+                                        PUBLIC ../../../third_party
                                         PRIVATE ../../include)
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux" AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
