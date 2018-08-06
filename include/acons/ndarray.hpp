@@ -9,8 +9,12 @@
 #include <assert.h>
 #include <algorithm>
 #include <initializer_list>
+#include <functional>
   
 namespace acons {
+
+template <typename T, size_t N, typename Order=row_major, typename Base=zero_based, typename Allocator=std::allocator<T>>
+class ndarray;
 
 struct zero_based
 {
@@ -179,7 +183,7 @@ protected:
     }
 };
 
-template <typename T, size_t N, typename Order=row_major, typename Base=zero_based, typename Allocator=std::allocator<T>>
+template <typename T, size_t N, typename Order, typename Base, typename Allocator>
 class ndarray : public ndarray_base<Allocator>
 {
     template<size_t Pos>
@@ -188,21 +192,21 @@ class ndarray : public ndarray_base<Allocator>
         using next = init_helper<Pos - 1>;
 
         template <typename... Args>
-        static void init(ndarray<T, N, Order, Base, Allocator>& a, size_t n, Args... args)
+        static void init(std::array<size_t,N>& dim, ndarray<T, N, Order, Base, Allocator>& a, size_t n, Args... args)
         {
-            a.dim_[N-Pos] = n;
-            next::init(a, args...);
+            dim[N-Pos] = n;
+            next::init(dim, a, args...);
         }
     };
 
     template<>
     struct init_helper<0>
     {
-        static void init(ndarray<T, N, Order, Base, Allocator>& a)
+        static void init(std::array<size_t,N>& dim, ndarray<T, N, Order, Base, Allocator>& a)
         {
             a.init();
         }
-        static void init(ndarray<T, N, Order, Base, Allocator>& a, const T& val)
+        static void init(std::array<size_t,N>& dim, ndarray<T, N, Order, Base, Allocator>& a, const T& val)
         {
             a.init(val);
         }
@@ -251,7 +255,7 @@ public:
     ndarray(size_t k, Args... args)
         : ndarray_base(allocator_type()) 
     {
-        init_helper<N>::init(*this, k, args ...);
+        init_helper<N>::init(dim_, *this, k, args ...);
     }
 
     ndarray(const std::array<size_t,N>& dim)
