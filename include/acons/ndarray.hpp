@@ -221,8 +221,8 @@ class ndarray : public ndarray_base<Allocator>
     std::array<size_t,N> dim_;
     std::array<size_t,N> strides_;
 public:
-    using ndarray_base::allocator_type;
-    using ndarray_base::get_allocator;
+    using ndarray_base<Allocator>::allocator_type;
+    using ndarray_base<Allocator>::get_allocator;
 
     typedef T value_type;
     typedef const T& const_reference;
