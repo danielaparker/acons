@@ -183,34 +183,38 @@ protected:
     }
 };
 
+template<size_t Pos>
+struct init_helper
+{
+    using next = init_helper<Pos - 1>;
+
+    template <typename T, size_t N, typename Order, typename Base, typename Allocator, typename... Args>
+    static void init(std::array<size_t,N>& dim, ndarray<T, N, Order, Base, Allocator>& a, size_t n, Args... args)
+    {
+        dim[N-Pos] = n;
+        next::init<T,N,Order,Base,Allocator>(dim, a, args...);
+    }
+};
+
+template<>
+struct init_helper<0>
+{
+    template <typename T, size_t N, typename Order, typename Base, typename Allocator>
+    static void init(std::array<size_t, N>& dim, ndarray<T, N, Order, Base, Allocator>& a)
+    {
+        a.init();
+    }
+    template <typename T, size_t N, typename Order, typename Base, typename Allocator>
+    static void init(std::array<size_t, N>& dim, ndarray<T, N, Order, Base, Allocator>& a, const T& val)
+    {
+        a.init(val);
+    }
+};
+
 template <typename T, size_t N, typename Order, typename Base, typename Allocator>
 class ndarray : public ndarray_base<Allocator>
 {
-    template<size_t Pos>
-    struct init_helper
-    {
-        using next = init_helper<Pos - 1>;
-
-        template <typename... Args>
-        static void init(std::array<size_t,N>& dim, ndarray<T, N, Order, Base, Allocator>& a, size_t n, Args... args)
-        {
-            dim[N-Pos] = n;
-            next::init(dim, a, args...);
-        }
-    };
-
-    template<>
-    struct init_helper<0>
-    {
-        static void init(std::array<size_t,N>& dim, ndarray<T, N, Order, Base, Allocator>& a)
-        {
-            a.init();
-        }
-        static void init(std::array<size_t,N>& dim, ndarray<T, N, Order, Base, Allocator>& a, const T& val)
-        {
-            a.init(val);
-        }
-    };
+    friend struct init_helper<0>;
 
     T* data_;
     size_t size_;
@@ -428,6 +432,7 @@ public:
 
     ndarray& operator=(const ndarray&) = default;
     ndarray& operator=(ndarray&&) = default;
+
 private:
     void init()
     {
