@@ -259,7 +259,7 @@ public:
     ndarray(size_t k, Args... args)
         : ndarray_base<Allocator>(allocator_type()) 
     {
-        init_helper<N>::init(dim_, *this, k, args ...);
+        init_helper<N>::init<T,N,Order,Base,Allocator>(dim_, *this, k, args ...);
     }
 
     ndarray(const std::array<size_t,N>& dim)
