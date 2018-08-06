@@ -13,9 +13,6 @@
   
 namespace acons {
 
-template <typename T, size_t N, typename Order=row_major, typename Base=zero_based, typename Allocator=std::allocator<T>>
-class ndarray;
-
 struct zero_based
 {
     static size_t rebase_to_zero(size_t index)
@@ -59,6 +56,9 @@ struct column_major
         }
     }
 };
+
+template <typename T, size_t N, typename Order=row_major, typename Base=zero_based, typename Allocator=std::allocator<T>>
+class ndarray;
 
 template <size_t n, typename Base, size_t m>
 typename std::enable_if<m == n, size_t>::type
