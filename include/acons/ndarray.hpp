@@ -228,13 +228,13 @@ public:
     typedef const T* const_iterator;
 
     ndarray()
-        : ndarray_base(allocator_type()),
+        : ndarray_base<Allocator>(allocator_type()),
           data_(null_ptr), size_t(0)
     {
     }
 
     ndarray(const ndarray& a)
-        : ndarray_base(a.get_allocator()), dim_(a.dim_), strides_(a.strides_)
+        : ndarray_base<Allocator>(a.get_allocator()), dim_(a.dim_), strides_(a.strides_)
     {
         data_ = get_allocator().allocate(a.size());
         size_ = a.size();
@@ -246,7 +246,7 @@ public:
     }
 
     ndarray(ndarray&& a)
-        : ndarray_base(a.get_allocator()), 
+        : ndarray_base<Allocator>(a.get_allocator()), 
           dim_(std::move(a.dim_)), strides_(std::move(a.strides_)) 
     {
         data_ = a.data_;
@@ -257,69 +257,69 @@ public:
 
     template <typename... Args>
     ndarray(size_t k, Args... args)
-        : ndarray_base(allocator_type()) 
+        : ndarray_base<Allocator>(allocator_type()) 
     {
         init_helper<N>::init(dim_, *this, k, args ...);
     }
 
     ndarray(const std::array<size_t,N>& dim)
-        : ndarray_base(allocator_type()), 
+        : ndarray_base<Allocator>(allocator_type()), 
           dim_(dim)
     {
         init();
     }
 
     ndarray(const std::array<size_t,N>& dim, const Allocator& allocator)
-        : ndarray_base(allocator), 
+        : ndarray_base<Allocator>(allocator), 
           dim_(dim)
     {
         init();
     }
 
     ndarray(const std::array<size_t,N>& dim, T val)
-        : ndarray_base(allocator_type()), 
+        : ndarray_base<Allocator>(allocator_type()), 
           dim_(dim)
     {
         init(val);
     }
 
     ndarray(const std::array<size_t,N>& dim, T val, const Allocator& allocator)
-        : ndarray_base(allocator), 
+        : ndarray_base<Allocator>(allocator), 
           dim_(dim)
     {
         init(val);
     }
 
     ndarray(std::array<size_t,N>&& dim)
-        : ndarray_base(allocator_type()), 
+        : ndarray_base<Allocator>(allocator_type()), 
           dim_(std::move(dim))
     {
         init();
     }
 
     ndarray(std::array<size_t,N>&& dim, const Allocator& allocator)
-        : ndarray_base(allocator), 
+        : ndarray_base<Allocator>(allocator), 
           dim_(std::move(dim))
     {
         init();
     }
 
     ndarray(std::array<size_t,N>&& dim, T val)
-        : ndarray_base(allocator_type()), 
+        : ndarray_base<Allocator>(allocator_type()), 
           dim_(std::move(dim))
     {
         init(val);
     }
 
     ndarray(std::array<size_t,N>&& dim, T val, const Allocator& allocator)
-        : ndarray_base(allocator), 
+        : ndarray_base<Allocator>(allocator), 
           dim_(std::move(dim))
     {
         init(val);
     }
 
     ndarray(std::initializer_list<array_item<T>> list) 
-        : ndarray_base(allocator_type())
+        : ndarray_base<Allocator>(allocator_type())
     {
         dim_from_initializer_list(list, 0);
 
@@ -330,7 +330,7 @@ public:
     }
 
     ndarray(std::initializer_list<array_item<T>> list, const Allocator& allocator) 
-        : ndarray_base(allocator)
+        : ndarray_base<Allocator>(allocator)
     {
         dim_from_initializer_list(list, 0);
 
