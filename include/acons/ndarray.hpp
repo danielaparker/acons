@@ -233,7 +233,7 @@ public:
 
     ndarray()
         : ndarray_base<Allocator>(allocator_type()),
-          data_(nullptr), size_t(0)
+          data_(nullptr), size_(0)
     {
     }
 
