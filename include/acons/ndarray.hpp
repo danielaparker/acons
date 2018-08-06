@@ -208,7 +208,8 @@ class ndarray : public ndarray_base<Allocator>
         }
     };
 
-    std::vector<T> data_;
+    T* data_;
+    size_t size_;
     std::array<size_t,N> dim_;
     std::array<size_t,N> strides_;
 public:
@@ -219,19 +220,31 @@ public:
     typedef const T* const_iterator;
 
     ndarray()
-        : ndarray_base(allocator_type())
+        : ndarray_base(allocator_type()),
+          data_(null_ptr), size_t(0)
     {
     }
 
     ndarray(const ndarray& a)
-        : ndarray_base(a.get_allocator()), data_(a.data_), dim_(a.dim_), strides_(a.strides_)
+        : ndarray_base(a.get_allocator()), dim_(a.dim_), strides_(a.strides_)
     {
+        data_ = get_allocator().allocate(a.size());
+        size_ = a.size();
+
+        for (size_t i = 0; i < size_; ++i)
+        {
+            data_[i] = a.data_[i];
+        }
     }
 
     ndarray(ndarray&& a)
         : ndarray_base(a.get_allocator()), 
-          data_(std::move(a.data_)), dim_(std::move(a.dim_)), strides_(std::move(a.strides_)) 
+          dim_(std::move(a.dim_)), strides_(std::move(a.strides_)) 
     {
+        data_ = a.data_;
+        size_ = a.size_;
+        a.data_ = null_ptr;
+        a.size_ = 0;
     }
 
     template <typename... Args>
@@ -282,11 +295,12 @@ public:
 
     ~ndarray()
     {
+        get_allocator().deallocate(data_,size_);
     }
 
     size_t size() const
     {
-        return data_.size();
+        return size_;
     }
 
     const std::array<size_t,N>& dimensions() const {return dim_;}
@@ -294,12 +308,12 @@ public:
 
     T* data()
     {
-        return data_.data();
+        return data_;
     }
 
     const T* data() const 
     {
-        return data_.data();
+        return data_;
     }
 
     size_t size(size_t i) const
@@ -374,16 +388,18 @@ public:
 private:
     void init()
     {
-        size_t size;
-        Order::calculate_strides(dim_, strides_, size);
-        data_.resize(size);
+        Order::calculate_strides(dim_, strides_, size_);
+        data_ = get_allocator().allocate(size_);
     }
 
     void init(const T& val)
     {
-        size_t size;
-        Order::calculate_strides(dim_, strides_, size);
-        data_.resize(size, val);
+        Order::calculate_strides(dim_, strides_, size_);
+        data_ = get_allocator().allocate(size_);
+        for (size_t i = 0; i < size_; ++i)
+        {
+            data_[i] = val;
+        }
     }
 
     void dim_from_initializer_list(const array_item<T>& init, size_t dim)
