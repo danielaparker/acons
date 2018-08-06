@@ -221,7 +221,7 @@ class ndarray : public ndarray_base<Allocator>
     std::array<size_t,N> dim_;
     std::array<size_t,N> strides_;
 public:
-    using ndarray_base<Allocator>::allocator_type;
+    using typename ndarray_base<Allocator>::allocator_type;
     using ndarray_base<Allocator>::get_allocator;
 
     typedef T value_type;
@@ -375,7 +375,7 @@ public:
 
     T& operator()(const std::array<size_t,N>& indices)
     {
-        size_t off = get_offset<n, Base, 0>(strides_,indices);
+        size_t off = get_offset<N, Base>(strides_,indices);
         assert(off < size());
         return data_[off];
     }
