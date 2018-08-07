@@ -9,7 +9,7 @@ TEST_CASE("compare row major ndarray")
     ndarray<double,2,row_major> a = {{1.0,2.0,3.0,4.0},{5.0,6.0,7.0,8.0}};
     ndarray<double,2,row_major> b = {{1.0,2.0,3.0,4.0},{5.0,6.0,7.0,8.0}};
     ndarray<double,2,row_major> c = {{1.0,4.0,2.0,3.0},{5.0,8.0,6.0,7.0}};
-    ndarray<double,2,row_major> d = {{1.0,2.0,3.0},{5.0,6.0,7.0,8.0}};
+    ndarray<double,2,row_major> d = {{1.0,2.0,3.0,0.0},{5.0,6.0,7.0,8.0}};
 
     bool test1 = a == b;
     bool test2 = a != b;
@@ -46,7 +46,7 @@ TEST_CASE("compare column major ndarray")
     ndarray<double,2,column_major> a = {{1.0,2.0,3.0,4.0},{5.0,6.0,7.0,8.0}};
     ndarray<double,2,column_major> b = {{1.0,2.0,3.0,4.0},{5.0,6.0,7.0,8.0}};
     ndarray<double,2,column_major> c = {{1.0,4.0,2.0,3.0},{5.0,8.0,6.0,7.0}};
-    ndarray<double,2,column_major> d = {{1.0,2.0,3.0},{5.0,6.0,7.0,8.0}};
+    ndarray<double,2,column_major> d = {{1.0,2.0,3.0,0.0},{5.0,6.0,7.0,8.0}};
 
     bool test1 = a == b;
     bool test2 = a != b;

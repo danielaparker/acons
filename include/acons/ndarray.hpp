@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <initializer_list>
 #include <functional>
+#include <stdexcept>
   
 namespace acons {
 
@@ -532,6 +533,7 @@ private:
     void dim_from_initializer_list(const array_item<T>& init, size_t dim)
     {
         bool is_array = false;
+        size_t size = 0;
 
         size_t i = 0;
         for (const auto& item : init)
@@ -539,6 +541,7 @@ private:
             if (i == 0)
             {
                 is_array = item.is_array();
+                size = item.size();
                 if (dim < N)
                 {
                     this->dim_[dim++] = init.size();
@@ -550,9 +553,16 @@ private:
             }
             else
             {
-                if (is_array != item.is_array())
+                if (is_array)
                 {
-                    throw std::runtime_error("Invalid initializer list");
+                    if (!item.is_array() || item.size() != size)
+                    {
+                        throw std::invalid_argument("initializer list contains non-conforming shapes");
+                    }
+                }
+                else if (dim != N)
+                {
+                    throw std::invalid_argument("initializer list incompatible with array dimensionality");
                 }
             }
             ++i;

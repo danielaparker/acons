@@ -11,6 +11,15 @@ The `ndarray_ref` class provides a common interface for [ndarray](ndarray) and [
 #include <acons/ndarray.hpp>
 ```
 
+#### Template parameters
+
+Member type                         |Definition|Notes
+------------------------------------|----------|--------------------
+T||
+N||
+Order||
+Base||
+
 #### Member types
 
 Member type                         |Definition
@@ -75,6 +84,11 @@ and an optional (N+1)th argument specifies an initial value.
 
 (8) Constructs an N-dimensional array from the initializer list init
     using the supplied allocator.
+
+Exceptions:
+
+(1) - (8) Calls to `Allocator::allocate` may throw.
+(7) - (8) Throws `std::invalid_argument` if the initializer list contains non-comforming shapes.
 
 #### Capacity
 
