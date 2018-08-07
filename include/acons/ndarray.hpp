@@ -65,21 +65,21 @@ class ndarray_view;
 
 template <size_t n, typename Base, size_t m>
 typename std::enable_if<m == n, size_t>::type
-    get_offset(const std::array<size_t,n>& strides) 
+get_offset(const std::array<size_t,n>& strides) 
 {
     return 0;
 }
 
 template <size_t n, typename Base, size_t m>
 typename std::enable_if<m+1 == n, size_t>::type
-    get_offset(const std::array<size_t,n>& strides, size_t index) 
+get_offset(const std::array<size_t,n>& strides, size_t index) 
 {
     return Base::rebase_to_zero(index)*strides[n-1];
 }
 
 template <size_t n, typename Base, size_t m, typename... Indices>
 typename std::enable_if<(m+1 < n), size_t>::type
-    get_offset(const std::array<size_t,n>& strides, size_t index, Indices... indices)
+get_offset(const std::array<size_t,n>& strides, size_t index, Indices... indices)
 {
     const size_t mplus1 = m + 1;
     size_t i = Base::rebase_to_zero(index)*strides[m] + get_offset<n, Base, mplus1>(strides,indices...);
@@ -98,75 +98,6 @@ size_t get_offset(const std::array<size_t,N>& strides, const std::array<size_t,N
 
     return offset;
 }
-
-// ndarray
-
-template <class T>
-struct array_item
-{
-    typedef typename std::vector<array_item<T>>::iterator iterator;
-    typedef typename std::vector<array_item<T>>::const_iterator const_iterator;
-
-    bool is_array_;
-    std::vector<array_item<T>> v_;
-    T val_;
-
-    array_item(const std::vector<array_item<T>>& a)
-        : is_array_(true), v_(a), val_(0)
-    {
-    }
-
-    array_item(std::initializer_list<array_item<T>> list)
-        : is_array_(true), v_(list), val_(0)
-    {
-    }
-    array_item(T val)
-        : is_array_(false), val_(val)
-    {
-    }
-
-    array_item() 
-        : is_array_(false)
-    {
-    }
-    array_item(const array_item&)  = default;
-    array_item(array_item&&)  = default;
-
-    bool is_array() const
-    {
-        return is_array_;
-    }
-
-    size_t size() const
-    {
-        return v_.size();
-    }
-
-    T value() const
-    {
-        return val_;
-    }
-
-    iterator begin()
-    {
-        return v_.begin();
-    }
-
-    iterator end()
-    {
-        return v_.end();
-    }
-
-    const_iterator begin() const
-    {
-        return v_.begin();
-    }
-
-    const_iterator end() const
-    {
-        return v_.end();
-    }
-};
 
 // ndarray_ref
 
@@ -197,19 +128,8 @@ protected:
     {
     }
 
-    ndarray_ref(T* data, size_t size, std::array<size_t,N>&& dim, std::array<size_t,N>&& strides)
-        : data_(data), size_(size), dim_(std::move(dim)), strides_(std::move(strides))
-    {
-    }
-
     ndarray_ref(T* data, const std::array<size_t,N>& dim)
-        : data_(data), dim_(dim)
-    {
-        Order::calculate_strides(dim_, strides_, size_);
-    }
-
-    ndarray_ref(T* data, std::array<size_t,N>&& dim)
-        : data_(data), dim_(std::move(dim))
+        : data_(data), size_(0), dim_(dim)
     {
         Order::calculate_strides(dim_, strides_, size_);
     }
@@ -300,6 +220,75 @@ public:
 };
 
 
+// ndarray
+
+template <class T>
+struct array_item
+{
+    typedef typename std::vector<array_item<T>>::iterator iterator;
+    typedef typename std::vector<array_item<T>>::const_iterator const_iterator;
+
+    bool is_array_;
+    std::vector<array_item<T>> v_;
+    T val_;
+
+    array_item(const std::vector<array_item<T>>& a)
+        : is_array_(true), v_(a), val_(0)
+    {
+    }
+
+    array_item(std::initializer_list<array_item<T>> list)
+        : is_array_(true), v_(list), val_(0)
+    {
+    }
+    array_item(T val)
+        : is_array_(false), val_(val)
+    {
+    }
+
+    array_item() 
+        : is_array_(false)
+    {
+    }
+    array_item(const array_item&)  = default;
+    array_item(array_item&&)  = default;
+
+    bool is_array() const
+    {
+        return is_array_;
+    }
+
+    size_t size() const
+    {
+        return v_.size();
+    }
+
+    T value() const
+    {
+        return val_;
+    }
+
+    iterator begin()
+    {
+        return v_.begin();
+    }
+
+    iterator end()
+    {
+        return v_.end();
+    }
+
+    const_iterator begin() const
+    {
+        return v_.begin();
+    }
+
+    const_iterator end() const
+    {
+        return v_.end();
+    }
+};
+
 // ndarray_base
 
 template <class Allocator>
@@ -314,8 +303,8 @@ public:
         return allocator_;
     }
 protected:
-    ndarray_base(const Allocator& allocator)
-        : allocator_(allocator)
+    ndarray_base(const Allocator& alloc)
+        : allocator_(alloc)
     {
     }
 };
@@ -372,21 +361,21 @@ public:
     }
 
     template <typename... Args>
-    ndarray(size_t k, Args... args)
+    ndarray(size_t i, Args... args)
         : ndarray_base<Allocator>(allocator_type()) 
     {
-        init_helper<N>::init(this->dim_, *this, k, args ...);
+        init_helper<N>::init(this->dim_, *this, i, args ...);
     }
 
-    ndarray(const std::array<size_t,N>& dim)
+    explicit ndarray(const std::array<size_t,N>& dim)
         : ndarray_base<Allocator>(allocator_type()), 
           ndarray_ref<T, N, Order, Base>(nullptr, dim)
     {
         this->data_ = get_allocator().allocate(this->size_);
     }
 
-    ndarray(const std::array<size_t,N>& dim, const Allocator& allocator)
-        : ndarray_base<Allocator>(allocator), 
+    ndarray(const std::array<size_t,N>& dim, const Allocator& alloc)
+        : ndarray_base<Allocator>(alloc), 
           ndarray_ref<T, N, Order, Base>(nullptr, dim)
     {
         this->data_ = get_allocator().allocate(this->size_);
@@ -403,8 +392,8 @@ public:
         }
     }
 
-    ndarray(const std::array<size_t,N>& dim, T val, const Allocator& allocator)
-        : ndarray_base<Allocator>(allocator), 
+    ndarray(const std::array<size_t,N>& dim, T val, const Allocator& alloc)
+        : ndarray_base<Allocator>(alloc), 
           ndarray_ref<T, N, Order, Base>(nullptr, dim)
     {
         this->data_ = get_allocator().allocate(this->size_);
@@ -414,36 +403,27 @@ public:
         }
     }
 
-    ndarray(std::array<size_t,N>&& dim)
-        : ndarray_base<Allocator>(allocator_type()), 
-          ndarray_ref<T, N, Order, Base>(nullptr, std::forward<std::array<size_t,N>>(dim))
+    ndarray(std::initializer_list<array_item<T>> list) 
+        : ndarray_base<Allocator>(allocator_type())
     {
+        dim_from_initializer_list(list, 0);
+
+        Order::calculate_strides(this->dim_, this->strides_, this->size_);
         this->data_ = get_allocator().allocate(this->size_);
+        std::array<size_t,N> indices;
+        data_from_initializer_list(list,indices,0);
     }
 
-    ndarray(std::array<size_t,N>&& dim, const Allocator& allocator)
-        : ndarray_base<Allocator>(allocator), 
-          ndarray_ref<T, N, Order, Base>(nullptr, std::forward<std::array<size_t,N>>(dim))
+    ndarray(std::initializer_list<array_item<T>> list, const Allocator& alloc) 
+        : ndarray_base<Allocator>(alloc)
     {
-        this->data_ = get_allocator().allocate(this->size_);
-    }
+        dim_from_initializer_list(list, 0);
 
-    ndarray(std::array<size_t,N>&& dim, T val)
-        : ndarray_base<Allocator>(allocator_type()), 
-          ndarray_ref<T, N, Order, Base>(nullptr, std::forward<std::array<size_t,N>>(dim))
-    {
+        // Initialize multipliers and size
+        Order::calculate_strides(this->dim_, this->strides_, this->size_);
         this->data_ = get_allocator().allocate(this->size_);
-        for (size_t i = 0; i < this->size_; ++i)
-        {
-            this->data_[i] = val;
-        }
-    }
-
-    ndarray(std::array<size_t,N>&& dim, T val, const Allocator& allocator)
-        : ndarray_base<Allocator>(allocator), 
-          ndarray_ref<T, N, Order, Base>(nullptr, std::forward<std::array<size_t,N>>(dim))
-    {
-        this->data_ = get_allocator().allocate(this->size_);
+        std::array<size_t,N> indices;
+        data_from_initializer_list(list,indices,0);
     }
 
     ndarray(const ndarray& a)
@@ -459,8 +439,8 @@ public:
         }
     }
 
-    ndarray(const ndarray& a, const Allocator& allocator)
-        : ndarray_base<Allocator>(allocator), 
+    ndarray(const ndarray& a, const Allocator& alloc)
+        : ndarray_base<Allocator>(alloc), 
           ndarray_ref<T, N, Order, Base>(nullptr, 0, a.dim_, a.strides_)
     {
         this->size_ = a.size();
@@ -485,8 +465,8 @@ public:
         }
     }
 
-    ndarray(const ndarray_view<T,N,Order,Base>& a, const Allocator& allocator)
-        : ndarray_base<Allocator>(allocator), 
+    ndarray(const ndarray_view<T,N,Order,Base>& a, const Allocator& alloc)
+        : ndarray_base<Allocator>(alloc), 
           ndarray_ref<T, N, Order, Base>(nullptr, 0, a.dim_, a.strides_)
     {
         this->size_ = a.size();
@@ -500,33 +480,28 @@ public:
 
     ndarray(ndarray&& a)
         : ndarray_base<Allocator>(a.get_allocator()), 
-          ndarray_ref<T, N, Order, Base>(a.data_, a.size_, std::move(a.dim_), std::move(a.strides_))
+          ndarray_ref<T, N, Order, Base>(a.data_, a.size_, a.dim_, a.strides_)
     {
         a.data_ = nullptr;
         a.size_ = 0;
+        for (size_t i = 0; i < N; ++i)
+        {
+            a.dim_[i] = 0;
+            a.strides_[i] = 0;
+        }
     }
 
-    ndarray(std::initializer_list<array_item<T>> list) 
-        : ndarray_base<Allocator>(allocator_type())
+    ndarray(ndarray&& a, const Allocator& alloc)
+        : ndarray_base<Allocator>(alloc), 
+          ndarray_ref<T, N, Order, Base>(a.data_, a.size_, a.dim_, a.strides_)
     {
-        dim_from_initializer_list(list, 0);
-
-        Order::calculate_strides(this->dim_, this->strides_, this->size_);
-        this->data_ = get_allocator().allocate(this->size_);
-        std::array<size_t,N> indices;
-        data_from_initializer_list(list,indices,0);
-    }
-
-    ndarray(std::initializer_list<array_item<T>> list, const Allocator& allocator) 
-        : ndarray_base<Allocator>(allocator)
-    {
-        dim_from_initializer_list(list, 0);
-
-        // Initialize multipliers and size
-        Order::calculate_strides(this->dim_, this->strides_, this->size_);
-        this->data_ = get_allocator().allocate(this->size_);
-        std::array<size_t,N> indices;
-        data_from_initializer_list(list,indices,0);
+        a.data_ = nullptr;
+        a.size_ = 0;
+        for (size_t i = 0; i < N; ++i)
+        {
+            a.dim_[i] = 0;
+            a.strides_[i] = 0;
+        }
     }
 
     ~ndarray()
@@ -685,11 +660,6 @@ public:
 
     ndarray_view(T* data, const std::array<size_t,M>& dim) 
         : ndarray_ref<T, M, Order, Base>(data, dim)
-    {
-    }
-
-    ndarray_view(T* data, std::array<size_t,M>&& dim) 
-        : ndarray_ref<T, M, Order, Base>(data, std::forward<std::array<size_t,M>>(dim))
     {
     }
 };
