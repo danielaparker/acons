@@ -365,12 +365,12 @@ public:
         : ndarray_base<Allocator>(a.get_allocator()), 
           ndarray_ref<T, N, Order, Base>(nullptr, 0, a.dim_, a.strides_)
     {
-        size_ = a.size();
-        data_ = get_allocator().allocate(a.size());
+        this->size_ = a.size();
+        this->data_ = get_allocator().allocate(a.size());
 
-        for (size_t i = 0; i < size_; ++i)
+        for (size_t i = 0; i < this->size_; ++i)
         {
-            data_[i] = a.data_[i];
+            this->data_[i] = a.data_[i];
         }
     }
 
@@ -378,12 +378,12 @@ public:
         : ndarray_base<Allocator>(allocator), 
           ndarray_ref<T, N, Order, Base>(nullptr, 0, a.dim_, a.strides_)
     {
-        size_ = a.size();
-        data_ = get_allocator().allocate(a.size());
+        this->size_ = a.size();
+        this->data_ = get_allocator().allocate(a.size());
 
-        for (size_t i = 0; i < size_; ++i)
+        for (size_t i = 0; i < this->size_; ++i)
         {
-            data_[i] = a.data_[i];
+            this->data_[i] = a.data_[i];
         }
     }
 
@@ -391,12 +391,12 @@ public:
         : ndarray_base<Allocator>(allocator_type()), 
           ndarray_ref<T, N, Order, Base>(nullptr, 0, a.dim_, a.strides_)
     {
-        size_ = a.size();
-        data_ = get_allocator().allocate(a.size());
+        this->size_ = a.size();
+        this->data_ = get_allocator().allocate(a.size());
 
-        for (size_t i = 0; i < size_; ++i)
+        for (size_t i = 0; i < this->size_; ++i)
         {
-            data_[i] = a.data_[i];
+            this->data_[i] = a.data_[i];
         }
     }
 
@@ -404,12 +404,12 @@ public:
         : ndarray_base<Allocator>(allocator), 
           ndarray_ref<T, N, Order, Base>(nullptr, 0, a.dim_, a.strides_)
     {
-        size_ = a.size();
-        data_ = get_allocator().allocate(a.size());
+        this->size_ = a.size();
+        this->data_ = get_allocator().allocate(a.size());
 
-        for (size_t i = 0; i < size_; ++i)
+        for (size_t i = 0; i < this->size_; ++i)
         {
-            data_[i] = a.data_[i];
+            this->data_[i] = a.data_[i];
         }
     }
 
@@ -425,31 +425,31 @@ public:
     ndarray(size_t k, Args... args)
         : ndarray_base<Allocator>(allocator_type()) 
     {
-        init_helper<N>::init(dim_, *this, k, args ...);
+        init_helper<N>::init(this->dim_, *this, k, args ...);
     }
 
     ndarray(const std::array<size_t,N>& dim)
         : ndarray_base<Allocator>(allocator_type()), 
           ndarray_ref<T, N, Order, Base>(nullptr, dim)
     {
-        data_ = get_allocator().allocate(size_);
+        this->data_ = get_allocator().allocate(this->size_);
     }
 
     ndarray(const std::array<size_t,N>& dim, const Allocator& allocator)
         : ndarray_base<Allocator>(allocator), 
           ndarray_ref<T, N, Order, Base>(nullptr, dim)
     {
-        data_ = get_allocator().allocate(size_);
+        this->data_ = get_allocator().allocate(this->size_);
     }
 
     ndarray(const std::array<size_t,N>& dim, T val)
         : ndarray_base<Allocator>(allocator_type()), 
           ndarray_ref<T, N, Order, Base>(nullptr, dim)
     {
-        data_ = get_allocator().allocate(size_);
-        for (size_t i = 0; i < size_; ++i)
+        this->data_ = get_allocator().allocate(this->size_);
+        for (size_t i = 0; i < this->size_; ++i)
         {
-            data_[i] = val;
+            this->data_[i] = val;
         }
     }
 
@@ -457,10 +457,10 @@ public:
         : ndarray_base<Allocator>(allocator), 
           ndarray_ref<T, N, Order, Base>(nullptr, dim)
     {
-        data_ = get_allocator().allocate(size_);
-        for (size_t i = 0; i < size_; ++i)
+        this->data_ = get_allocator().allocate(this->size_);
+        for (size_t i = 0; i < this->size_; ++i)
         {
-            data_[i] = val;
+            this->data_[i] = val;
         }
     }
 
@@ -468,24 +468,24 @@ public:
         : ndarray_base<Allocator>(allocator_type()), 
           ndarray_ref<T, N, Order, Base>(nullptr, std::forward<std::array<size_t,N>>(dim))
     {
-        data_ = get_allocator().allocate(size_);
+        this->data_ = get_allocator().allocate(this->size_);
     }
 
     ndarray(std::array<size_t,N>&& dim, const Allocator& allocator)
         : ndarray_base<Allocator>(allocator), 
           ndarray_ref<T, N, Order, Base>(nullptr, std::forward<std::array<size_t,N>>(dim))
     {
-        data_ = get_allocator().allocate(size_);
+        this->data_ = get_allocator().allocate(this->size_);
     }
 
     ndarray(std::array<size_t,N>&& dim, T val)
         : ndarray_base<Allocator>(allocator_type()), 
           ndarray_ref<T, N, Order, Base>(nullptr, std::forward<std::array<size_t,N>>(dim))
     {
-        data_ = get_allocator().allocate(size_);
-        for (size_t i = 0; i < size_; ++i)
+        this->data_ = get_allocator().allocate(this->size_);
+        for (size_t i = 0; i < this->size_; ++i)
         {
-            data_[i] = val;
+            this->data_[i] = val;
         }
     }
 
@@ -493,7 +493,7 @@ public:
         : ndarray_base<Allocator>(allocator), 
           ndarray_ref<T, N, Order, Base>(nullptr, std::forward<std::array<size_t,N>>(dim))
     {
-        data_ = get_allocator().allocate(size_);
+        this->data_ = get_allocator().allocate(this->size_);
     }
 
     ndarray(std::initializer_list<array_item<T>> list) 
@@ -501,8 +501,8 @@ public:
     {
         dim_from_initializer_list(list, 0);
 
-        Order::calculate_strides(dim_, strides_, size_);
-        data_ = get_allocator().allocate(size_);
+        Order::calculate_strides(this->dim_, this->strides_, this->size_);
+        this->data_ = get_allocator().allocate(this->size_);
         std::array<size_t,N> indices;
         data_from_initializer_list(list,indices,0);
     }
@@ -513,15 +513,15 @@ public:
         dim_from_initializer_list(list, 0);
 
         // Initialize multipliers and size
-        Order::calculate_strides(dim_, strides_, size_);
-        data_ = get_allocator().allocate(size_);
+        Order::calculate_strides(this->dim_, this->strides_, this->size_);
+        this->data_ = get_allocator().allocate(this->size_);
         std::array<size_t,N> indices;
         data_from_initializer_list(list,indices,0);
     }
 
     ~ndarray()
     {
-        get_allocator().deallocate(data_,size_);
+        get_allocator().deallocate(this->data_,this->size_);
     }
 
     ndarray& operator=(const ndarray&) = default;
@@ -530,17 +530,17 @@ public:
 private:
     void init()
     {
-        Order::calculate_strides(dim_, strides_, size_);
-        data_ = get_allocator().allocate(size_);
+        Order::calculate_strides(this->dim_, this->strides_, this->size_);
+        this->data_ = get_allocator().allocate(this->size_);
     }
 
     void init(const T& val)
     {
-        Order::calculate_strides(dim_, strides_, size_);
-        data_ = get_allocator().allocate(size_);
-        for (size_t i = 0; i < size_; ++i)
+        Order::calculate_strides(this->dim_, this->strides_, this->size_);
+        this->data_ = get_allocator().allocate(this->size_);
+        for (size_t i = 0; i < this->size_; ++i)
         {
-            data_[i] = val;
+            this->data_[i] = val;
         }
     }
 
@@ -589,7 +589,7 @@ private:
                 size_t offset = get_offset<N,zero_based>(strides_,indices);
                 if (offset < size())
                 {
-                    data_[offset] = item.value();
+                    this->data_[offset] = item.value();
                 }
             }
             ++i;
@@ -660,16 +660,16 @@ public:
                typename std::enable_if<m <= N>::type* = 0)
         : ndarray_ref<T, M, Order, Base>()
     {
-        dim_ = dim;
+        this->dim_ = dim;
         size_t offset = get_offset<N, Base>(a.strides(),indices);
 
-        data_ = a.data() + offset;
-        size_ = a.size() - offset;
+        this->data_ = a.data() + offset;
+        this->size_ = a.size() - offset;
 
         size_t diff = N - M;
         for (size_t i = 0; i < M; ++i)
         {
-            strides_[i] = a.strides()[i];
+            this->strides_[i] = a.strides()[i];
         }
     }
 
