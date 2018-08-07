@@ -168,214 +168,49 @@ struct array_item
     }
 };
 
-template <class Allocator>
-class ndarray_base
+// ndarray_ref
+
+template <typename T, size_t N, typename Order, typename Base>
+class ndarray_ref
 {
-    Allocator allocator_;
 public:
-    typedef Allocator allocator_type;
+    typedef T* iterator;
+    typedef const T* const_iterator;
 
-    allocator_type get_allocator() const
-    {
-        return allocator_;
-    }
 protected:
-    ndarray_base(const Allocator& allocator)
-        : allocator_(allocator)
-    {
-    }
-};
-
-template<size_t Pos>
-struct init_helper
-{
-    using next = init_helper<Pos - 1>;
-
-    template <typename Array, typename... Args>
-    static void init(std::array<size_t,Array::dimension>& dim, Array& a, size_t n, Args... args)
-    {
-        dim[Array::dimension - Pos] = n;
-        next::init(dim, a, args...);
-    }
-};
-
-template<>
-struct init_helper<0>
-{
-    template <typename Array>
-    static void init(std::array<size_t, Array::dimension>& dim, Array& a)
-    {
-        a.init();
-    }
-    template <typename Array>
-    static void init(std::array<size_t, Array::dimension>& dim, Array& a, typename Array::const_reference val)
-    {
-        a.init(val);
-    }
-};
-
-template <typename T, size_t N, typename Order, typename Base, typename Allocator>
-class ndarray : public ndarray_base<Allocator>
-{
-    friend struct init_helper<0>;
-
     T* data_;
     size_t size_;
     std::array<size_t,N> dim_;
     std::array<size_t,N> strides_;
+
+    ndarray_ref()
+        : data_(nullptr), size_(0)
+    {
+    }
+
+    ndarray_ref(T* data, size_t size, const std::array<size_t,N>& dim, const std::array<size_t,N>& strides)
+        : data_(data), size_(size), dim_(dim), strides_(strides)
+    {
+    }
+
+    ndarray_ref(T* data, size_t size, std::array<size_t,N>&& dim, std::array<size_t,N>&& strides)
+        : data_(data), size_(size), dim_(std::move(dim)), strides_(std::move(strides))
+    {
+    }
+
+    ndarray_ref(T* data, const std::array<size_t,N>& dim)
+        : data_(data), dim_(dim)
+    {
+        Order::calculate_strides(dim_, strides_, size_);
+    }
+
+    ndarray_ref(T* data, std::array<size_t,N>&& dim)
+        : data_(data), dim_(std::move(dim))
+    {
+        Order::calculate_strides(dim_, strides_, size_);
+    }
+
 public:
-    using typename ndarray_base<Allocator>::allocator_type;
-    using ndarray_base<Allocator>::get_allocator;
-
-    typedef T value_type;
-    typedef const T& const_reference;
-    static const size_t dimension = N;
-
-    typedef T* iterator;
-    typedef const T* const_iterator;
-
-    ndarray()
-        : ndarray_base<Allocator>(allocator_type()),
-          data_(nullptr), size_(0)
-    {
-    }
-
-    ndarray(const ndarray& a)
-        : ndarray_base<Allocator>(a.get_allocator()), dim_(a.dim_), strides_(a.strides_)
-    {
-        data_ = get_allocator().allocate(a.size());
-        size_ = a.size();
-
-        for (size_t i = 0; i < size_; ++i)
-        {
-            data_[i] = a.data_[i];
-        }
-    }
-
-    ndarray(const ndarray_view<T,N,Order,Base>& a)
-        : ndarray_base<Allocator>(allocator_type()), dim_(a.dim_), strides_(a.strides_)
-    {
-        data_ = get_allocator().allocate(a.size());
-        size_ = a.size();
-
-        for (size_t i = 0; i < size_; ++i)
-        {
-            data_[i] = a.data_[i];
-        }
-    }
-
-    ndarray(const ndarray_view<T,N,Order,Base>& a, const Allocator& allocator)
-        : ndarray_base<Allocator>(allocator), dim_(a.dim_), strides_(a.strides_)
-    {
-        data_ = get_allocator().allocate(a.size());
-        size_ = a.size();
-
-        for (size_t i = 0; i < size_; ++i)
-        {
-            data_[i] = a.data_[i];
-        }
-    }
-
-    ndarray(ndarray&& a)
-        : ndarray_base<Allocator>(a.get_allocator()), 
-          dim_(std::move(a.dim_)), strides_(std::move(a.strides_)) 
-    {
-        data_ = a.data_;
-        size_ = a.size_;
-        a.data_ = nullptr;
-        a.size_ = 0;
-    }
-
-    template <typename... Args>
-    ndarray(size_t k, Args... args)
-        : ndarray_base<Allocator>(allocator_type()) 
-    {
-        init_helper<N>::init(dim_, *this, k, args ...);
-    }
-
-    ndarray(const std::array<size_t,N>& dim)
-        : ndarray_base<Allocator>(allocator_type()), 
-          dim_(dim)
-    {
-        init();
-    }
-
-    ndarray(const std::array<size_t,N>& dim, const Allocator& allocator)
-        : ndarray_base<Allocator>(allocator), 
-          dim_(dim)
-    {
-        init();
-    }
-
-    ndarray(const std::array<size_t,N>& dim, T val)
-        : ndarray_base<Allocator>(allocator_type()), 
-          dim_(dim)
-    {
-        init(val);
-    }
-
-    ndarray(const std::array<size_t,N>& dim, T val, const Allocator& allocator)
-        : ndarray_base<Allocator>(allocator), 
-          dim_(dim)
-    {
-        init(val);
-    }
-
-    ndarray(std::array<size_t,N>&& dim)
-        : ndarray_base<Allocator>(allocator_type()), 
-          dim_(std::move(dim))
-    {
-        init();
-    }
-
-    ndarray(std::array<size_t,N>&& dim, const Allocator& allocator)
-        : ndarray_base<Allocator>(allocator), 
-          dim_(std::move(dim))
-    {
-        init();
-    }
-
-    ndarray(std::array<size_t,N>&& dim, T val)
-        : ndarray_base<Allocator>(allocator_type()), 
-          dim_(std::move(dim))
-    {
-        init(val);
-    }
-
-    ndarray(std::array<size_t,N>&& dim, T val, const Allocator& allocator)
-        : ndarray_base<Allocator>(allocator), 
-          dim_(std::move(dim))
-    {
-        init(val);
-    }
-
-    ndarray(std::initializer_list<array_item<T>> list) 
-        : ndarray_base<Allocator>(allocator_type())
-    {
-        dim_from_initializer_list(list, 0);
-
-        // Initialize multipliers and size
-        init();
-        std::array<size_t,N> indices;
-        data_from_initializer_list(list,indices,0);
-    }
-
-    ndarray(std::initializer_list<array_item<T>> list, const Allocator& allocator) 
-        : ndarray_base<Allocator>(allocator)
-    {
-        dim_from_initializer_list(list, 0);
-
-        // Initialize multipliers and size
-        init();
-        std::array<size_t,N> indices;
-        data_from_initializer_list(list,indices,0);
-    }
-
-    ~ndarray()
-    {
-        get_allocator().deallocate(data_,size_);
-    }
-
     size_t size() const
     {
         return size_;
@@ -398,13 +233,6 @@ public:
     {
         assert(i < dim_.size());
         return dim_[i];
-    }
-
-    T& operator()(const std::array<size_t,N>& indices)
-    {
-        size_t off = get_offset<N, Base>(strides_,indices);
-        assert(off < size());
-        return data_[off];
     }
 
     template <size_t n=N, typename... Indices>
@@ -459,6 +287,241 @@ public:
         size_t off = get_offset<n, Base, 0>(strides_,indices...);
         assert(off < size());
         return &data_[off] + dim_[n];
+    }
+};
+
+
+// ndarray_base
+
+template <class Allocator>
+class ndarray_base
+{
+    Allocator allocator_;
+public:
+    typedef Allocator allocator_type;
+
+    allocator_type get_allocator() const
+    {
+        return allocator_;
+    }
+protected:
+    ndarray_base(const Allocator& allocator)
+        : allocator_(allocator)
+    {
+    }
+};
+
+template<size_t Pos>
+struct init_helper
+{
+    using next = init_helper<Pos - 1>;
+
+    template <typename Array, typename... Args>
+    static void init(std::array<size_t,Array::dimension>& dim, Array& a, size_t n, Args... args)
+    {
+        dim[Array::dimension - Pos] = n;
+        next::init(dim, a, args...);
+    }
+};
+
+template<>
+struct init_helper<0>
+{
+    template <typename Array>
+    static void init(std::array<size_t, Array::dimension>& dim, Array& a)
+    {
+        a.init();
+    }
+    template <typename Array>
+    static void init(std::array<size_t, Array::dimension>& dim, Array& a, typename Array::const_reference val)
+    {
+        a.init(val);
+    }
+};
+
+template <typename T, size_t N, typename Order, typename Base, typename Allocator>
+class ndarray : public ndarray_base<Allocator>, public ndarray_ref<T, N, Order, Base>
+{
+    friend struct init_helper<0>;
+
+public:
+    using typename ndarray_base<Allocator>::allocator_type;
+    using ndarray_base<Allocator>::get_allocator;
+
+    typedef T value_type;
+    typedef const T& const_reference;
+    static const size_t dimension = N;
+
+    typedef T* iterator;
+    typedef const T* const_iterator;
+
+    ndarray()
+        : ndarray_base<Allocator>(allocator_type()),
+          ndarray_ref<T, N, Order, Base>()
+    {
+    }
+
+    ndarray(const ndarray& a)
+        : ndarray_base<Allocator>(a.get_allocator()), 
+          ndarry_ref(nullptr, 0, a.dim_, a.strides_)
+    {
+        size_ = a.size();
+        data_ = get_allocator().allocate(a.size());
+
+        for (size_t i = 0; i < size_; ++i)
+        {
+            data_[i] = a.data_[i];
+        }
+    }
+
+    ndarray(const ndarray& a, const Allocator& allocator)
+        : ndarray_base<Allocator>(allocator), 
+          ndarry_ref(nullptr, 0, a.dim_, a.strides_)
+    {
+        size_ = a.size();
+        data_ = get_allocator().allocate(a.size());
+
+        for (size_t i = 0; i < size_; ++i)
+        {
+            data_[i] = a.data_[i];
+        }
+    }
+
+    ndarray(const ndarray_view<T,N,Order,Base>& a)
+        : ndarray_base<Allocator>(allocator_type()), 
+          ndarry_ref(nullptr, 0, a.dim_, a.strides_)
+    {
+        size_ = a.size();
+        data_ = get_allocator().allocate(a.size());
+
+        for (size_t i = 0; i < size_; ++i)
+        {
+            data_[i] = a.data_[i];
+        }
+    }
+
+    ndarray(const ndarray_view<T,N,Order,Base>& a, const Allocator& allocator)
+        : ndarray_base<Allocator>(allocator), 
+          ndarry_ref(nullptr, 0, a.dim_, a.strides_)
+    {
+        size_ = a.size();
+        data_ = get_allocator().allocate(a.size());
+
+        for (size_t i = 0; i < size_; ++i)
+        {
+            data_[i] = a.data_[i];
+        }
+    }
+
+    ndarray(ndarray&& a)
+        : ndarray_base<Allocator>(a.get_allocator()), 
+          ndarry_ref(a.data_, a.size_, std::move(a.dim_), std::move(a.strides_))
+    {
+        a.data_ = nullptr;
+        a.size_ = 0;
+    }
+
+    template <typename... Args>
+    ndarray(size_t k, Args... args)
+        : ndarray_base<Allocator>(allocator_type()) 
+    {
+        init_helper<N>::init(dim_, *this, k, args ...);
+    }
+
+    ndarray(const std::array<size_t,N>& dim)
+        : ndarray_base<Allocator>(allocator_type()), 
+          ndarry_ref(nullptr, dim)
+    {
+        data_ = get_allocator().allocate(size_);
+    }
+
+    ndarray(const std::array<size_t,N>& dim, const Allocator& allocator)
+        : ndarray_base<Allocator>(allocator), 
+          ndarry_ref(nullptr, dim)
+    {
+        data_ = get_allocator().allocate(size_);
+    }
+
+    ndarray(const std::array<size_t,N>& dim, T val)
+        : ndarray_base<Allocator>(allocator_type()), 
+          ndarry_ref(nullptr, dim)
+    {
+        data_ = get_allocator().allocate(size_);
+        for (size_t i = 0; i < size_; ++i)
+        {
+            data_[i] = val;
+        }
+    }
+
+    ndarray(const std::array<size_t,N>& dim, T val, const Allocator& allocator)
+        : ndarray_base<Allocator>(allocator), 
+          ndarry_ref(nullptr, dim)
+    {
+        data_ = get_allocator().allocate(size_);
+        for (size_t i = 0; i < size_; ++i)
+        {
+            data_[i] = val;
+        }
+    }
+
+    ndarray(std::array<size_t,N>&& dim)
+        : ndarray_base<Allocator>(allocator_type()), 
+          ndarry_ref(nullptr, std::forward<std::array<size_t,N>>(dim))
+    {
+        data_ = get_allocator().allocate(size_);
+    }
+
+    ndarray(std::array<size_t,N>&& dim, const Allocator& allocator)
+        : ndarray_base<Allocator>(allocator), 
+          ndarry_ref(nullptr, std::forward<std::array<size_t,N>>(dim))
+    {
+        data_ = get_allocator().allocate(size_);
+    }
+
+    ndarray(std::array<size_t,N>&& dim, T val)
+        : ndarray_base<Allocator>(allocator_type()), 
+          ndarry_ref(nullptr, std::forward<std::array<size_t,N>>(dim))
+    {
+        data_ = get_allocator().allocate(size_);
+        for (size_t i = 0; i < size_; ++i)
+        {
+            data_[i] = val;
+        }
+    }
+
+    ndarray(std::array<size_t,N>&& dim, T val, const Allocator& allocator)
+        : ndarray_base<Allocator>(allocator), 
+          ndarry_ref(nullptr, std::forward<std::array<size_t,N>>(dim))
+    {
+        data_ = get_allocator().allocate(size_);
+    }
+
+    ndarray(std::initializer_list<array_item<T>> list) 
+        : ndarray_base<Allocator>(allocator_type())
+    {
+        dim_from_initializer_list(list, 0);
+
+        Order::calculate_strides(dim_, strides_, size_);
+        data_ = get_allocator().allocate(size_);
+        std::array<size_t,N> indices;
+        data_from_initializer_list(list,indices,0);
+    }
+
+    ndarray(std::initializer_list<array_item<T>> list, const Allocator& allocator) 
+        : ndarray_base<Allocator>(allocator)
+    {
+        dim_from_initializer_list(list, 0);
+
+        // Initialize multipliers and size
+        Order::calculate_strides(dim_, strides_, size_);
+        data_ = get_allocator().allocate(size_);
+        std::array<size_t,N> indices;
+        data_from_initializer_list(list,indices,0);
+    }
+
+    ~ndarray()
+    {
+        get_allocator().deallocate(data_,size_);
     }
 
     ndarray& operator=(const ndarray&) = default;
@@ -580,27 +643,24 @@ std::basic_ostream<CharT>& operator <<(std::basic_ostream<CharT>& os, ndarray<T,
 }
 
 template <typename T, size_t M, typename Order, typename Base>
-class ndarray_view  
+class ndarray_view : public ndarray_ref<T, M, Order, Base> 
 {
-    T* data_;
-    size_t size_;
-    std::array<size_t,M> dim_;
-    std::array<size_t,M> strides_;
 public:
     typedef T* iterator;
     typedef const T* const_iterator;
 
     template <typename Allocator>
     ndarray_view(ndarray<T, M, Order, Base, Allocator>& a)
-        : data_(a.data()), dim_(a.dimensions(), strides_(a.strides()))
+        : ndarray_ref<T, M, Order, Base>(a.data(), a.size(), a.dimensions(), a.strides())
     {
     }
 
     template<size_t m = M, size_t N, typename Allocator>
     ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, const std::array<size_t,N>& indices, const std::array<size_t,M>& dim, 
                typename std::enable_if<m <= N>::type* = 0)
-        : dim_(dim)
+        : ndarray_ref<T, M, Order, Base>()
     {
+        dim_ = dim;
         size_t offset = get_offset<N, Base>(a.strides(),indices);
 
         data_ = a.data() + offset;
@@ -614,88 +674,13 @@ public:
     }
 
     ndarray_view(T* data, const std::array<size_t,M>& dim) 
-        : dim_(dim)
+        : ndarray_ref<T, M, Order, Base>(data, dim)
     {
-        data_ = data;
-        Order::calculate_strides(dim_,strides_,size_);
     }
 
-    size_t size() const
+    ndarray_view(T* data, std::array<size_t,M>&& dim) 
+        : ndarray_ref<T, M, Order, Base>(data, std::forward<std::array<size_t,M>>(dim))
     {
-        return size_;
-    }
-
-    const std::array<size_t,M>& dimensions() const {return dim_;}
-    const std::array<size_t,M>& strides() const {return strides_;}
-
-    T* data()
-    {
-        return data_;
-    }
-
-    const T* data() const 
-    {
-        return data_;
-    }
-
-    size_t size(size_t i) const
-    {
-        assert(i < dim_.size());
-        return dim_[i];
-    }
-
-    template <size_t n=M, typename... Indices>
-    typename std::enable_if<(n == M),T&>::type 
-    operator()(Indices... indices) 
-    {
-        size_t off = get_offset<n, Base, 0>(strides_,indices...);
-        assert(off < size());
-        return data_[off];
-    }
-
-    template <size_t n=M, typename... Indices>
-    typename std::enable_if<(n == M),const T&>::type 
-    operator()(Indices... indices) const
-    {
-        size_t off = get_offset<n, Base, 0>(strides_,indices...);
-        assert(off < size());
-        return data_[off];
-    }
-
-    template <size_t n=M-1, typename... Indices>
-    typename std::enable_if<(n == M-1),iterator>::type 
-    begin(Indices... indices) 
-    {
-        size_t off = get_offset<n, Base, 0>(strides_,indices...);
-        assert(off < size());
-        return &data_[off];
-    }
-
-    template <size_t n=M-1, typename... Indices>
-    typename std::enable_if<(n == M-1),iterator>::type 
-    end(Indices... indices) 
-    {
-        size_t off = get_offset<n, Base, 0>(strides_,indices...);
-        assert(off < size());
-        return &data_[off] + dim_[n];
-    }
-
-    template <size_t n=M-1, typename... Indices>
-    typename std::enable_if<(n == M-1),const_iterator>::type 
-    begin(Indices... indices) const
-    {
-        size_t off = get_offset<n, Base, 0>(strides_,indices...);
-        assert(off < size());
-        return &data_[off];
-    }
-
-    template <size_t n=M-1, typename... Indices>
-    typename std::enable_if<(n == M-1),const_iterator>::type 
-    end(Indices... indices) const
-    {
-        size_t off = get_offset<n, Base, 0>(strides_,indices...);
-        assert(off < size());
-        return &data_[off] + dim_[n];
     }
 };
 
