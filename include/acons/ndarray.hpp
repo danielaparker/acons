@@ -211,7 +211,7 @@ protected:
     }
 
 public:
-    size_t size() const
+    size_t size() const noexcept
     {
         return size_;
     }
@@ -363,7 +363,7 @@ public:
 
     ndarray(const ndarray& a)
         : ndarray_base<Allocator>(a.get_allocator()), 
-          ndarry_ref(nullptr, 0, a.dim_, a.strides_)
+          ndarray_ref<T, N, Order, Base>(nullptr, 0, a.dim_, a.strides_)
     {
         size_ = a.size();
         data_ = get_allocator().allocate(a.size());
@@ -376,7 +376,7 @@ public:
 
     ndarray(const ndarray& a, const Allocator& allocator)
         : ndarray_base<Allocator>(allocator), 
-          ndarry_ref(nullptr, 0, a.dim_, a.strides_)
+          ndarray_ref<T, N, Order, Base>(nullptr, 0, a.dim_, a.strides_)
     {
         size_ = a.size();
         data_ = get_allocator().allocate(a.size());
@@ -389,7 +389,7 @@ public:
 
     ndarray(const ndarray_view<T,N,Order,Base>& a)
         : ndarray_base<Allocator>(allocator_type()), 
-          ndarry_ref(nullptr, 0, a.dim_, a.strides_)
+          ndarray_ref<T, N, Order, Base>(nullptr, 0, a.dim_, a.strides_)
     {
         size_ = a.size();
         data_ = get_allocator().allocate(a.size());
@@ -402,7 +402,7 @@ public:
 
     ndarray(const ndarray_view<T,N,Order,Base>& a, const Allocator& allocator)
         : ndarray_base<Allocator>(allocator), 
-          ndarry_ref(nullptr, 0, a.dim_, a.strides_)
+          ndarray_ref<T, N, Order, Base>(nullptr, 0, a.dim_, a.strides_)
     {
         size_ = a.size();
         data_ = get_allocator().allocate(a.size());
@@ -415,7 +415,7 @@ public:
 
     ndarray(ndarray&& a)
         : ndarray_base<Allocator>(a.get_allocator()), 
-          ndarry_ref(a.data_, a.size_, std::move(a.dim_), std::move(a.strides_))
+          ndarray_ref<T, N, Order, Base>(a.data_, a.size_, std::move(a.dim_), std::move(a.strides_))
     {
         a.data_ = nullptr;
         a.size_ = 0;
@@ -430,21 +430,21 @@ public:
 
     ndarray(const std::array<size_t,N>& dim)
         : ndarray_base<Allocator>(allocator_type()), 
-          ndarry_ref(nullptr, dim)
+          ndarray_ref<T, N, Order, Base>(nullptr, dim)
     {
         data_ = get_allocator().allocate(size_);
     }
 
     ndarray(const std::array<size_t,N>& dim, const Allocator& allocator)
         : ndarray_base<Allocator>(allocator), 
-          ndarry_ref(nullptr, dim)
+          ndarray_ref<T, N, Order, Base>(nullptr, dim)
     {
         data_ = get_allocator().allocate(size_);
     }
 
     ndarray(const std::array<size_t,N>& dim, T val)
         : ndarray_base<Allocator>(allocator_type()), 
-          ndarry_ref(nullptr, dim)
+          ndarray_ref<T, N, Order, Base>(nullptr, dim)
     {
         data_ = get_allocator().allocate(size_);
         for (size_t i = 0; i < size_; ++i)
@@ -455,7 +455,7 @@ public:
 
     ndarray(const std::array<size_t,N>& dim, T val, const Allocator& allocator)
         : ndarray_base<Allocator>(allocator), 
-          ndarry_ref(nullptr, dim)
+          ndarray_ref<T, N, Order, Base>(nullptr, dim)
     {
         data_ = get_allocator().allocate(size_);
         for (size_t i = 0; i < size_; ++i)
@@ -466,21 +466,21 @@ public:
 
     ndarray(std::array<size_t,N>&& dim)
         : ndarray_base<Allocator>(allocator_type()), 
-          ndarry_ref(nullptr, std::forward<std::array<size_t,N>>(dim))
+          ndarray_ref<T, N, Order, Base>(nullptr, std::forward<std::array<size_t,N>>(dim))
     {
         data_ = get_allocator().allocate(size_);
     }
 
     ndarray(std::array<size_t,N>&& dim, const Allocator& allocator)
         : ndarray_base<Allocator>(allocator), 
-          ndarry_ref(nullptr, std::forward<std::array<size_t,N>>(dim))
+          ndarray_ref<T, N, Order, Base>(nullptr, std::forward<std::array<size_t,N>>(dim))
     {
         data_ = get_allocator().allocate(size_);
     }
 
     ndarray(std::array<size_t,N>&& dim, T val)
         : ndarray_base<Allocator>(allocator_type()), 
-          ndarry_ref(nullptr, std::forward<std::array<size_t,N>>(dim))
+          ndarray_ref<T, N, Order, Base>(nullptr, std::forward<std::array<size_t,N>>(dim))
     {
         data_ = get_allocator().allocate(size_);
         for (size_t i = 0; i < size_; ++i)
@@ -491,7 +491,7 @@ public:
 
     ndarray(std::array<size_t,N>&& dim, T val, const Allocator& allocator)
         : ndarray_base<Allocator>(allocator), 
-          ndarry_ref(nullptr, std::forward<std::array<size_t,N>>(dim))
+          ndarray_ref<T, N, Order, Base>(nullptr, std::forward<std::array<size_t,N>>(dim))
     {
         data_ = get_allocator().allocate(size_);
     }
