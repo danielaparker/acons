@@ -586,7 +586,7 @@ private:
             }
             else 
             {
-                size_t offset = get_offset<N,zero_based>(strides_,indices);
+                size_t offset = get_offset<N,zero_based>(this->strides_,indices);
                 if (offset < size())
                 {
                     this->data_[offset] = item.value();
