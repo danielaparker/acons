@@ -60,6 +60,9 @@ struct column_major
 template <typename T, size_t N, typename Order=row_major, typename Base=zero_based, typename Allocator=std::allocator<T>>
 class ndarray;
 
+template <typename T, size_t M, typename Order=row_major, typename Base=zero_based>
+class ndarray_view;  
+
 template <size_t n, typename Base, size_t m>
 typename std::enable_if<m == n, size_t>::type
     get_offset(const std::array<size_t,n>& strides) 
@@ -239,6 +242,30 @@ public:
 
     ndarray(const ndarray& a)
         : ndarray_base<Allocator>(a.get_allocator()), dim_(a.dim_), strides_(a.strides_)
+    {
+        data_ = get_allocator().allocate(a.size());
+        size_ = a.size();
+
+        for (size_t i = 0; i < size_; ++i)
+        {
+            data_[i] = a.data_[i];
+        }
+    }
+
+    ndarray(const ndarray_view<T,N,Order,Base>& a)
+        : ndarray_base<Allocator>(allocator_type()), dim_(a.dim_), strides_(a.strides_)
+    {
+        data_ = get_allocator().allocate(a.size());
+        size_ = a.size();
+
+        for (size_t i = 0; i < size_; ++i)
+        {
+            data_[i] = a.data_[i];
+        }
+    }
+
+    ndarray(const ndarray_view<T,N,Order,Base>& a, const Allocator& allocator)
+        : ndarray_base<Allocator>(allocator), dim_(a.dim_), strides_(a.strides_)
     {
         data_ = get_allocator().allocate(a.size());
         size_ = a.size();
@@ -552,7 +579,7 @@ std::basic_ostream<CharT>& operator <<(std::basic_ostream<CharT>& os, ndarray<T,
     return os;
 }
 
-template <typename T, size_t M, typename Order=row_major, typename Base=zero_based>
+template <typename T, size_t M, typename Order, typename Base>
 class ndarray_view  
 {
     T* data_;
@@ -562,6 +589,12 @@ class ndarray_view
 public:
     typedef T* iterator;
     typedef const T* const_iterator;
+
+    template <typename Allocator>
+    ndarray_view(ndarray<T, M, Order, Base, Allocator>& a)
+        : data_(a.data()), dim_(a.dimensions(), strides_(a.strides()))
+    {
+    }
 
     template<size_t m = M, size_t N, typename Allocator>
     ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, const std::array<size_t,N>& indices, const std::array<size_t,M>& dim, 
