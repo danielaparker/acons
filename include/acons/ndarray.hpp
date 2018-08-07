@@ -347,6 +347,7 @@ class ndarray : public ndarray_base<Allocator>, public ndarray_ref<T, N, Order, 
 public:
     using typename ndarray_base<Allocator>::allocator_type;
     using ndarray_base<Allocator>::get_allocator;
+    using ndarray_ref<T, N, Order, Base>::size;
 
     typedef T value_type;
     typedef const T& const_reference;
