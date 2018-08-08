@@ -101,18 +101,7 @@ struct row_major
                         const T* data2, const std::array<size_t,N>& strides2, 
                         std::array<size_t,N>& indices, size_t index)
     {
-        if (index + 1 < N)
-        {
-            for (size_t i = 0; i < dim[index]; ++i)
-            {
-                indices[index] = i;
-                if (!compare(dim,data1,strides1,data2,strides2,indices,index+1))
-                {
-                    return false;
-                }
-            }
-        }
-        else if (index + 1 == N)
+        if (index + 1 == N)
         {
             indices[index] = 0;
             size_t offset1 = get_offset<N,zero_based>(strides1,indices);
@@ -128,7 +117,17 @@ struct row_major
                 }
             }
         }
-        return true;
+        else
+        {
+            for (size_t i = 0; i < dim[index]; ++i)
+            {
+                indices[index] = i;
+                if (!compare(dim,data1,strides1,data2,strides2,indices,index+1))
+                {
+                    return false;
+                }
+            }
+        }
     }
 };
 
@@ -167,18 +166,7 @@ struct column_major
                         const T* data2, const std::array<size_t,N>& strides2, 
                         std::array<size_t,N>& indices, size_t index)
     {
-        if (index > 0)
-        {
-            for (size_t i = 0; i < dim[index]; ++i)
-            {
-                indices[index] = i;
-                if (!compare(dim,data1,strides1,data2,strides2,indices,index-1))
-                {
-                    return false;
-                }
-            }
-        }
-        else if (index == 0)
+        if (index == 0)
         {
             for (size_t i = 0; i < dim[index]; ++i)
             {
@@ -195,6 +183,15 @@ struct column_major
                         return false;
                     }
                 }
+            }
+            return true;
+        }
+        for (size_t i = 0; i < dim[index]; ++i)
+        {
+            indices[index] = i;
+            if (!compare(dim,data1,strides1,data2,strides2,indices,index-1))
+            {
+                return false;
             }
         }
         return true;
