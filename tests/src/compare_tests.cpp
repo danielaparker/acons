@@ -6,37 +6,11 @@ using namespace acons;
 
 TEST_CASE("compare 2 x 2 row major ndarray")
 {
-    std::cout << "row major \n\n";
-
     ndarray<double,2,row_major> a = {{0,1},{2,3}};
     ndarray<double,2,row_major> b = {{0,1},{2,4}};
 
     ndarray_view<double,2,row_major> v(a);
     ndarray_view<double,2,row_major> w(b);
-
-    std::cout << a << std::endl;
-
-    std::cout << "dimensions\n";
-    for (size_t i = 0; i < 2; ++i)
-    {
-        if (i > 0)
-        {
-            std::cout << ",";
-        }
-        std::cout << a.dimensions()[i];
-    }
-    std::cout << "\n\n";
-
-    std::cout << "strides\n";
-    for (size_t i = 0; i < 2; ++i)
-    {
-        if (i > 0)
-        {
-            std::cout << ",";
-        }
-        std::cout << a.strides()[i];
-    }
-    std::cout << "\n\n";
 
     bool test1 = v == w;
 
@@ -45,41 +19,61 @@ TEST_CASE("compare 2 x 2 row major ndarray")
 
 TEST_CASE("compare 2 x 2 column major ndarray")
 {
-    std::cout << "column major \n\n";
-
     ndarray<double,2,column_major> a = {{0,1},{2,3}};
     ndarray<double,2,column_major> b = {{0,1},{2,4}};
 
     ndarray_view<double,2,column_major> v(a);
     ndarray_view<double,2,column_major> w(b);
 
-    std::cout << a << std::endl;
-
-    std::cout << "dimensions\n";
-    for (size_t i = 0; i < 2; ++i)
-    {
-        if (i > 0)
-        {
-            std::cout << ",";
-        }
-        std::cout << a.dimensions()[i];
-    }
-    std::cout << "\n\n";
-
-    std::cout << "strides\n";
-    for (size_t i = 0; i < 2; ++i)
-    {
-        if (i > 0)
-        {
-            std::cout << ",";
-        }
-        std::cout << a.strides()[i];
-    }
-    std::cout << "\n\n";
-
     bool test1 = v == w;
 
     CHECK(!test1);
+}
+
+TEST_CASE("compare 2 x 3 x 4 row major ndarray")
+{
+    ndarray<double,3,row_major> a(2, 3, 4, 1.0);
+    ndarray<double,3,row_major> b(a);
+    const ndarray<double,3,row_major> c(a);
+    ndarray_view<double,3,row_major> v(a);
+    ndarray_view<double,3,row_major> w(b);
+
+    bool test1 = c == b;
+    bool test2 = c == v;
+    bool test3 = c == w;
+    CHECK(test1);
+    CHECK(test2);
+    CHECK(test3);
+
+    v(0,0,0) = 2;
+    w(1,2,3) = 2;
+    bool test4 = c == v;
+    bool test5 = c == w;
+    CHECK(!test4);
+    CHECK(!test5);
+}
+
+TEST_CASE("compare 2 x 3 x 4 column major ndarray")
+{
+    ndarray<double,3,column_major> a(2, 3, 4, 1.0);
+    ndarray<double,3,column_major> b(a);
+    const ndarray<double,3,column_major> c(a);
+    ndarray_view<double,3,column_major> v(a);
+    ndarray_view<double,3,column_major> w(b);
+
+    bool test1 = c == b;
+    bool test2 = c == v;
+    bool test3 = c == w;
+    CHECK(test1);
+    CHECK(test2);
+    CHECK(test3);
+
+    v(0,0,0) = 2;
+    w(1,2,3) = 2;
+    bool test4 = c == v;
+    bool test5 = c == w;
+    CHECK(!test4);
+    CHECK(!test5);
 }
 
 TEST_CASE("compare row major ndarray")

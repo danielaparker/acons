@@ -128,6 +128,7 @@ struct row_major
                 }
             }
         }
+        return true;
     }
 };
 
@@ -184,14 +185,16 @@ struct column_major
                     }
                 }
             }
-            return true;
         }
-        for (size_t i = 0; i < dim[index]; ++i)
+        else
         {
-            indices[index] = i;
-            if (!compare(dim,data1,strides1,data2,strides2,indices,index-1))
+            for (size_t i = 0; i < dim[index]; ++i)
             {
-                return false;
+                indices[index] = i;
+                if (!compare(dim,data1,strides1,data2,strides2,indices,index-1))
+                {
+                    return false;
+                }
             }
         }
         return true;
@@ -809,7 +812,8 @@ bool operator!=(const ndarray<T, N, Order, Base, Allocator>& lhs, const ndarray<
 }
 
 template <typename T, size_t M, typename Order, typename Base>
-bool operator==(const ndarray_view<T, M, Order, Base>& lhs, const ndarray_view<T, M, Order, Base>& rhs)
+bool operator==(const ndarray_view<T, M, Order, Base>& lhs, 
+                const ndarray_view<T, M, Order, Base>& rhs)
 {
     if (&lhs == &rhs)
     {
@@ -820,8 +824,38 @@ bool operator==(const ndarray_view<T, M, Order, Base>& lhs, const ndarray_view<T
                           rhs.data(), rhs.dimensions(), lhs.strides());
 }
 
+template <typename T, size_t M, typename Order, typename Base, typename Allocator>
+bool operator==(const ndarray<T, M, Order, Base, Allocator>& lhs, 
+                const ndarray_view<T, M, Order, Base>& rhs)
+{
+    return Order::compare(lhs.data(), lhs.dimensions(), lhs.strides(),
+                          rhs.data(), rhs.dimensions(), lhs.strides());
+}
+
+template <typename T, size_t M, typename Order, typename Base, typename Allocator>
+bool operator==(const ndarray_view<T, M, Order, Base>& lhs, 
+                const ndarray<T, M, Order, Base, Allocator>& rhs)
+{
+    return Order::compare(lhs.data(), lhs.dimensions(), lhs.strides(),
+                          rhs.data(), rhs.dimensions(), lhs.strides());
+}
+
 template <typename T, size_t M, typename Order, typename Base>
 bool operator!=(const ndarray_view<T, M, Order, Base>& lhs, const ndarray_view<T, M, Order, Base>& rhs)
+{
+    return !(lhs == rhs);
+}
+
+template <typename T, size_t M, typename Order, typename Base, typename Allocator>
+bool operator!=(const ndarray<T, M, Order, Base, Allocator>& lhs, 
+                const ndarray_view<T, M, Order, Base>& rhs)
+{
+    return !(lhs == rhs);
+}
+
+template <typename T, size_t M, typename Order, typename Base, typename Allocator>
+bool operator!=(const ndarray_view<T, M, Order, Base>& lhs, 
+                const ndarray<T, M, Order, Base, Allocator>& rhs)
 {
     return !(lhs == rhs);
 }
