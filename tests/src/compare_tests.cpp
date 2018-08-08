@@ -4,6 +4,84 @@
 
 using namespace acons;
 
+TEST_CASE("compare 2 x 2 row major ndarray")
+{
+    std::cout << "row major \n\n";
+
+    ndarray<double,2,row_major> a = {{0,1},{2,3}};
+    ndarray<double,2,row_major> b = {{0,1},{2,4}};
+
+    ndarray_view<double,2,row_major> v(a);
+    ndarray_view<double,2,row_major> w(b);
+
+    std::cout << a << std::endl;
+
+    std::cout << "dimensions\n";
+    for (size_t i = 0; i < 2; ++i)
+    {
+        if (i > 0)
+        {
+            std::cout << ",";
+        }
+        std::cout << a.dimensions()[i];
+    }
+    std::cout << "\n\n";
+
+    std::cout << "strides\n";
+    for (size_t i = 0; i < 2; ++i)
+    {
+        if (i > 0)
+        {
+            std::cout << ",";
+        }
+        std::cout << a.strides()[i];
+    }
+    std::cout << "\n\n";
+
+    bool test1 = v == w;
+
+    CHECK(!test1);
+}
+
+TEST_CASE("compare 2 x 2 column major ndarray")
+{
+    std::cout << "column major \n\n";
+
+    ndarray<double,2,column_major> a = {{0,1},{2,3}};
+    ndarray<double,2,column_major> b = {{0,1},{2,4}};
+
+    ndarray_view<double,2,column_major> v(a);
+    ndarray_view<double,2,column_major> w(b);
+
+    std::cout << a << std::endl;
+
+    std::cout << "dimensions\n";
+    for (size_t i = 0; i < 2; ++i)
+    {
+        if (i > 0)
+        {
+            std::cout << ",";
+        }
+        std::cout << a.dimensions()[i];
+    }
+    std::cout << "\n\n";
+
+    std::cout << "strides\n";
+    for (size_t i = 0; i < 2; ++i)
+    {
+        if (i > 0)
+        {
+            std::cout << ",";
+        }
+        std::cout << a.strides()[i];
+    }
+    std::cout << "\n\n";
+
+    bool test1 = v == w;
+
+    CHECK(!test1);
+}
+
 TEST_CASE("compare row major ndarray")
 {
     ndarray<double,2,row_major> a = {{1.0,2.0,3.0,4.0},{5.0,6.0,7.0,8.0}};

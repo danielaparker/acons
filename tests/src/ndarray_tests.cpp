@@ -56,7 +56,6 @@ TEST_CASE("TestArray2DInitializerList")
 
     CHECK(a.size(0) == 2);
     CHECK(a.size(1) == 4);
-
 }
 
 TEST_CASE("Test Array View 1")

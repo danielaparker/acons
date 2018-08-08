@@ -14,56 +14,6 @@
   
 namespace acons {
 
-struct zero_based
-{
-    static size_t rebase_to_zero(size_t index)
-    {
-        return index;
-    }
-};
-
-struct one_based
-{
-    static size_t rebase_to_zero(size_t index)
-    {
-        return index - 1;
-    }
-};
-
-struct row_major
-{
-    template <size_t N>
-    static void calculate_strides(const std::array<size_t,N>& dim, std::array<size_t,N>& strides, size_t& size)
-    {
-        size = 1;
-        for (size_t i = 0; i < N; ++i)
-        {
-            strides[N-i-1] = size;
-            size *= dim[N-i-1];
-        }
-    }
-};
-
-struct column_major
-{
-    template <size_t N>
-    static void calculate_strides(const std::array<size_t,N>& dim, std::array<size_t,N>& strides, size_t& size)
-    {
-        size = 1;
-        for (size_t i = 0; i < N; ++i)
-        {
-            strides[i] = size;
-            size *= dim[i];
-        }
-    }
-};
-
-template <typename T, size_t N, typename Order=row_major, typename Base=zero_based, typename Allocator=std::allocator<T>>
-class ndarray;
-
-template <typename T, size_t M, typename Order=row_major, typename Base=zero_based>
-class ndarray_view;  
-
 template <size_t n, typename Base, size_t m>
 typename std::enable_if<m == n, size_t>::type
 get_offset(const std::array<size_t,n>& strides) 
@@ -99,6 +49,163 @@ size_t get_offset(const std::array<size_t,N>& strides, const std::array<size_t,N
 
     return offset;
 }
+
+struct zero_based
+{
+    static size_t rebase_to_zero(size_t index)
+    {
+        return index;
+    }
+};
+
+struct one_based
+{
+    static size_t rebase_to_zero(size_t index)
+    {
+        return index - 1;
+    }
+};
+
+struct row_major
+{
+    template <size_t N>
+    static void calculate_strides(const std::array<size_t,N>& dim, std::array<size_t,N>& strides, size_t& size)
+    {
+        size = 1;
+        for (size_t i = 0; i < N; ++i)
+        {
+            strides[N-i-1] = size;
+            size *= dim[N-i-1];
+        }
+    }
+
+    template <typename T, size_t N>
+    static bool compare(const T* data1, const std::array<size_t, N>& dim1, const std::array<size_t, N>& strides1,
+                        const T* data2, const std::array<size_t, N>& dim2, const std::array<size_t, N>& strides2)
+    {
+        for (size_t i = 0; i < N; ++i)
+        {
+            if (dim1[i] != dim2[i])
+            {
+                return false;
+            }
+        }
+        std::array<size_t,N> indices;
+        bool result = compare(dim1, data1, strides1, data2, strides2, indices, 0); 
+        return result;
+    }
+
+    template <typename T, size_t N>
+    static bool compare(const std::array<size_t,N>& dim,
+                        const T* data1, const std::array<size_t,N>& strides1, 
+                        const T* data2, const std::array<size_t,N>& strides2, 
+                        std::array<size_t,N>& indices, size_t index)
+    {
+        if (index + 1 < N)
+        {
+            for (size_t i = 0; i < dim[index]; ++i)
+            {
+                indices[index] = i;
+                if (!compare(dim,data1,strides1,data2,strides2,indices,index+1))
+                {
+                    return false;
+                }
+            }
+        }
+        else if (index + 1 == N)
+        {
+            indices[index] = 0;
+            size_t offset1 = get_offset<N,zero_based>(strides1,indices);
+            size_t offset2 = get_offset<N,zero_based>(strides2,indices);
+            const T* p1 = data1 + offset1;
+            const T* p2 = data2 + offset2;
+            const T* end = p1 + dim[index];
+            while (p1 != end)
+            {
+                if (*p1++ != *p2++)
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+};
+
+struct column_major
+{
+    template <size_t N>
+    static void calculate_strides(const std::array<size_t,N>& dim, std::array<size_t,N>& strides, size_t& size)
+    {
+        size = 1;
+        for (size_t i = 0; i < N; ++i)
+        {
+            strides[i] = size;
+            size *= dim[i];
+        }
+    }
+
+    template <typename T, size_t N>
+    static bool compare(const T* data1, const std::array<size_t, N>& dim1, const std::array<size_t, N>& strides1,
+                        const T* data2, const std::array<size_t, N>& dim2, const std::array<size_t, N>& strides2)
+    {
+        for (size_t i = 0; i < N; ++i)
+        {
+            if (dim1[i] != dim2[i])
+            {
+                return false;
+            }
+        }
+        std::array<size_t,N> indices;
+        bool result = compare(dim1, data1, strides1, data2, strides2, indices, N-1); 
+        return result;
+    }
+
+    template <typename T, size_t N>
+    static bool compare(const std::array<size_t,N>& dim,
+                        const T* data1, const std::array<size_t,N>& strides1, 
+                        const T* data2, const std::array<size_t,N>& strides2, 
+                        std::array<size_t,N>& indices, size_t index)
+    {
+        if (index > 0)
+        {
+            for (size_t i = 0; i < dim[index]; ++i)
+            {
+                indices[index] = i;
+                if (!compare(dim,data1,strides1,data2,strides2,indices,index-1))
+                {
+                    return false;
+                }
+            }
+        }
+        else if (index == 0)
+        {
+            for (size_t i = 0; i < dim[index]; ++i)
+            {
+                indices[index] = 0;
+                size_t offset1 = get_offset<N,zero_based>(strides1,indices);
+                size_t offset2 = get_offset<N,zero_based>(strides2,indices);
+                const T* p1 = data1 + offset1;
+                const T* p2 = data2 + offset2;
+                const T* end = p1 + dim[index];
+                while (p1 != end)
+                {
+                    if (*p1++ != *p2++)
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+};
+
+template <typename T, size_t N, typename Order=row_major, typename Base=zero_based, typename Allocator=std::allocator<T>>
+class ndarray;
+
+template <typename T, size_t M, typename Order=row_major, typename Base=zero_based>
+class ndarray_view;  
 
 // ndarray_ref
 
@@ -711,28 +818,9 @@ bool operator==(const ndarray_view<T, M, Order, Base>& lhs, const ndarray_view<T
     {
         return true;
     }
-    for (size_t i = 0; i < M; ++i)
-    {
-        if (lhs.size(i) != rhs.size(i))
-        {
-            return false;
-        }
-    }
-    for (size_t i = 0; i < M; ++i)
-    {
-        size_t stride1 = lhs.strides()[i];
-        size_t stride2 = rhs.strides()[i];
-        for (size_t j = 0; j < lhs.size(i); ++j)
-        {
-            size_t index1 = j*stride1;
-            size_t index2 = j*stride2;
-            if (lhs.data()[index1] != rhs.data()[index2])
-            {
-                return false;
-            }
-        }
-    }
-    return true;
+
+    return Order::compare(lhs.data(), lhs.dimensions(), lhs.strides(),
+                          rhs.data(), rhs.dimensions(), lhs.strides());
 }
 
 template <typename T, size_t M, typename Order, typename Base>

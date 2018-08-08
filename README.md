@@ -1,2 +1,2 @@
 # acons
-Multidimensional ndarray construction
+N-dimensional ndarray construction
