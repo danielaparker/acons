@@ -661,7 +661,7 @@ private:
 
     void assign_move(ndarray<T,N,Order,Base,Allocator>&& other, std::true_type) noexcept
     {
-        std::swap(this->allocator_,other.get_allocator());
+        std::swap(this->allocator_,other.allocator_);
         std::swap(this->data_,other.data_);
         std::swap(this->size_,other.size_);
         std::swap(this->dim_,other.dim_);
