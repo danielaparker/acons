@@ -1,10 +1,10 @@
-### acons::ndarray_ref
+### acons::ndarray
 
 ```c++
-template <typename T, size_t N, typename Order, typename Base>
-class ndarray_ref
+template <typename T, size_t N, typename Order, typename Base, typename Allocator>
+class ndarray
 ```
-The `ndarray_ref` class provides a common interface for [ndarray](ndarray) and [ndarray_view](ndarray_view).
+The `ndarray` class represents an N-dimensional array.
 
 #### Header
 ```c++
@@ -19,6 +19,7 @@ T||
 N||
 Order||
 Base||
+Allocator||
 
 #### Member types
 
@@ -93,6 +94,8 @@ Exceptions:
     ndarray& operator=(const ndarray& other);
 
     ndarray& operator=(ndarray&& other);
+
+    ndarray& operator=(std::initializer_list<array_item<T>> list);
 
 
 ##### Capacity

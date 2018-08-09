@@ -640,9 +640,28 @@ public:
         return *this;
     }
 
+    ndarray& operator=(std::initializer_list<array_item<T>> list)
+    {
+        get_allocator().deallocate(this->data_,this->size_);
+        dim_from_initializer_list(list, 0);
+
+        Order::calculate_strides(this->dim_, this->strides_, this->size_);
+        this->data_ = get_allocator().allocate(this->size_);
+        std::array<size_t,N> indices;
+        data_from_initializer_list(list,indices,0);
+        return *this;
+    }
+
+    void swap(ndarray<T,N,Order,Base,Allocator>& other) noexcept
+    {
+        swap(other,std::allocator_traits<allocator_type>::propagate_on_container_swap::value );
+    }
+
+private:
+
     void assign_move(ndarray<T,N,Order,Base,Allocator>&& other, std::true_type) noexcept
     {
-        std::swap(allocator_,other.get_allocator());
+        std::swap(this->allocator_,other.get_allocator());
         std::swap(data_,other.data_);
         std::swap(size_,other.size_);
         std::swap(dim_,other.dim_);
@@ -667,7 +686,7 @@ public:
 
     void assign_copy(const ndarray<T,N,Order,Base,Allocator>& other, std::true_type)
     {
-        allocator_ = other.get_allocator();
+        this->allocator_ = other.get_allocator();
         get_allocator().deallocate(this->data_,this->size_);
         this->size_ = other.size();
         this->data_ = get_allocator().allocate(other.size());
@@ -695,14 +714,9 @@ public:
         }
     }
 
-    void swap(ndarray<T,N,Order,Base,Allocator>& other) noexcept
-    {
-        swap(other,std::allocator_traits<allocator_type>::propagate_on_container_swap::value );
-    }
-
     void swap(ndarray<T,N,Order,Base,Allocator>& other, std::true_type) noexcept
     {
-        std::swap(allocator_,other.allocator_);
+        std::swap(this->allocator_,other.allocator_);
         std::swap(data_,other.data_);
         std::swap(size_,other.size_);
         std::swap(dim_,other.dim_);
@@ -713,7 +727,6 @@ public:
     {
     }
 
-private:
     void init()
     {
         Order::calculate_strides(this->dim_, this->strides_, this->size_);

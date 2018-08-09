@@ -280,6 +280,10 @@ TEST_CASE("assignment 1")
     bool test2 = c == a;
     CHECK(test2);
 
-    CHECK(b.size() == 0);
+    CHECK(b.empty());
+
+    b = {{{0,1,2},{3,4,5}}};
+    bool test3 = b == a;
+    CHECK(test3);
 }
 
