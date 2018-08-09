@@ -662,10 +662,10 @@ private:
     void assign_move(ndarray<T,N,Order,Base,Allocator>&& other, std::true_type) noexcept
     {
         std::swap(this->allocator_,other.get_allocator());
-        std::swap(data_,other.data_);
-        std::swap(size_,other.size_);
-        std::swap(dim_,other.dim_);
-        std::swap(strides_,other.strides_);
+        std::swap(this->data_,other.data_);
+        std::swap(this->size_,other.size_);
+        std::swap(this->dim_,other.dim_);
+        std::swap(this->strides_,other.strides_);
     }
 
     void assign_move(ndarray<T,N,Order,Base,Allocator>&& other, std::false_type) noexcept
@@ -717,10 +717,10 @@ private:
     void swap(ndarray<T,N,Order,Base,Allocator>& other, std::true_type) noexcept
     {
         std::swap(this->allocator_,other.allocator_);
-        std::swap(data_,other.data_);
-        std::swap(size_,other.size_);
-        std::swap(dim_,other.dim_);
-        std::swap(strides_,other.strides_);
+        std::swap(this->data_,other.data_);
+        std::swap(this->size_,other.size_);
+        std::swap(this->dim_,other.dim_);
+        std::swap(this->strides_,other.strides_);
     }
 
     void swap(ndarray<T,N,Order,Base,Allocator>& other, std::false_type) noexcept
