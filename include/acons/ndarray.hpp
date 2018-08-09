@@ -11,6 +11,8 @@
 #include <initializer_list>
 #include <functional>
 #include <stdexcept>
+#include <type_traits>
+#include <iterator>
   
 namespace acons {
 
@@ -80,8 +82,8 @@ struct row_major
     }
 
     template <typename T, size_t N>
-    static bool compare(const T* data1, const std::array<size_t, N>& dim1, const std::array<size_t, N>& strides1,
-                        const T* data2, const std::array<size_t, N>& dim2, const std::array<size_t, N>& strides2)
+    static bool compare(const T* data1, const std::array<size_t,N>& dim1, const std::array<size_t,N>& strides1, 
+                        const T* data2, const std::array<size_t,N>& dim2, const std::array<size_t,N>& strides2)
     {
         for (size_t i = 0; i < N; ++i)
         {
@@ -402,6 +404,7 @@ struct array_item
 template <class Allocator>
 class ndarray_base
 {
+protected:
     Allocator allocator_;
 public:
     typedef Allocator allocator_type;
@@ -617,8 +620,98 @@ public:
         get_allocator().deallocate(this->data_,this->size_);
     }
 
-    ndarray& operator=(const ndarray&) = default;
-    ndarray& operator=(ndarray&&) = default;
+    ndarray& operator=(const ndarray<T,N,Order,Base,Allocator>& other)
+    {
+        if (&other != this)
+        {
+            assign_copy(other,
+                   typename std::allocator_traits<Allocator>::propagate_on_container_copy_assignment());
+        }
+        return *this;
+    }
+
+    ndarray& operator=(ndarray<T,N,Order,Base,Allocator>&& other) noexcept
+    {
+        if (&other != this)
+        {
+            assign_move(std::forward<ndarray>(other),
+                   typename std::allocator_traits<Allocator>::propagate_on_container_move_assignment());
+        }
+        return *this;
+    }
+
+    void assign_move(ndarray<T,N,Order,Base,Allocator>&& other, std::true_type) noexcept
+    {
+        std::swap(allocator_,other.get_allocator());
+        std::swap(data_,other.data_);
+        std::swap(size_,other.size_);
+        std::swap(dim_,other.dim_);
+        std::swap(strides_,other.strides_);
+    }
+
+    void assign_move(ndarray<T,N,Order,Base,Allocator>&& other, std::false_type) noexcept
+    {
+        if (this->size() != other.size())
+        {
+            get_allocator().deallocate(this->data_,this->size_);
+            this->size_ = other.size();
+            this->data_ = get_allocator().allocate(other.size());
+        }
+        this->dim_ = other.dimensions();
+        this->strides_ = other.strides();
+        for (size_t i = 0; i < this->size_; ++i)
+        {
+            this->data_[i] = other.data_[i];
+        }
+    }
+
+    void assign_copy(const ndarray<T,N,Order,Base,Allocator>& other, std::true_type)
+    {
+        allocator_ = other.get_allocator();
+        get_allocator().deallocate(this->data_,this->size_);
+        this->size_ = other.size();
+        this->data_ = get_allocator().allocate(other.size());
+        this->dim_ = other.dimensions();
+        this->strides_ = other.strides();
+        for (size_t i = 0; i < this->size_; ++i)
+        {
+            this->data_[i] = other.data_[i];
+        }
+    }
+
+    void assign_copy(const ndarray<T,N,Order,Base,Allocator>& other, std::false_type)
+    {
+        if (this->size() != other.size())
+        {
+            get_allocator().deallocate(this->data_,this->size_);
+            this->size_ = other.size();
+            this->data_ = get_allocator().allocate(other.size());
+        }
+        this->dim_ = other.dimensions();
+        this->strides_ = other.strides();
+        for (size_t i = 0; i < this->size_; ++i)
+        {
+            this->data_[i] = other.data_[i];
+        }
+    }
+
+    void swap(ndarray<T,N,Order,Base,Allocator>& other) noexcept
+    {
+        swap(other,std::allocator_traits<allocator_type>::propagate_on_container_swap::value );
+    }
+
+    void swap(ndarray<T,N,Order,Base,Allocator>& other, std::true_type) noexcept
+    {
+        std::swap(allocator_,other.allocator_);
+        std::swap(data_,other.data_);
+        std::swap(size_,other.size_);
+        std::swap(dim_,other.dim_);
+        std::swap(strides_,other.strides_);
+    }
+
+    void swap(ndarray<T,N,Order,Base,Allocator>& other, std::false_type) noexcept
+    {
+    }
 
 private:
     void init()
@@ -700,7 +793,8 @@ private:
 };
 
 template <typename T, size_t N, typename Order, typename Base, typename CharT>
-void output(std::basic_ostream<CharT>& os, const T* data, const std::array<size_t,N>& strides, const std::array<size_t,N>& dimensions, size_t index, std::array<size_t,N>& indices)
+void output(std::basic_ostream<CharT>& os, const T* data, const std::array<size_t,N>& strides, const std::array<size_t,N>& dimensions,
+            std::array<size_t,N>& indices, size_t index)
 {
     if (index+1 < strides.size())
     {
@@ -713,7 +807,7 @@ void output(std::basic_ostream<CharT>& os, const T* data, const std::array<size_
             }
             indices[index] = i; 
             {
-                output<T,N,Order,Base,CharT>(os,data,strides,dimensions,index+1,indices);
+                output<T,N,Order,Base,CharT>(os,data,strides,dimensions,indices, index + 1);
             }
         }
         os << ']';
@@ -739,10 +833,95 @@ void output(std::basic_ostream<CharT>& os, const T* data, const std::array<size_
 template <typename T, size_t N, typename Order, typename Base, typename Allocator, typename CharT>
 std::basic_ostream<CharT>& operator <<(std::basic_ostream<CharT>& os, ndarray<T, N, Order, Base, Allocator>& a)
 {
-    std::array<size_t, N> indices;
-    output<T,N,Order,Base,CharT>(os, a.data(), a.strides(), a.dimensions(), 0, indices);
+    std::array<size_t,N> indices;
+    output<T,N,Order,Base,CharT>(os, a.data(), a.strides(), a.dimensions(), indices, 0);
     return os;
 }
+
+
+template <typename T, size_t N, typename Order, typename Enable = void>
+class ndarray_view_iterator;
+
+template <typename T, size_t N, typename Order>
+class ndarray_view_iterator<T, N, Order, 
+                            typename std::enable_if<N==1 && std::is_same<Order,row_major>::value>::type>
+{
+T* p_;
+public:
+    typedef ptrdiff_t difference_type;
+    typedef T& reference;
+    typedef T* pointer;
+    typedef std::forward_iterator_tag iterator_category;
+
+    ndarray_view_iterator()
+        : p_(nullptr)
+    {
+    }
+
+    ndarray_view_iterator(T* data)
+        : p_(data)
+    {
+    }
+
+    ndarray_view_iterator(const ndarray_view_iterator<T,N,Order>& val) 
+        : p_(val.p_)
+    {
+    } 
+
+    ndarray_view_iterator<T, N, Order>& operator++()
+    {
+        ++p_;
+        return *this;
+    }
+
+    ndarray_view_iterator<T, N, Order>& operator++(int)
+    {
+        ndarray_view_iterator<T,N,Order> temp(*this);
+        ++p_;
+        return temp;
+    }
+
+    reference operator*() const
+    {
+        return *p_;
+    }
+
+    friend bool operator==(const ndarray_view_iterator<T,N,Order>& it1, const ndarray_view_iterator& it2)
+    {
+        return it1.p_ == it2.p_;
+    }
+
+    friend bool operator!=(const ndarray_view_iterator<T,N,Order>& it1, const ndarray_view_iterator& it2)
+    {
+        return !(it1 == it2);
+    }
+};
+
+template <typename T, size_t N, typename Order>
+class ndarray_view_iterator<T, N, Order, 
+                            typename std::enable_if<N != 1 && std::is_same<Order,row_major>::value>::type>
+{
+T* data_;
+public:
+    ndarray_view_iterator(T* data)
+        : data_(data)
+    {
+    }
+};
+
+template <typename T, size_t N, typename Order>
+class ndarray_view_iterator<T, N, Order, 
+    typename std::enable_if<N == 1 && std::is_same<Order,column_major>::value>::type>
+{
+public:
+};
+
+template <typename T, size_t N, typename Order>
+class ndarray_view_iterator<T, N, Order, 
+    typename std::enable_if<N != 1 && std::is_same<Order,column_major>::value>::type>
+{
+public:
+};
 
 template <typename T, size_t M, typename Order, typename Base>
 class ndarray_view : public ndarray_ref<T, M, Order, Base> 
@@ -858,6 +1037,14 @@ bool operator!=(const ndarray_view<T, M, Order, Base>& lhs,
                 const ndarray<T, M, Order, Base, Allocator>& rhs)
 {
     return !(lhs == rhs);
+}
+
+template <typename T, size_t N, typename Order, typename Base, typename CharT>
+std::basic_ostream<CharT>& operator <<(std::basic_ostream<CharT>& os, ndarray_view<T, N, Order, Base>& a)
+{
+    std::array<size_t,N> indices;
+    output<T,N,Order,Base,CharT>(os, a.data(), a.strides(), a.dimensions(), indices, 0);
+    return os;
 }
 
 }

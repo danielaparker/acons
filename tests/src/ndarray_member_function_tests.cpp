@@ -262,3 +262,24 @@ TEST_CASE("constructor 12")
     CHECK(a.size(1) == 0);
     CHECK(a.size(2) == 0);
 }
+
+// operator==
+
+TEST_CASE("assignment 1")
+{
+    ndarray<double, 3> a = {{{0,1,2},{3,4,5}}};
+    ndarray<double, 3> b;
+
+    b = a;
+
+    bool test1 = b == a;
+    CHECK(test1);
+
+    ndarray<double, 3> c;
+    c = std::move(b);
+    bool test2 = c == a;
+    CHECK(test2);
+
+    CHECK(b.size() == 0);
+}
+

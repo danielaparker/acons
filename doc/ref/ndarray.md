@@ -28,7 +28,7 @@ Member type                         |Definition
 `reference`|T&
 `const_reference`|const T&
 
-#### Constructor
+#### Member functions
 
     ndarray(); // (1)
 
@@ -90,9 +90,19 @@ Exceptions:
 (1) - (8) Calls to `Allocator::allocate` may throw.
 (7) - (8) Throws `std::invalid_argument` if the initializer list contains non-comforming shapes.
 
-#### Capacity
+    ndarray& operator=(const ndarray& other);
 
-#### Accessors
+    ndarray& operator=(ndarray&& other);
+
+
+##### Capacity
+
+##### Accessors
+
+##### Modifiers
+
+    void swap(ndarray<T,N,Order,Base,Allocator>& other) noexcept
+Swaps the contents of the two N-dimensional arrays
 
 #### See also
 

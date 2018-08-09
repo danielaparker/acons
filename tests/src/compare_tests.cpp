@@ -53,6 +53,50 @@ TEST_CASE("compare 2 x 3 x 4 row major ndarray")
     CHECK(!test5);
 }
 
+TEST_CASE("compare 2 x 2 ndarray_view on 2 x 3 row major")
+{
+    ndarray<double,2,row_major> a = {{0,1,2},{3,4,5}};
+    ndarray<double,2,row_major> b = a;
+    ndarray_view<double,2,row_major> v(a, {0, 0}, {2,2});
+    ndarray_view<double,2,row_major> w(b, {0, 0}, {2,2});
+
+    a(0,2) = 6;
+    a(1,2) = 7;
+
+    b(0,2) = 8;
+    b(1,2) = 9;
+
+    bool test = v == w;
+    CHECK(test);
+}
+
+TEST_CASE("compare 2 x 2 ndarray_view on 4 x 4 row major")
+{
+    ndarray<double,2,row_major> a = {{0, 1, 2, 3}, {4, 5, 6, 7}, {8, 9, 10, 11}, {12, 13, 14, 15}};
+    ndarray<double,2,row_major> b = a;
+    ndarray_view<double,2,row_major> v(a, {1, 1}, {2,2});
+    ndarray_view<double,2,row_major> w(b, {1, 1}, {2,2});
+
+    for (size_t j = 0; j < 4; ++j)
+    {
+        a(0,j) = 16;
+        a(3,j) = 16;
+        a(j,0) = 17;
+        a(j,3) = 17;
+    }
+
+    for (size_t j = 0; j < 4; ++j)
+    {
+        b(0,j) = 26;
+        b(3,j) = 26;
+        b(j,0) = 27;
+        b(j,3) = 27;
+    }
+
+    bool test = v == w;
+    CHECK(test);
+}
+
 TEST_CASE("compare 2 x 3 x 4 column major ndarray")
 {
     ndarray<double,3,column_major> a(2, 3, 4, 1.0);
