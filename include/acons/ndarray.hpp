@@ -138,21 +138,11 @@ struct row_major
                 return false;
             }
         }
-        std::array<size_t,N> indices;
-        bool result = compare(dim1, data1, strides1, data2, strides2, indices, 0); 
-        return result;
-    }
 
-    template <typename T, size_t N>
-    static bool compare(const std::array<size_t,N>& dim,
-                        const T* data1, const std::array<size_t,N>& strides1, 
-                        const T* data2, const std::array<size_t,N>& strides2, 
-                        std::array<size_t,N>& indices, size_t index)
-    {
         size_t stack_depth = 1;
-        for (size_t i = 0; i+1 < dim.size(); ++i)
+        for (size_t i = 0; i+1 < dim1.size(); ++i)
         {
-            stack_depth *= dim[i];
+            stack_depth *= dim1[i];
         }
         std::vector<output_item<N>> stack(stack_depth);
 
@@ -164,7 +154,7 @@ struct row_major
 
             if (val.index+1 < N)
             {
-                for (size_t i = dim[val.index]; i-- > 0; )
+                for (size_t i = dim1[val.index]; i-- > 0; )
                 {
                     val.indices[val.index] = i; 
                     stack[count].indices = val.indices;
@@ -179,7 +169,7 @@ struct row_major
                 size_t offset2 = get_offset<N,zero_based>(strides2,val.indices);
                 const T* p1 = data1 + offset1;
                 const T* p2 = data2 + offset2;
-                const T* end = p1 + dim[val.index];
+                const T* end = p1 + dim1[val.index];
                 while (p1 != end)
                 {
                     if (*p1++ != *p2++)
@@ -191,44 +181,6 @@ struct row_major
         }
         return true;
     }
-
-/*
-    template <typename T, size_t N>
-    static bool compare(const std::array<size_t,N>& dim,
-                        const T* data1, const std::array<size_t,N>& strides1, 
-                        const T* data2, const std::array<size_t,N>& strides2, 
-                        std::array<size_t,N>& indices, size_t index)
-    {
-        if (index + 1 == N)
-        {
-            indices[index] = 0;
-            size_t offset1 = get_offset<N,zero_based>(strides1,indices);
-            size_t offset2 = get_offset<N,zero_based>(strides2,indices);
-            const T* p1 = data1 + offset1;
-            const T* p2 = data2 + offset2;
-            const T* end = p1 + dim[index];
-            while (p1 != end)
-            {
-                if (*p1++ != *p2++)
-                {
-                    return false;
-                }
-            }
-        }
-        else
-        {
-            for (size_t i = 0; i < dim[index]; ++i)
-            {
-                indices[index] = i;
-                if (!compare(dim,data1,strides1,data2,strides2,indices,index+1))
-                {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-*/
 };
 
 struct column_major
