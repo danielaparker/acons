@@ -16,6 +16,17 @@
   
 namespace acons {
 
+template <typename T>
+struct is_stateless
+ : public std::integral_constant<bool,  
+      (std::is_default_constructible<T>::value &&
+       std::is_trivially_constructible<T>::value &&
+       std::is_trivially_copyable<T>::value &&
+       std::is_trivially_destructible<T>::value &&
+       std::is_class<T>::value &&
+       std::is_empty<T>::value)>
+{};
+
 template <size_t n, typename Base, size_t m>
 typename std::enable_if<m == n, size_t>::type
 get_offset(const std::array<size_t,n>& strides) 
@@ -654,18 +665,24 @@ public:
 
     void swap(ndarray<T,N,Order,Base,Allocator>& other) noexcept
     {
-        swap(other,std::allocator_traits<allocator_type>::propagate_on_container_swap::value );
+#if defined(_MSC_VER) && _MSC_VER <= 1900
+        swap_allocator(other, is_stateless<Allocator>(), std::true_type());
+#else
+        swap_allocator(other, is_stateless<Allocator>(), 
+                       typename std::allocator_traits<allocator_type>::propagate_on_container_swap>());
+#endif
+        std::swap(this->data_,other.data_);
+        std::swap(this->size_,other.size_);
+        std::swap(this->dim_,other.dim_);
+        std::swap(this->strides_,other.strides_);
+
     }
 
 private:
 
     void assign_move(ndarray<T,N,Order,Base,Allocator>&& other, std::true_type) noexcept
     {
-        std::swap(this->allocator_,other.allocator_);
-        std::swap(this->data_,other.data_);
-        std::swap(this->size_,other.size_);
-        std::swap(this->dim_,other.dim_);
-        std::swap(this->strides_,other.strides_);
+        swap(other);
     }
 
     void assign_move(ndarray<T,N,Order,Base,Allocator>&& other, std::false_type) noexcept
@@ -714,17 +731,25 @@ private:
         }
     }
 
-    void swap(ndarray<T,N,Order,Base,Allocator>& other, std::true_type) noexcept
+    void swap_allocator(ndarray<T,N,Order,Base,Allocator>& other, std::true_type, std::true_type) noexcept
     {
-        std::swap(this->allocator_,other.allocator_);
-        std::swap(this->data_,other.data_);
-        std::swap(this->size_,other.size_);
-        std::swap(this->dim_,other.dim_);
-        std::swap(this->strides_,other.strides_);
+        // allocator is stateless, no need to swap it
     }
 
-    void swap(ndarray<T,N,Order,Base,Allocator>& other, std::false_type) noexcept
+    void swap_allocator(ndarray<T,N,Order,Base,Allocator>& other, std::false_type, std::true_type) noexcept
     {
+        using std::swap;
+        swap(this->allocator_,other.allocator_);
+    }
+
+    void swap_allocator(ndarray<T,N,Order,Base,Allocator>& other, std::true_type, std::false_type) noexcept
+    {
+        // allocator is stateless, no need to swap it
+    }
+
+    void swap_allocator(ndarray<T,N,Order,Base,Allocator>& other, std::false_type, std::false_type) noexcept
+    {
+        // Undefined behavior
     }
 
     void init()
