@@ -669,7 +669,7 @@ public:
         swap_allocator(other, is_stateless<Allocator>(), std::true_type());
 #else
         swap_allocator(other, is_stateless<Allocator>(), 
-                       typename std::allocator_traits<allocator_type>::propagate_on_container_swap>());
+                       typename std::allocator_traits<allocator_type>::propagate_on_container_swap());
 #endif
         std::swap(this->data_,other.data_);
         std::swap(this->size_,other.size_);
