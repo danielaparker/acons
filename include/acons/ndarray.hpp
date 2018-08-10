@@ -862,8 +862,7 @@ struct output_item
 };
 
 template <typename T, size_t N, typename Order, typename Base, typename CharT>
-void output(std::basic_ostream<CharT>& os, const T* data, const std::array<size_t,N>& strides, const std::array<size_t,N>& dimensions,
-            std::array<size_t,N>& indices, size_t index)
+void output(std::basic_ostream<CharT>& os, const T* data, const std::array<size_t,N>& strides, const std::array<size_t,N>& dimensions)
 {
     std::vector<output_item<N>> stack;
     stack.emplace_back(0);
@@ -977,8 +976,7 @@ void output2(std::basic_ostream<CharT>& os, const T* data, const std::array<size
 template <typename T, size_t N, typename Order, typename Base, typename Allocator, typename CharT>
 std::basic_ostream<CharT>& operator <<(std::basic_ostream<CharT>& os, ndarray<T, N, Order, Base, Allocator>& a)
 {
-    std::array<size_t,N> indices;
-    output<T,N,Order,Base,CharT>(os, a.data(), a.strides(), a.dimensions(), indices, 0);
+    output<T,N,Order,Base,CharT>(os, a.data(), a.strides(), a.dimensions());
     return os;
 }
 
@@ -1186,8 +1184,7 @@ bool operator!=(const ndarray_view<T, M, Order, Base>& lhs,
 template <typename T, size_t N, typename Order, typename Base, typename CharT>
 std::basic_ostream<CharT>& operator <<(std::basic_ostream<CharT>& os, ndarray_view<T, N, Order, Base>& a)
 {
-    std::array<size_t,N> indices;
-    output<T,N,Order,Base,CharT>(os, a.data(), a.strides(), a.dimensions(), indices, 0);
+    output<T,N,Order,Base,CharT>(os, a.data(), a.strides(), a.dimensions());
     return os;
 }
 
