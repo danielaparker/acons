@@ -5,6 +5,28 @@
 
 using namespace acons;
 
+TEST_CASE("simple ostream test")
+{
+    ndarray<double, 3, row_major> a = { {{0,1},{2,3}}, {{4,5},{6,7}} };
+    CHECK(a.size(0) == 2);
+    CHECK(a.size(1) == 2);
+    CHECK(a.size(2) == 2);
+
+    CHECK(a(0,0,0) == 0);
+    CHECK(a(0,0,1) == 1);
+    CHECK(a(0,1,0) == 2);
+    CHECK(a(0,1,1) == 3);
+
+    CHECK(a(1,0,0) == 4);
+    CHECK(a(1,0,1) == 5);
+    CHECK(a(1,1,0) == 6);
+    CHECK(a(1,1,1) == 7);
+
+    std::ostringstream os;
+    os << a;
+    CHECK(os.str() == std::string("[[[0,1],[2,3]],[[4,5],[6,7]]]"));
+}
+
 TEST_CASE("2x2x2 ostream test")
 {
     ndarray<double, 3, row_major> a = { {{0,1},{2,3}}, {{4,5},{6,7}} };

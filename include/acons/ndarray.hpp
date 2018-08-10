@@ -829,43 +829,150 @@ private:
     }
 };
 
+template <size_t N>
+struct output_item
+{
+    static const size_t close_bracket = N+1;
+    static const size_t insert_comma = N+2;
+
+    std::array<size_t, N> indices;
+    size_t index;
+
+    output_item()
+        : index(0)
+    {
+    }
+
+    output_item(const output_item<N>& item)
+        : indices(item.indices), index(item.index)
+    {
+
+    }
+
+    output_item(const std::array<size_t,N>& x, size_t i)
+        : indices(x), index(i)
+    {
+    }
+
+    output_item(size_t i)
+        : index(i)
+    {
+    }
+
+};
+
 template <typename T, size_t N, typename Order, typename Base, typename CharT>
 void output(std::basic_ostream<CharT>& os, const T* data, const std::array<size_t,N>& strides, const std::array<size_t,N>& dimensions,
             std::array<size_t,N>& indices, size_t index)
 {
-    if (index+1 < strides.size())
+    std::vector<output_item<N>> stack;
+    stack.emplace_back(0);
+    while (!stack.empty())
     {
-        os << '[';
-        for (size_t i = 0; i < dimensions[index]; ++i)
-        {
-            if (i > 0)
-            {
-                os << ',';
-            }
-            indices[index] = i; 
-            {
-                output<T,N,Order,Base,CharT>(os,data,strides,dimensions,indices, index + 1);
-            }
-        }
-        os << ']';
-    }
-    else
-    {
-        os << '[';
-        for (size_t i = 0; i < dimensions[index]; ++i)
-        {
-            indices[index] = i; 
-            if (i > 0)
-            {
-                os << ',';
-            }
-            size_t offset = get_offset<N,Base>(strides,indices);
+        auto val = stack.back();
+        stack.pop_back();
 
-            os << data[get_offset<N,Base>(strides,indices)];
+        if (val.index+1 < N)
+        {
+            os << '[';
+            stack.push_back(output_item<N>(output_item<N>::close_bracket)); 
+            for (size_t i = dimensions[val.index]; i-- > 0; )
+            {
+                val.indices[val.index] = i; 
+                stack.push_back(output_item<N>(val.indices,val.index+1)); 
+                if (i > 0)
+                {
+                    stack.push_back(output_item<N>(output_item<N>::insert_comma)); 
+                }
+            }
         }
-        os << ']';
+        else if (val.index+1 == N)
+        {
+            os << '[';
+            for (size_t i = 0; i < dimensions[val.index]; ++i)
+            {
+                val.indices[val.index] = i; 
+                if (i > 0)
+                {
+                    os << ',';
+                }
+                size_t offset = get_offset<N,Base>(strides,val.indices);
+
+                os << data[get_offset<N,Base>(strides,val.indices)];
+            }
+            os << ']';
+        }
+        else if (val.index == output_item<N>::close_bracket)
+        {
+            os << ']';
+        }
+        else if (val.index == output_item<N>::insert_comma)
+        {
+            os << ',';
+        }
     }
 }
+
+/*
+template <typename T, size_t N, typename Order, typename Base, typename CharT>
+void output2(std::basic_ostream<CharT>& os, const T* data, const std::array<size_t,N>& strides, const std::array<size_t,N>& dimensions,
+             std::array<size_t,N>& indices, size_t index)
+{
+    std::vector<output_item<N>> stack(N*20);
+
+    size_t count = 1;
+    while (count != 0)
+    {
+        auto val = stack[count-1];
+        --count;
+
+        if (val.index+1 < N)
+        {
+            os << '[';
+            stack[count].index = 1000; 
+            count++;
+            for (size_t i = dimensions[val.index]; i-- > 0; )
+            {
+                val.indices[val.index] = i; 
+                stack[count].indices = val.indices;
+                stack[count].index = val.index+1;
+                stack[count].depth = 0;
+                count++;
+                if (i > 0)
+                {
+                    stack[count].index = 1001; 
+                    count++;
+                }
+            }
+        }
+        else if (val.index+1 == N)
+        {
+            std::cout << "N: " << N << ", count: " << count << ", depth: " << val.depth << "\n";
+            os << '[';
+            for (size_t i = 0; i < dimensions[val.index]; ++i)
+            {
+                val.indices[val.index] = i; 
+                if (i > 0)
+                {
+                    os << ',';
+                }
+                size_t offset = get_offset<N,Base>(strides,val.indices);
+
+                os << data[get_offset<N,Base>(strides,val.indices)];
+            }
+            os << ']';
+        }
+        else if (val.index == 1000)
+        {
+            os << ']';
+        }
+        else if (val.index == 1001)
+        {
+            os << ',';
+        }
+    }
+}
+*/
 
 template <typename T, size_t N, typename Order, typename Base, typename Allocator, typename CharT>
 std::basic_ostream<CharT>& operator <<(std::basic_ostream<CharT>& os, ndarray<T, N, Order, Base, Allocator>& a)
