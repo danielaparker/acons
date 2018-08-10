@@ -82,6 +82,38 @@ struct one_based
     }
 };
 
+template <size_t N>
+struct output_item
+{
+    static const size_t close_bracket = N+1;
+    static const size_t insert_comma = N+2;
+
+    std::array<size_t, N> indices;
+    size_t index;
+
+    output_item()
+        : index(0)
+    {
+    }
+
+    output_item(const output_item<N>& item)
+        : indices(item.indices), index(item.index)
+    {
+
+    }
+
+    output_item(const std::array<size_t,N>& x, size_t i)
+        : indices(x), index(i)
+    {
+    }
+
+    output_item(size_t i)
+        : index(i)
+    {
+    }
+
+};
+
 struct row_major
 {
     template <size_t N>
@@ -117,6 +149,56 @@ struct row_major
                         const T* data2, const std::array<size_t,N>& strides2, 
                         std::array<size_t,N>& indices, size_t index)
     {
+        size_t stack_depth = 1;
+        for (size_t i = 0; i+1 < dim.size(); ++i)
+        {
+            stack_depth *= dim[i];
+        }
+        std::vector<output_item<N>> stack(stack_depth);
+
+        size_t count = 1;
+        while (count != 0)
+        {
+            auto val = stack[count-1];
+            --count;
+
+            if (val.index+1 < N)
+            {
+                for (size_t i = dim[val.index]; i-- > 0; )
+                {
+                    val.indices[val.index] = i; 
+                    stack[count].indices = val.indices;
+                    stack[count].index = val.index+1;
+                    count++;
+                }
+            }
+            else if (val.index+1 == N)
+            {
+                val.indices[val.index] = 0;
+                size_t offset1 = get_offset<N,zero_based>(strides1,val.indices);
+                size_t offset2 = get_offset<N,zero_based>(strides2,val.indices);
+                const T* p1 = data1 + offset1;
+                const T* p2 = data2 + offset2;
+                const T* end = p1 + dim[val.index];
+                while (p1 != end)
+                {
+                    if (*p1++ != *p2++)
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+/*
+    template <typename T, size_t N>
+    static bool compare(const std::array<size_t,N>& dim,
+                        const T* data1, const std::array<size_t,N>& strides1, 
+                        const T* data2, const std::array<size_t,N>& strides2, 
+                        std::array<size_t,N>& indices, size_t index)
+    {
         if (index + 1 == N)
         {
             indices[index] = 0;
@@ -146,6 +228,7 @@ struct row_major
         }
         return true;
     }
+*/
 };
 
 struct column_major
@@ -827,38 +910,6 @@ private:
             ++i;
         }
     }
-};
-
-template <size_t N>
-struct output_item
-{
-    static const size_t close_bracket = N+1;
-    static const size_t insert_comma = N+2;
-
-    std::array<size_t, N> indices;
-    size_t index;
-
-    output_item()
-        : index(0)
-    {
-    }
-
-    output_item(const output_item<N>& item)
-        : indices(item.indices), index(item.index)
-    {
-
-    }
-
-    output_item(const std::array<size_t,N>& x, size_t i)
-        : indices(x), index(i)
-    {
-    }
-
-    output_item(size_t i)
-        : index(i)
-    {
-    }
-
 };
 
 template <typename T, size_t N, typename Order, typename Base, typename CharT>
