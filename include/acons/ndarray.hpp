@@ -20,10 +20,13 @@ template <typename T>
 struct is_stateless
  : public std::integral_constant<bool,  
       (std::is_default_constructible<T>::value &&
+#if defined(__GNUC__) && (__GNUC__ < 5)
+#else
        std::is_trivially_constructible<T>::value &&
        std::is_trivially_copyable<T>::value &&
-       std::is_trivially_destructible<T>::value &&
        std::is_class<T>::value &&
+#endif
+       std::is_trivially_destructible<T>::value &&
        std::is_empty<T>::value)>
 {};
 
@@ -665,12 +668,8 @@ public:
 
     void swap(ndarray<T,N,Order,Base,Allocator>& other) noexcept
     {
-#if defined(_MSC_VER) && _MSC_VER <= 1900
-        swap_allocator(other, is_stateless<Allocator>(), std::true_type());
-#else
         swap_allocator(other, is_stateless<Allocator>(), 
                        typename std::allocator_traits<allocator_type>::propagate_on_container_swap());
-#endif
         std::swap(this->data_,other.data_);
         std::swap(this->size_,other.size_);
         std::swap(this->dim_,other.dim_);
