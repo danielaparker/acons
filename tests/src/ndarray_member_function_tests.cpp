@@ -293,3 +293,27 @@ TEST_CASE("assignment 1")
     CHECK(test3);
 }
 
+// operator()
+
+TEST_CASE("indexing operator 1")
+{
+    ndarray<double, 3> A(2,3,4);
+
+    int init = 0;
+    for (size_t i = 0; i < A.size(0); ++i)
+    {
+        for (size_t j = 0; j < A.size(1); ++j)
+        {
+            for (size_t k = 0; k < A.size(2); ++k)
+            {
+                A(i,j,k) = init++;
+            }
+        }
+    }
+    std::cout << "A: " << A << "\n\n";
+
+    ndarray_view<double,2> v = A.subarray(std::array<size_t,1>{0});
+
+    std::cout << "v: " << v << "\n\n";
+}
+

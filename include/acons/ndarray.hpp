@@ -782,49 +782,19 @@ public:
         return data_[off];
     }
 
-    template <size_t n=N, typename... Indices>
-    typename std::enable_if<(n == N),const T&>::type 
-    operator()(Indices... indices) const
+    template <typename... Indices>
+    const T& operator()(Indices... indices) const
     {
-        size_t off = get_offset<n, Base, 0>(strides_,indices...);
+        size_t off = get_offset<N, Base, 0>(strides_,indices...);
         assert(off < size());
         return data_[off];
     }
 
-    template <size_t n=N-1, typename... Indices>
-    typename std::enable_if<(n == N-1),iterator>::type 
-    begin(Indices... indices) 
+    template <size_t n=N, size_t K, typename... Indices>
+    typename std::enable_if<(K < n),ndarray_view<T,N-K,Order,Base>>::type 
+    subarray(const std::array<size_t,K>& indices) 
     {
-        size_t off = get_offset<n, Base, 0>(strides_,indices...);
-        assert(off < size());
-        return &data_[off];
-    }
-
-    template <size_t n=N-1, typename... Indices>
-    typename std::enable_if<(n == N-1),iterator>::type 
-    end(Indices... indices) 
-    {
-        size_t off = get_offset<n, Base, 0>(strides_,indices...);
-        assert(off < size());
-        return &data_[off] + dim_[n];
-    }
-
-    template <size_t n=N-1, typename... Indices>
-    typename std::enable_if<(n == N-1),const_iterator>::type 
-    begin(Indices... indices) const
-    {
-        size_t off = get_offset<n, Base, 0>(strides_,indices...);
-        assert(off < size());
-        return &data_[off];
-    }
-
-    template <size_t n=N-1, typename... Indices>
-    typename std::enable_if<(n == N-1),const_iterator>::type 
-    end(Indices... indices) const
-    {
-        size_t off = get_offset<n, Base, 0>(strides_,indices...);
-        assert(off < size());
-        return &data_[off] + dim_[n];
+        return ndarray_view<T,N-K,Order,Base>(*this,indices);
     }
 
 private:
@@ -1135,6 +1105,14 @@ public:
     typedef const T* const_iterator;
     typedef array_wrapper<slice,M> slices_type;
 
+    ndarray_view()
+        : data_(nullptr), size_(0)
+    {
+        dim_.fill(0);
+        strides_.fill(0);
+        offsets_.fill(0);
+    }
+
     template <typename Allocator>
     ndarray_view(ndarray<T, M, Order, Base, Allocator>& a)
         : data_(a.data_), size_(a.size_), dim_(a.dim_), strides_(a.strides_)          
@@ -1204,6 +1182,38 @@ public:
         }
     }
 
+    template<size_t m = M, size_t N, typename Allocator>
+    ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
+                 const std::array<size_t,N-M>& indices,
+               typename std::enable_if<m < N>::type* = 0)
+        : data_(a.data()), size_(a.size())
+    {
+        size_t rel = get_offset<N,N-M,Base>(a.strides(),indices);
+
+        for (size_t i = 0; i < M; ++i)
+        {
+            dim_[i] = a.dimensions()[(N-M)+i];
+            strides_[i] = a.strides()[(N-M)+i];
+            offsets_[i] = rel;
+        }
+    }
+
+    template<size_t m = M, size_t N, typename Allocator>
+    ndarray_view(ndarray_view<T, N, Order, Base>& a, 
+                 const std::array<size_t,N-M>& indices,
+               typename std::enable_if<m < N>::type* = 0)
+        : data_(a.data()), size_(a.size())
+    {
+        size_t rel = get_offset<N,N-M,Base>(a.strides(),a.offsets(),indices);
+
+        for (size_t i = 0; i < M; ++i)
+        {
+            dim_[i] = a.dimension()[(N-M)+i];
+            strides_[i] = a.strides()[(N-M)+i];
+            offsets_[i] = rel + Base::rebase_to_zero(a.offsets()[(N-M)+i]);
+        }
+    }
+
     ndarray_view(T* data, const std::array<size_t,M>& dim) 
         : data_(data), dim_(dim)
     {
@@ -1258,42 +1268,6 @@ public:
         size_t off = get_offset<n, Base, 0>(strides_, offsets_, indices...);
         assert(off < size());
         return data_[off];
-    }
-
-    template <size_t n=M-1, typename... Indices>
-    typename std::enable_if<(n == M-1),iterator>::type 
-    begin(Indices... indices) 
-    {
-        size_t off = get_offset<n, Base, 0>(strides_, offsets_, indices...);
-        assert(off < size());
-        return &data_[off];
-    }
-
-    template <size_t n=M-1, typename... Indices>
-    typename std::enable_if<(n == M-1),iterator>::type 
-    end(Indices... indices) 
-    {
-        size_t off = get_offset<n, Base, 0>(strides_, offsets_, indices...);
-        assert(off < size());
-        return &data_[off] + dim_[n];
-    }
-
-    template <size_t n=M-1, typename... Indices>
-    typename std::enable_if<(n == M-1),const_iterator>::type 
-    begin(Indices... indices) const
-    {
-        size_t off = get_offset<n, Base, 0>(strides_, offsets_, indices...);
-        assert(off < size());
-        return &data_[off];
-    }
-
-    template <size_t n=M-1, typename... Indices>
-    typename std::enable_if<(n == M-1),const_iterator>::type 
-    end(Indices... indices) const
-    {
-        size_t off = get_offset<n, Base, 0>(strides_, offsets_, indices...);
-        assert(off < size());
-        return &data_[off] + dim_[n];
     }
 
     template <typename CharT>
