@@ -650,15 +650,15 @@ public:
 
     ndarray(const ndarray_view<T,N,Order,Base>& a)
         : ndarray_base<Allocator>(allocator_type()), 
-          data_(nullptr), size_(0), dim_(a.dim_), strides_(a.strides_)          
+          data_(nullptr), size_(0), dim_(a.dimensions()), strides_(a.strides())          
     {
         size_ = a.size();
         data_ = get_allocator().allocate(a.size());
 
 #if defined(_MSC_VER)
-        std::copy(a.data_, a.data_+a.size_,stdext::make_checked_array_iterator(data_,size_));
+        std::copy(a.data(), a.data()+a.size(),stdext::make_checked_array_iterator(data_,size_));
 #else 
-        std::copy(a.data_,a.data_+a.size_,data_);
+        std::copy(a.data(),a.data()+a.size(),data_);
 #endif
     }
 

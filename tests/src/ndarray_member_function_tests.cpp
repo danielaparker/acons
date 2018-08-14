@@ -315,5 +315,9 @@ TEST_CASE("indexing operator 1")
     ndarray_view<double,2> v = A.subarray(std::array<size_t,1>{0});
 
     std::cout << "v: " << v << "\n\n";
+
+    ndarray<double,2> u = A.subarray(std::array<size_t,1>{0});
+
+    std::cout << "u: " << u << "\n\n";
 }
 
