@@ -106,12 +106,13 @@ get_offset(const std::array<size_t,n>& strides,
     return i;
 }
 
-template <size_t N, typename Base>
-size_t get_offset(const std::array<size_t,N>& strides, 
-                  const std::array<size_t,N>& indices)
+template <size_t N, size_t M, typename Base>
+typename std::enable_if<M <= N,size_t>::type
+get_offset(const std::array<size_t,N>& strides, 
+                  const std::array<size_t,M>& indices)
 {
     size_t offset = 0;
-    for (size_t i = 0; i < N; ++i)
+    for (size_t i = 0; i < M; ++i)
     {
         offset += Base::rebase_to_zero(indices[i])*strides[i];
     }
@@ -148,13 +149,14 @@ get_offset(const std::array<size_t,n>& strides,
     return i;
 }
 
-template <size_t N, typename Base>
-size_t get_offset(const std::array<size_t,N>& strides, 
-                  const std::array<size_t, N>& offsets, 
-                  const std::array<size_t,N>& indices)
+template <size_t N, size_t M, typename Base>
+typename std::enable_if<M <= N,size_t>::type
+get_offset(const std::array<size_t,N>& strides, 
+           const std::array<size_t, N>& offsets, 
+           const std::array<size_t,M>& indices)
 {
     size_t offset = 0;
-    for (size_t i = 0; i < N; ++i)
+    for (size_t i = 0; i < M; ++i)
     {
         offset += Base::rebase_to_zero(indices[i]+offsets[i])*strides[i];
     }
@@ -262,15 +264,15 @@ struct row_major
             else if (val.index+1 == N)
             {
                 val.indices[val.index] = 0;
-                size_t offset1 = get_offset<N,zero_based>(strides1, offsets1, val.indices);
-                size_t offset2 = get_offset<N,zero_based>(strides2, offsets2, val.indices);
+                size_t offset1 = get_offset<N,N,zero_based>(strides1, offsets1, val.indices);
+                size_t offset2 = get_offset<N,N,zero_based>(strides2, offsets2, val.indices);
                 const T* p1 = data1 + offset1;
                 const T* p2 = data2 + offset2;
                 size_t stride1 = strides1[N-1];
                 size_t stride2 = strides2[N-1];
 
                 val.indices[val.index] = dim1[val.index]-1;
-                size_t end_offset1 = get_offset<N,zero_based>(strides1, offsets1, val.indices);
+                size_t end_offset1 = get_offset<N,N,zero_based>(strides1, offsets1, val.indices);
                 const T* end = data1 + end_offset1;
 
                 while (p1 <= end)
@@ -340,15 +342,15 @@ struct column_major
             else 
             {
                 val.indices[val.index] = 0;
-                size_t offset1 = get_offset<N,zero_based>(strides1, offsets1, val.indices);
-                size_t offset2 = get_offset<N,zero_based>(strides2, offsets2, val.indices);
+                size_t offset1 = get_offset<N,N,zero_based>(strides1, offsets1, val.indices);
+                size_t offset2 = get_offset<N,N,zero_based>(strides2, offsets2, val.indices);
                 const T* p1 = data1 + offset1;
                 const T* p2 = data2 + offset2;
                 //const T* end = p1 + dim1[val.index];
                 size_t stride1 = strides1[val.index]; 
                 size_t stride2 = strides2[val.index]; 
                 val.indices[val.index] = dim1[val.index] - 1;
-                size_t end_offset1 = get_offset<N,zero_based>(strides1, offsets1, val.indices);
+                size_t end_offset1 = get_offset<N,N,zero_based>(strides1, offsets1, val.indices);
                 const T* end = data1 + end_offset1;
                 while (p1 <= end)
                 {
@@ -932,7 +934,7 @@ private:
             }
             else 
             {
-                size_t offset = get_offset<N,zero_based>(strides_,indices);
+                size_t offset = get_offset<N,N,zero_based>(strides_,indices);
                 if (offset < size())
                 {
                     data_[offset] = item.value();
@@ -977,9 +979,9 @@ void output(std::basic_ostream<CharT>& os, const T* data, const std::array<size_
                 {
                     os << ',';
                 }
-                size_t offset = get_offset<N,Base>(strides,val.indices);
+                size_t offset = get_offset<N,N,Base>(strides,val.indices);
 
-                os << data[get_offset<N,Base>(strides,val.indices)];
+                os << data[get_offset<N,N,Base>(strides,val.indices)];
             }
             os << ']';
         }
@@ -1138,13 +1140,7 @@ public:
             throw std::invalid_argument("slices must have M elements");
         }
 
-        std::array<size_t,N> x;
-        x.fill(0);
-        for (size_t i = 0; i < indices.size(); ++i)
-        {
-            x[i] = indices[i];
-        }
-        size_t rel = get_offset<N,Base>(a.strides(),x);
+        size_t rel = get_offset<N,N-M,Base>(a.strides(),indices);
 
         for (size_t i = 0; i < M; ++i)
         {
@@ -1282,7 +1278,7 @@ public:
                     {
                         os << ',';
                     }
-                    size_t offset = get_offset<M,Base>(v.strides_, v.offsets_, val.indices);
+                    size_t offset = get_offset<M,M,Base>(v.strides_, v.offsets_, val.indices);
 
                     os << v.data_[offset];
                 }
