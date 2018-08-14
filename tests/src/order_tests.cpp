@@ -63,7 +63,7 @@ TEST_CASE("row major tests")
     CHECK(a.data()[4] == 4);
     CHECK(a.data()[5] == 5);
 
-    ndarray_view<double,1,row_major> v2(a,{{0,1},{1,2}});
+    ndarray_view<double,1,row_major> v2(a,{0},{{1,2}});
     CHECK(v2(0) == 1);
     CHECK(v2(1) == 2);
 
@@ -107,7 +107,7 @@ TEST_CASE("column major tests")
     //CHECK(v1(0) == 0);
     //CHECK(v1(1) == 3);
 
-    ndarray_view<double,1,column_major> v2(a,{{0,1},{1,2}});
+    ndarray_view<double,1,column_major> v2(a,{0},{{1,2}});
     CHECK(v2(0) == 1);
     CHECK(v2(1) == 2);
 

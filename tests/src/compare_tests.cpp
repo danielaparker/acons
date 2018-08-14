@@ -147,9 +147,9 @@ TEST_CASE("compare row major ndarray")
     CHECK(!test5);
     CHECK(test6);
 
-    ndarray_view<double,1,row_major> u(a,{{1,1},{0,2}});
-    ndarray_view<double,1,row_major> v(c,{{1,1},{0,2}});
-    ndarray_view<double,1,row_major> w(c,{{1,1},{0,2}});
+    ndarray_view<double, 1, row_major> u(a, { 1 }, { { 0,2 } });
+    ndarray_view<double, 1, row_major> v(c, { 1 }, { { 0,2 } });
+    ndarray_view<double, 1, row_major> w(c, { 1 }, { { 0,2 } });
 
     bool test7 = u == v;
     bool test8 = u != v;
@@ -184,9 +184,9 @@ TEST_CASE("compare column major ndarray")
     CHECK(!test5);
     CHECK(test6);
 
-    ndarray_view<double,1,column_major> u(a,{{1,1},{0,2}});
-    ndarray_view<double,1,column_major> v(c,{{1,1},{0,2}});
-    ndarray_view<double,1,column_major> w(c,{{1,1},{0,2}});
+    ndarray_view<double,1,column_major> u(a,{1},{{0,2}});
+    ndarray_view<double,1,column_major> v(c,{1},{{0,2}});
+    ndarray_view<double,1,column_major> w(c,{1},{{0,2}});
 
     bool test7 = u == v;
     bool test8 = u != v;

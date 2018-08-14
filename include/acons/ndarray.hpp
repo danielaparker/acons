@@ -1128,37 +1128,29 @@ public:
 
     template<size_t m = M, size_t N, typename Allocator>
     ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
+                 const std::array<size_t,N-M>& indices,
                  const range_type& slices, 
                typename std::enable_if<m < N>::type* = 0)
         : data_(a.data()), size_(a.size())
     {
-        if (slices.size() != N)
+        if (slices.size() != M)
         {
-            throw std::invalid_argument("slices must have N elements");
+            throw std::invalid_argument("slices must have M elements");
         }
 
-        size_t diff = N - M;
+        std::array<size_t,N> x;
+        x.fill(0);
+        for (size_t i = 0; i < indices.size(); ++i)
+        {
+            x[i] = indices[i];
+        }
+        size_t rel = get_offset<N,Base>(a.strides(),x);
 
-        size_t rel = 0;
-        for (size_t i = 0; i < diff; ++i)
-        {
-            if (slices[i].size() != 1)
-            {
-                throw std::invalid_argument("size must be one for N-M slices");
-            }
-            rel += Base::rebase_to_zero(slices[i].start())*a.strides()[i];
-        }
         for (size_t i = 0; i < M; ++i)
         {
-            dim_[i] = slices[diff+i].size()/slices[diff+i].stride();
-        }
-        for (size_t i = 0; i < M; ++i)
-        {
-            strides_[i] = a.strides()[i+diff]*slices[diff+i].stride();
-        }
-        for (size_t i = 0; i < M; ++i)
-        {
-            offsets_[i] = rel + Base::rebase_to_zero(slices[diff+i].start()); // a.strides()[i];
+            dim_[i] = slices[i].size()/slices[i].stride();
+            strides_[i] = a.strides()[(N-M)+i]*slices[i].stride();
+            offsets_[i] = rel + Base::rebase_to_zero(slices[i].start());
         }
     }
 
