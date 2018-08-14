@@ -16,6 +16,39 @@
   
 namespace acons {
 
+template <typename T, size_t N>
+class array_wrapper
+{
+    std::array<T,N> a_;
+public:
+    array_wrapper() = default;
+
+    array_wrapper(const array_wrapper<T,N>& a) = default;
+
+    array_wrapper(std::initializer_list<T> list)
+    {
+        if (list.size() != N)
+        {
+            throw std::invalid_argument("N-dimensional array requires N items.");
+        }
+        size_t i = 0;
+        for (auto item : list)
+        {
+            a_[i++] = item;
+        }
+    }
+
+    size_t size() const
+    {
+        return N;
+    }
+
+    T operator[](size_t i) const
+    {
+        return a_[i];
+    }
+};
+
 class slice
 {
     size_t start_;
@@ -52,6 +85,9 @@ public:
         : start_(other.start_), size_(other.size_), stride_(other.stride_)
     {
     }
+
+    slice& operator=(const slice& other) = default;
+
     size_t start() const
     {
         return start_;
@@ -1099,7 +1135,7 @@ class ndarray_view
 public:
     typedef T* iterator;
     typedef const T* const_iterator;
-    typedef std::vector<slice> range_type;
+    typedef array_wrapper<slice,M> range_type;
 
     template <typename Allocator>
     ndarray_view(ndarray<T, M, Order, Base, Allocator>& a)
@@ -1117,13 +1153,7 @@ public:
         for (size_t i = 0; i < M; ++i)
         {
             dim_[i] = slices[i].size()/slices[i].stride();
-        }
-        for (size_t i = 0; i < M; ++i)
-        {
             strides_[i] = a.strides()[i]*slices[i].stride();
-        }
-        for (size_t i = 0; i < M; ++i)
-        {
             offsets_[i] = Base::rebase_to_zero(slices[i].start()); // a.strides()[i];
         }
     }
@@ -1135,11 +1165,6 @@ public:
                typename std::enable_if<m < N>::type* = 0)
         : data_(a.data()), size_(a.size())
     {
-        if (slices.size() != M)
-        {
-            throw std::invalid_argument("slices must have M elements");
-        }
-
         size_t rel = get_offset<N,N-M,Base>(a.strides(),indices);
 
         for (size_t i = 0; i < M; ++i)

@@ -68,7 +68,6 @@ TEST_CASE("row major tests")
     CHECK(v2(1) == 2);
 
     ndarray_view<double,2,row_major> v3(a,{{0,1},{1,1}});
-    std::cout << "v3: " << v3 << "\n";
     CHECK(v3(0,0) == 1);
 
     ndarray_view<double,2,row_major> v4(a,{{0,1},{1,2}});
@@ -112,7 +111,6 @@ TEST_CASE("column major tests")
     CHECK(v2(1) == 2);
 
     ndarray_view<double,2,column_major> v3(a,{{0,1},{1,1}});
-    std::cout << "v3: " << v3 << "\n";
     CHECK(v3(0,0) == 1);
 
     ndarray_view<double,2,column_major> v4(a,{{0,1},{1,2}});
