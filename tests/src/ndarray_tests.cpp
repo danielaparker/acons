@@ -67,11 +67,11 @@ TEST_CASE("Test Array View 1")
 
     CHECK(a(1,1) == 6.0);
 
-    ndarray_view<double,1> v(a,{{1,1}});
+    ndarray_view<double,1> v(a,{{1,1},{1,2}});
 
-    CHECK(v(0) == 2.0); 
-
-    CHECK(v.size(0) == 1); 
+    REQUIRE(v.size(0) == 2); 
+    CHECK(v(0) == 6.0); 
+    CHECK(v(1) == 7.0); 
 }
 
 TEST_CASE("Test ndarray_view 2")
@@ -81,11 +81,11 @@ TEST_CASE("Test ndarray_view 2")
     CHECK(a.size(0) == 3);
     CHECK(a.size(1) == 4);
 
-    ndarray_view<double,1> v(a,{{1,2}});
+    ndarray_view<double,1> v(a,{{0,1},{2,2}});
 
-    CHECK(v(0) == 2.0); 
-    CHECK(v(1) == 3.0); 
-    CHECK(v.size(0) == 2); 
+    REQUIRE(v.size(0) == 2); 
+    CHECK(v(0) == 3.0); 
+    CHECK(v(1) == 4.0); 
 }
 
 TEST_CASE("Test Array View")
@@ -100,6 +100,5 @@ TEST_CASE("Test Array View")
     CHECK(v(1,0) == 3.0); 
     CHECK(v.size(0) == 2); 
     CHECK(v.size(1) == 3); 
-
 }
 

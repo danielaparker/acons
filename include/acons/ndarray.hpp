@@ -1109,21 +1109,56 @@ public:
     template<size_t m = M, size_t N, typename Allocator>
     ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
                  const range_type& slices, 
-               typename std::enable_if<m <= N>::type* = 0)
+               typename std::enable_if<m == N>::type* = 0)
         : data_(a.data()), size_(a.size())
     {
-        size_t diff = N - M;
         for (size_t i = 0; i < M; ++i)
         {
             dim_[i] = slices[i].size()/slices[i].stride();
         }
         for (size_t i = 0; i < M; ++i)
         {
-            strides_[i] = a.strides()[i+diff]*slices[i].stride();
+            strides_[i] = a.strides()[i]*slices[i].stride();
         }
         for (size_t i = 0; i < M; ++i)
         {
             offsets_[i] = Base::rebase_to_zero(slices[i].start()); // a.strides()[i];
+        }
+    }
+
+    template<size_t m = M, size_t N, typename Allocator>
+    ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
+                 const range_type& slices, 
+               typename std::enable_if<m < N>::type* = 0)
+        : data_(a.data()), size_(a.size())
+    {
+        if (slices.size() != N)
+        {
+            throw std::invalid_argument("slices must have N elements");
+        }
+
+        size_t diff = N - M;
+
+        size_t rel = 0;
+        for (size_t i = 0; i < diff; ++i)
+        {
+            if (slices[i].size() != 1)
+            {
+                throw std::invalid_argument("size must be one for N-M slices");
+            }
+            rel += Base::rebase_to_zero(slices[i].start())*a.strides()[i];
+        }
+        for (size_t i = 0; i < M; ++i)
+        {
+            dim_[i] = slices[diff+i].size()/slices[diff+i].stride();
+        }
+        for (size_t i = 0; i < M; ++i)
+        {
+            strides_[i] = a.strides()[i+diff]*slices[diff+i].stride();
+        }
+        for (size_t i = 0; i < M; ++i)
+        {
+            offsets_[i] = rel + Base::rebase_to_zero(slices[diff+i].start()); // a.strides()[i];
         }
     }
 
