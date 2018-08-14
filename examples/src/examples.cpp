@@ -25,7 +25,20 @@ void simple_example()
     std::cout << A << std::endl;
 }
 
+void array_view()
+{
+    // Construct a 3-dimensional array with dimensions 2 x 2 x 2
+    ndarray<double, 3> a = { {{0,1},{2,3}}, {{4,5},{6,7}} };
+    ndarray_view<double,1> v(a,{0,1,0},{2});
+
+
+    // Write to stdout
+    std::cout << a << std::endl;
+    std::cout << v << std::endl;
+}
+
 int main()
 {
     simple_example();
+    array_view();
 }

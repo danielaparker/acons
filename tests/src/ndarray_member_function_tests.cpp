@@ -219,6 +219,12 @@ TEST_CASE("constructor 11")
 {
     ndarray<double, 3> a = {{{0,1,2},{3,4,5}}};
 
+    CHECK(!a.empty());
+    CHECK(a.size() == 6);
+    CHECK(a.size(0) == 1);
+    CHECK(a.size(1) == 2);
+    CHECK(a.size(2) == 3);
+
     ndarray<double, 3> b(std::move(a));
 
     CHECK(!b.empty());
