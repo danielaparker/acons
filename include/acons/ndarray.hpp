@@ -585,10 +585,7 @@ public:
     {
         Order::calculate_strides(dim_, strides_, size_);
         data_ = get_allocator().allocate(size_);
-        for (size_t i = 0; i < size_; ++i)
-        {
-            data_[i] = val;
-        }
+        std::fill(data_, data_+size_,val);
     }
 
     ndarray(const std::array<size_t,N>& dim, T val, const Allocator& alloc)
@@ -597,10 +594,7 @@ public:
     {
         Order::calculate_strides(dim_, strides_, size_);
         data_ = get_allocator().allocate(size_);
-        for (size_t i = 0; i < size_; ++i)
-        {
-            data_[i] = val;
-        }
+        std::fill(data_, data_+size_,val);
     }
 
     ndarray(std::initializer_list<array_item<T>> list) 
@@ -633,10 +627,11 @@ public:
         size_ = a.size();
         data_ = get_allocator().allocate(a.size());
 
-        for (size_t i = 0; i < size_; ++i)
-        {
-            data_[i] = a.data_[i];
-        }
+#if defined(_MSC_VER)
+        std::copy(a.data_, a.data_+a.size_,stdext::make_checked_array_iterator(data_,size_));
+#else 
+        std::copy(a.data_,a._size_,data_);
+#endif
     }
 
     ndarray(const ndarray& a, const Allocator& alloc)
@@ -646,10 +641,11 @@ public:
         size_ = a.size();
         data_ = get_allocator().allocate(a.size());
 
-        for (size_t i = 0; i < size_; ++i)
-        {
-            data_[i] = a.data_[i];
-        }
+#if defined(_MSC_VER)
+        std::copy(a.data_, a.data_+a.size_,stdext::make_checked_array_iterator(data_,size_));
+#else 
+        std::copy(a.data_,a._size_,data_);
+#endif
     }
 
     ndarray(const ndarray_view<T,N,Order,Base>& a)
@@ -659,10 +655,11 @@ public:
         size_ = a.size();
         data_ = get_allocator().allocate(a.size());
 
-        for (size_t i = 0; i < size_; ++i)
-        {
-            data_[i] = a.data_[i];
-        }
+#if defined(_MSC_VER)
+        std::copy(a.data_, a.data_+a.size_,stdext::make_checked_array_iterator(data_,size_));
+#else 
+        std::copy(a.data_,a._size_,data_);
+#endif
     }
 
     ndarray(const ndarray_view<T,N,Order,Base>& a, const Allocator& alloc)
@@ -672,10 +669,11 @@ public:
         size_ = a.size();
         data_ = get_allocator().allocate(a.size());
 
-        for (size_t i = 0; i < size_; ++i)
-        {
-            data_[i] = a.data_[i];
-        }
+#if defined(_MSC_VER)
+        std::copy(a.data_, a.data_+a.size_,stdext::make_checked_array_iterator(data_,size_));
+#else 
+        std::copy(a.data_,a._size_,data_);
+#endif
     }
 
     ndarray(ndarray&& a)
@@ -846,10 +844,11 @@ private:
         }
         dim_ = other.dimensions();
         strides_ = other.strides();
-        for (size_t i = 0; i < size_; ++i)
-        {
-            data_[i] = other.data_[i];
-        }
+#if defined(_MSC_VER)
+        std::copy(other.data_, other.data_+other.size_,stdext::make_checked_array_iterator(data_,size_));
+#else 
+        std::copy(other.data_,other._size_,data_);
+#endif
     }
 
     void assign_copy(const ndarray<T,N,Order,Base,Allocator>& other, std::true_type)
@@ -860,10 +859,11 @@ private:
         data_ = get_allocator().allocate(other.size());
         dim_ = other.dimensions();
         strides_ = other.strides();
-        for (size_t i = 0; i < size_; ++i)
-        {
-            data_[i] = other.data_[i];
-        }
+#if defined(_MSC_VER)
+        std::copy(other.data_, other.data_+other.size_,stdext::make_checked_array_iterator(data_,size_));
+#else 
+        std::copy(other.data_,other._size_,data_);
+#endif
     }
 
     void assign_copy(const ndarray<T,N,Order,Base,Allocator>& other, std::false_type)
@@ -876,10 +876,11 @@ private:
         }
         dim_ = other.dimensions();
         strides_ = other.strides();
-        for (size_t i = 0; i < size_; ++i)
-        {
-            data_[i] = other.data_[i];
-        }
+#if defined(_MSC_VER)
+        std::copy(other.data_, other.data_+other.size_,stdext::make_checked_array_iterator(data_,size_));
+#else 
+        std::copy(other.data_,other._size_,data_);
+#endif
     }
 
     void swap_allocator(ndarray<T,N,Order,Base,Allocator>& other, std::true_type, std::true_type) noexcept
@@ -913,10 +914,7 @@ private:
     {
         Order::calculate_strides(dim_, strides_, size_);
         data_ = get_allocator().allocate(size_);
-        for (size_t i = 0; i < size_; ++i)
-        {
-            data_[i] = val;
-        }
+        std::fill(data_, data_+size_,val);
     }
 
     void dim_from_initializer_list(const array_item<T>& init, size_t dim)
@@ -1159,6 +1157,20 @@ public:
     }
 
     template<size_t m = M, size_t N, typename Allocator>
+    ndarray_view(ndarray_view<T, N, Order, Base>& a, 
+                 const range_type& slices, 
+               typename std::enable_if<m == N>::type* = 0)
+        : data_(a.data()), size_(a.size())
+    {
+        for (size_t i = 0; i < M; ++i)
+        {
+            dim_[i] = slices[i].size()/slices[i].stride();
+            strides_[i] = a.strides()[i]*slices[i].stride();
+            offsets_[i] = Base::rebase_to_zero(a.offsets()[i] + slices[i].start());
+        }
+    }
+
+    template<size_t m = M, size_t N, typename Allocator>
     ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
                  const std::array<size_t,N-M>& indices,
                  const range_type& slices, 
@@ -1172,6 +1184,23 @@ public:
             dim_[i] = slices[i].size()/slices[i].stride();
             strides_[i] = a.strides()[(N-M)+i]*slices[i].stride();
             offsets_[i] = rel + Base::rebase_to_zero(slices[i].start());
+        }
+    }
+
+    template<size_t m = M, size_t N, typename Allocator>
+    ndarray_view(ndarray_view<T, N, Order, Base>& a, 
+                 const std::array<size_t,N-M>& indices,
+                 const range_type& slices, 
+               typename std::enable_if<m < N>::type* = 0)
+        : data_(a.data()), size_(a.size())
+    {
+        size_t rel = get_offset<N,N-M,Base>(a.strides(),a.offsets(),indices);
+
+        for (size_t i = 0; i < M; ++i)
+        {
+            dim_[i] = slices[i].size()/slices[i].stride();
+            strides_[i] = a.strides()[(N-M)+i]*slices[i].stride();
+            offsets_[i] = rel + Base::rebase_to_zero(a.offsets()[(N-M)+i] + slices[i].start());
         }
     }
 
