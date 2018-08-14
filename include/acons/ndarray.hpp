@@ -816,7 +816,7 @@ private:
 
     void assign_copy(const ndarray<T,N,Order,Base,Allocator>& other, std::true_type)
     {
-        allocator_ = other.get_allocator();
+        this->allocator_ = other.get_allocator();
         get_allocator().deallocate(data_,size_);
         size_ = other.size();
         data_ = get_allocator().allocate(other.size());
@@ -852,7 +852,7 @@ private:
     void swap_allocator(ndarray<T,N,Order,Base,Allocator>& other, std::false_type, std::true_type) noexcept
     {
         using std::swap;
-        swap(allocator_,other.allocator_);
+        swap(this->allocator_,other.allocator_);
     }
 
     void swap_allocator(ndarray<T,N,Order,Base,Allocator>& other, std::true_type, std::false_type) noexcept
