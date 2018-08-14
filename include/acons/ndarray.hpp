@@ -630,7 +630,7 @@ public:
 #if defined(_MSC_VER)
         std::copy(a.data_, a.data_+a.size_,stdext::make_checked_array_iterator(data_,size_));
 #else 
-        std::copy(a.data_,a.size_,data_);
+        std::copy(a.data_,a.data_+a.size_,data_);
 #endif
     }
 
@@ -644,7 +644,7 @@ public:
 #if defined(_MSC_VER)
         std::copy(a.data_, a.data_+a.size_,stdext::make_checked_array_iterator(data_,size_));
 #else 
-        std::copy(a.data_,a.size_,data_);
+        std::copy(a.data_,a.data_+a.size_,data_);
 #endif
     }
 
@@ -658,7 +658,7 @@ public:
 #if defined(_MSC_VER)
         std::copy(a.data_, a.data_+a.size_,stdext::make_checked_array_iterator(data_,size_));
 #else 
-        std::copy(a.data_,a.size_,data_);
+        std::copy(a.data_,a.data_+a.size_,data_);
 #endif
     }
 
@@ -672,7 +672,7 @@ public:
 #if defined(_MSC_VER)
         std::copy(a.data_, a.data_+a.size_,stdext::make_checked_array_iterator(data_,size_));
 #else 
-        std::copy(a.data_,a.size_,data_);
+        std::copy(a.data_,a.data_+a.size_,data_);
 #endif
     }
 
@@ -847,7 +847,7 @@ private:
 #if defined(_MSC_VER)
         std::copy(other.data_, other.data_+other.size_,stdext::make_checked_array_iterator(data_,size_));
 #else 
-        std::copy(other.data_,other.size_,data_);
+        std::copy(other.data_,other.data_+other.size_,data_);
 #endif
     }
 
@@ -862,7 +862,7 @@ private:
 #if defined(_MSC_VER)
         std::copy(other.data_, other.data_+other.size_,stdext::make_checked_array_iterator(data_,size_));
 #else 
-        std::copy(other.data_,other.size_,data_);
+        std::copy(other.data_,other.data_+other.size_,data_);
 #endif
     }
 
@@ -879,7 +879,7 @@ private:
 #if defined(_MSC_VER)
         std::copy(other.data_, other.data_+other.size_,stdext::make_checked_array_iterator(data_,size_));
 #else 
-        std::copy(other.data_,other.size_,data_);
+        std::copy(other.data_,other.data_+other.size_,data_);
 #endif
     }
 
