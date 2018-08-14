@@ -1133,7 +1133,7 @@ class ndarray_view
 public:
     typedef T* iterator;
     typedef const T* const_iterator;
-    typedef array_wrapper<slice,M> range_type;
+    typedef array_wrapper<slice,M> slices_type;
 
     template <typename Allocator>
     ndarray_view(ndarray<T, M, Order, Base, Allocator>& a)
@@ -1144,7 +1144,7 @@ public:
 
     template<size_t m = M, size_t N, typename Allocator>
     ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
-                 const range_type& slices, 
+                 const slices_type& slices, 
                typename std::enable_if<m == N>::type* = 0)
         : data_(a.data()), size_(a.size())
     {
@@ -1158,7 +1158,7 @@ public:
 
     template<size_t m = M, size_t N, typename Allocator>
     ndarray_view(ndarray_view<T, N, Order, Base>& a, 
-                 const range_type& slices, 
+                 const slices_type& slices, 
                typename std::enable_if<m == N>::type* = 0)
         : data_(a.data()), size_(a.size())
     {
@@ -1173,7 +1173,7 @@ public:
     template<size_t m = M, size_t N, typename Allocator>
     ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
                  const std::array<size_t,N-M>& indices,
-                 const range_type& slices, 
+                 const slices_type& slices, 
                typename std::enable_if<m < N>::type* = 0)
         : data_(a.data()), size_(a.size())
     {
@@ -1190,7 +1190,7 @@ public:
     template<size_t m = M, size_t N, typename Allocator>
     ndarray_view(ndarray_view<T, N, Order, Base>& a, 
                  const std::array<size_t,N-M>& indices,
-                 const range_type& slices, 
+                 const slices_type& slices, 
                typename std::enable_if<m < N>::type* = 0)
         : data_(a.data()), size_(a.size())
     {
