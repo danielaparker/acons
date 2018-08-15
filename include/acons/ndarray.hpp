@@ -743,14 +743,15 @@ public:
         std::swap(strides_,other.strides_);
 
     }
-    size_t size() const noexcept
-    {
-        return size_;
-    }
 
     bool empty() const noexcept
     {
         return size_ == 0;
+    }
+
+    size_t size() const noexcept
+    {
+        return size_;
     }
 
     const std::array<size_t,N>& dimensions() const {return dim_;}
@@ -803,11 +804,11 @@ public:
         return data_[off];
     }
 
-    template <size_t n=N, size_t K, typename... Indices>
+    template <size_t n=N, size_t K>
     typename std::enable_if<(K < n),ndarray_view<T,N-K,Order,Base>>::type 
-    subarray(const std::array<size_t,K>& indices) 
+    subarray(const std::array<size_t,K>& origin) 
     {
-        return ndarray_view<T,N-K,Order,Base>(*this,indices);
+        return ndarray_view<T,N-K,Order,Base>(*this,origin);
     }
 
 private:
@@ -1165,12 +1166,12 @@ public:
 
     template<size_t m = M, size_t N, typename Allocator>
     ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
-                 const std::array<size_t,N-M>& indices,
+                 const std::array<size_t,N-M>& origin,
                  const slices_type& slices, 
                typename std::enable_if<m < N>::type* = 0)
         : data_(a.data()), size_(a.size())
     {
-        size_t rel = get_offset<N,N-M,Base>(a.strides(),indices);
+        size_t rel = get_offset<N,N-M,Base>(a.strides(),origin);
 
         for (size_t i = 0; i < M; ++i)
         {
@@ -1182,12 +1183,12 @@ public:
 
     template<size_t m = M, size_t N, typename Allocator>
     ndarray_view(ndarray_view<T, N, Order, Base>& a, 
-                 const std::array<size_t,N-M>& indices,
+                 const std::array<size_t,N-M>& origin,
                  const slices_type& slices, 
                typename std::enable_if<m < N>::type* = 0)
         : data_(a.data()), size_(a.size())
     {
-        size_t rel = get_offset<N,N-M,Base>(a.strides(),a.offsets(),indices);
+        size_t rel = get_offset<N,N-M,Base>(a.strides(),a.offsets(),origin);
 
         for (size_t i = 0; i < M; ++i)
         {
@@ -1199,11 +1200,11 @@ public:
 
     template<size_t m = M, size_t N, typename Allocator>
     ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
-                 const std::array<size_t,N-M>& indices,
+                 const std::array<size_t,N-M>& origin,
                typename std::enable_if<m < N>::type* = 0)
         : data_(a.data()), size_(a.size())
     {
-        size_t rel = get_offset<N,N-M,Base>(a.strides(),indices);
+        size_t rel = get_offset<N,N-M,Base>(a.strides(),origin);
 
         for (size_t i = 0; i < M; ++i)
         {
@@ -1215,11 +1216,11 @@ public:
 
     template<size_t m = M, size_t N, typename Allocator>
     ndarray_view(ndarray_view<T, N, Order, Base>& a, 
-                 const std::array<size_t,N-M>& indices,
+                 const std::array<size_t,N-M>& origin,
                typename std::enable_if<m < N>::type* = 0)
         : data_(a.data()), size_(a.size())
     {
-        size_t rel = get_offset<N,N-M,Base>(a.strides(),a.offsets(),indices);
+        size_t rel = get_offset<N,N-M,Base>(a.strides(),a.offsets(),origin);
 
         for (size_t i = 0; i < M; ++i)
         {
@@ -1295,6 +1296,13 @@ public:
         size_t off = get_offset<M, M, Base>(strides_, offsets_, indices);
         assert(off < size());
         return data_[off];
+    }
+
+    template <size_t n=N, size_t K>
+    typename std::enable_if<(K < n),ndarray_view<T,N-K,Order,Base>>::type 
+    subarray(const std::array<size_t,K>& origin) 
+    {
+        return ndarray_view<T,N-K,Order,Base>(*this,origin);
     }
 
     template <typename CharT>

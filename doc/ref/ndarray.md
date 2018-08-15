@@ -97,10 +97,29 @@ Exceptions:
 
     ndarray& operator=(std::initializer_list<array_item<T>> list);
 
-
 ##### Capacity
 
-##### Accessors
+    bool empty() const noexcept;
+
+    size_t size() const noexcept;
+
+##### Element access
+
+    size_t size(size_t i) const;
+
+    template <typename... Indices>
+    T& operator()(size_t index, Indices... indices); 
+
+    template <typename... Indices>
+    const T& operator()(size_t index, Indices... indices) const;
+
+    T& operator()(const std::array<size_t,N>& indices); 
+
+    const T& operator()(const std::array<size_t,N>& indices) const; 
+
+    template <size_t n=N, size_t K>
+    typename std::enable_if<(K < n),ndarray_view<T,N-K,Order,Base>>::type 
+    subarray(const std::array<size_t,K>& origin);
 
 ##### Modifiers
 
