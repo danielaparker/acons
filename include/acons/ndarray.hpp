@@ -773,11 +773,10 @@ public:
         return dim_[i];
     }
 
-    template <size_t n=N, typename... Indices>
-    typename std::enable_if<(n == N),T&>::type 
-    operator()(size_t index, Indices... indices) 
+    template <typename... Indices>
+    T& operator()(size_t index, Indices... indices) 
     {
-        size_t off = get_offset<n, Base, 0>(strides_, index, indices...);
+        size_t off = get_offset<N, Base, 0>(strides_, index, indices...);
         assert(off < size());
         return data_[off];
     }
@@ -1268,18 +1267,16 @@ public:
         return dim_[i];
     }
 
-    template <size_t n=M, typename... Indices>
-    typename std::enable_if<(n == M),T&>::type 
-    operator()(size_t index, Indices... indices) 
+    template <typename... Indices>
+    T& operator()(size_t index, Indices... indices) 
     {
-        size_t off = get_offset<n, Base, 0>(strides_, offsets_, index, indices...);
+        size_t off = get_offset<M, Base, 0>(strides_, offsets_, index, indices...);
         assert(off < size());
         return data_[off];
     }
 
-    template <size_t n=M, typename... Indices>
-    typename std::enable_if<(n == M),const T&>::type 
-    operator()(size_t index, Indices... indices) const
+    template <typename... Indices>
+    const T& operator()(size_t index, Indices... indices) const
     {
         size_t off = get_offset<n, Base, 0>(strides_, offsets_, index, indices...);
         assert(off < size());
