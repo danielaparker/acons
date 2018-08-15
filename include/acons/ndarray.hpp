@@ -145,7 +145,7 @@ get_offset(const std::array<size_t,n>& strides,
 template <size_t N, size_t M, typename Base>
 typename std::enable_if<M <= N,size_t>::type
 get_offset(const std::array<size_t,N>& strides, 
-                  const std::array<size_t,M>& indices)
+           const std::array<size_t,M>& indices)
 {
     size_t offset = 0;
     for (size_t i = 0; i < M; ++i)
@@ -785,7 +785,21 @@ public:
     template <typename... Indices>
     const T& operator()(Indices... indices) const
     {
-        size_t off = get_offset<N, Base, 0>(strides_,indices...);
+        size_t off = get_offset<N, Base, 0>(strides_, indices...);
+        assert(off < size());
+        return data_[off];
+    }
+
+    T& operator()(const std::array<size_t,N>& indices) 
+    {
+        size_t off = get_offset<N, N, Base>(strides_,indices);
+        assert(off < size());
+        return data_[off];
+    }
+
+    const T& operator()(const std::array<size_t,N>& indices) const 
+    {
+        size_t off = get_offset<N, N, Base>(strides_,indices);
         assert(off < size());
         return data_[off];
     }
@@ -949,8 +963,8 @@ private:
     }
 };
 
-template <typename T, size_t N, typename Order, typename Base, typename CharT>
-void output(std::basic_ostream<CharT>& os, const T* data, const std::array<size_t,N>& strides, const std::array<size_t,N>& dimensions)
+template <typename CharT, size_t N, typename Getter>
+void print(std::basic_ostream<CharT>& os, const std::array<size_t,N>& dimensions, Getter getter)
 {
     std::vector<output_item<N>> stack;
     stack.emplace_back(0);
@@ -983,9 +997,7 @@ void output(std::basic_ostream<CharT>& os, const T* data, const std::array<size_
                 {
                     os << ',';
                 }
-                size_t offset = get_offset<N,N,Base>(strides,val.indices);
-
-                os << data[get_offset<N,N,Base>(strides,val.indices)];
+                os << getter(val.indices);
             }
             os << ']';
         }
@@ -1001,9 +1013,13 @@ void output(std::basic_ostream<CharT>& os, const T* data, const std::array<size_
 }
 
 template <typename T, size_t N, typename Order, typename Base, typename Allocator, typename CharT>
-std::basic_ostream<CharT>& operator <<(std::basic_ostream<CharT>& os, ndarray<T, N, Order, Base, Allocator>& a)
+std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os, ndarray<T, N, Order, Base, Allocator>& a)
 {
-    output<T,N,Order,Base,CharT>(os, a.data(), a.strides(), a.dimensions());
+    auto f = [&](const std::array<size_t,N>& indices) 
+    { 
+        return a(indices);
+    };
+    print(os, a.dimensions(), f);
     return os;
 }
 
@@ -1270,57 +1286,28 @@ public:
         return data_[off];
     }
 
-    template <typename CharT>
-    friend std::basic_ostream<CharT>& operator <<(std::basic_ostream<CharT>& os, ndarray_view<T, M, Order, Base>& v)
+    T& operator()(const std::array<size_t,M>& indices) 
     {
-        std::vector<output_item<M>> stack;
-        stack.emplace_back(0);
-        while (!stack.empty())
-        {
-            auto val = stack.back();
-            stack.pop_back();
+        size_t off = get_offset<M, M, Base>(strides_, offsets_, indices);
+        assert(off < size());
+        return data_[off];
+    }
 
-            if (val.index+1 < M)
-            {
-                os << '[';
-                stack.push_back(output_item<M>(output_item<M>::close_bracket)); 
-                for (size_t i = v.dim_[val.index]; i-- > 0; )
-                {
-                    //std::cout << val.index << " dim: " << v.dim_[val.index] << "\n";
-                    val.indices[val.index] = i; 
-                    stack.push_back(output_item<M>(val.indices,val.index+1)); 
-                    if (i > 0)
-                    {
-                        stack.push_back(output_item<M>(output_item<M>::insert_comma)); 
-                    }
-                }
-            }
-            else if (val.index+1 == M)
-            {
-                os << '[';
-                //std::cout << val.index << " dim: " << v.dim_[val.index] << "\n";
-                for (size_t i = 0; i < v.dim_[val.index]; ++i)
-                {
-                    val.indices[val.index] = i; 
-                    if (i > 0)
-                    {
-                        os << ',';
-                    }
-                    size_t offset = get_offset<M,M,Base>(v.strides_, v.offsets_, val.indices);
+    const T& operator()(const std::array<size_t,M>& indices) const 
+    {
+        size_t off = get_offset<M, M, Base>(strides_, offsets_, indices);
+        assert(off < size());
+        return data_[off];
+    }
 
-                    os << v.data_[offset];
-                }
-                os << ']';
-            }
-            else if (val.index == output_item<M>::close_bracket)
-            {
-                os << ']';
-            }
-            else if (val.index == output_item<M>::insert_comma)
-            {
-                os << ',';
-            }
-        }
+    template <typename CharT>
+    friend std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os, ndarray_view<T, M, Order, Base>& v)
+    {
+        auto f = [&](const std::array<size_t,M>& indices) 
+        { 
+            return v(indices);
+        };
+        print(os, v.dimensions(), f);
         return os;
     }
 };
