@@ -1278,7 +1278,7 @@ public:
     template <typename... Indices>
     const T& operator()(size_t index, Indices... indices) const
     {
-        size_t off = get_offset<n, Base, 0>(strides_, offsets_, index, indices...);
+        size_t off = get_offset<M, Base, 0>(strides_, offsets_, index, indices...);
         assert(off < size());
         return data_[off];
     }

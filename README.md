@@ -10,7 +10,7 @@ Download the latest [single header file](https://raw.githubusercontent.com/danie
 
 ## Examples
 
-### Simple example
+### Construct a 3-dimensional array
 
 ```c++
 #include <acons/ndarray.hpp>
