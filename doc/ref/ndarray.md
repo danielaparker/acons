@@ -25,6 +25,7 @@ Allocator||
 
 Member type                         |Definition
 ------------------------------------|------------------------------
+`allocator_type`|
 `value_type`|T
 `reference`|T&
 `const_reference`|const T&
@@ -65,6 +66,14 @@ Member type                         |Definition
     ndarray(ndarray&& a, 
             const Allocator& alloc); // (12)
 
+    template <typename TPtr>
+    ndarray(const const_ndarray_view<T,N,Order,Base,TPtr>& a); // (13)
+
+    template <typename TPtr>
+    ndarray(const const_ndarray_view<T,N,Order,Base,TPtr>& a, 
+            const Allocator& alloc); // (14)
+
+
 Constructs a new N-dimensional array, optionally using a user supplied allocator.
 
 (1) Default constructor. Constructs an empty N-dimensional array.
@@ -99,6 +108,8 @@ Exceptions:
 
     ndarray& operator=(std::initializer_list<array_item<T>> list);
 
+    ~ndarray();
+
 ##### Capacity
 
     bool empty() const noexcept;
@@ -122,6 +133,10 @@ Exceptions:
     template <size_t n=N, size_t K>
     typename std::enable_if<(K < n),ndarray_view<T,N-K,Order,Base>>::type 
     subarray(const std::array<size_t,K>& origin);
+
+    template <size_t n=N, size_t K>
+    typename std::enable_if<(K < n),const_ndarray_view<T,N-K,Order,Base>>::type 
+    subarray(const std::array<size_t,K>& origin) const 
 
 ##### Iterators
 

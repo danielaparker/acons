@@ -1,10 +1,10 @@
-### acons::ndarray
+### acons::ndarray_view
 
 ```c++
-template <typename T, size_t N, typename Order, typename Base, typename Allocator>
-class ndarray
+template <typename T, size_t M, typename Order=row_major, typename Base=zero_based>
+class ndarray_view
 ```
-The `ndarray` class represents an N-dimensional array.
+The `ndarray_view` class represents a view on an N-dimensional array.
 
 #### Header
 ```c++
@@ -19,7 +19,6 @@ T||
 N||
 Order||
 Base||
-Allocator||
 
 #### Member types
 
@@ -33,37 +32,15 @@ Member type                         |Definition
 
 #### Member functions
 
-    ndarray(); // (1)
+    ndarray_view(); // (1)
 
-    template <typename... Args>
-    ndarray(size_t i, Args... args); // (2)
+    template <typename Allocator>
+    ndarray_view(ndarray<T, M, Order, Base, Allocator>& a); // (2)
 
-    explicit ndarray(const std::array<size_t,N>& dimensions); // (3)
+    template<size_t N, typename Allocator>
+    ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
+                 const slices_type& slices);
 
-    ndarray(const std::array<size_t,N>& dimensions, 
-            const Allocator& alloc); // (4)
-
-    ndarray(const std::array<size_t,N>& dimensions,
-            T val); // (5)
-
-    ndarray(const std::array<size_t,N>& dimensions, 
-            T val,
-            const Allocator& alloc); // (6)
-
-    ndarray(std::initializer_list<array_item<T>> list); // (7)
-
-    ndarray(std::initializer_list<array_item<T>> list, 
-            const Allocator& alloc); // (8)
-
-    ndarray(const ndarray& a); // (9)
-
-    ndarray(const ndarray& a, 
-            const Allocator& alloc); // (10)
-
-    ndarray(ndarray&& a); // (11)
-
-    ndarray(ndarray&& a, 
-            const Allocator& alloc); // (12)
 
 Constructs a new N-dimensional array, optionally using a user supplied allocator.
 

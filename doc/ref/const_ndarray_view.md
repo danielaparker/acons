@@ -1,4 +1,4 @@
-### acons::ndarray
+### acons::const_ndarray_view
 
 ```c++
 template <typename T, size_t N, typename Order, typename Base, typename Allocator>
