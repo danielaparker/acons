@@ -1110,8 +1110,8 @@ public:
 private:
     pointer data_;
     std::array<size_t,N> dim_;
-    const std::array<size_t,N> strides_;
-    const std::array<size_t,N> offsets_;
+    std::array<size_t,N> strides_;
+    std::array<size_t,N> offsets_;
     std::vector<output_item<N>> stack_;
     pointer p_;
     pointer endp_;
