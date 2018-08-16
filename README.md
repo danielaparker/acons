@@ -71,7 +71,7 @@ Output:
 
 using namespace acons;
 
-typedef boost::interprocess::allocator<int,
+typedef boost::interprocess::allocator<double,
         boost::interprocess::managed_shared_memory::segment_manager> shmem_allocator;
 
 typedef ndarray<double,2,row_major,zero_based,shmem_allocator> ndarray_shm;
@@ -80,13 +80,15 @@ int main(int argc, char *argv[])
 {
     typedef std::pair<double, int> MyType;
 
-    if(argc == 1){  //Parent process
+    if(argc == 1) //Parent process
+    {  
        //Remove shared memory on construction and destruction
        struct shm_remove
        {
           shm_remove() { boost::interprocess::shared_memory_object::remove("MySharedMemory"); }
           ~shm_remove(){ boost::interprocess::shared_memory_object::remove("MySharedMemory"); }
-       } remover;
+       } 
+       remover;
 
        //Construct managed shared memory
        boost::interprocess::managed_shared_memory segment(boost::interprocess::create_only, 
@@ -107,8 +109,8 @@ int main(int argc, char *argv[])
        std::pair<ndarray_shm*, boost::interprocess::managed_shared_memory::size_type> res;
        res = segment.find<ndarray_shm>("my ndarray");
 
-       std::cout << "Parent:" << std::endl;
-       std::cout << *(res.first) << std::endl;
+       std::cout << "Parent process:\n";
+       std::cout << *(res.first) << "\n";
 
        //Launch child process
        std::string s(argv[0]); s += " child ";
@@ -119,7 +121,8 @@ int main(int argc, char *argv[])
        if(segment.find<MyType>("my ndarray").first)
           return 1;
     }
-    else{
+    else
+    {
        //Open managed shared memory
        boost::interprocess::managed_shared_memory segment(boost::interprocess::open_only, 
                                                           "MySharedMemory");
@@ -129,12 +132,12 @@ int main(int argc, char *argv[])
 
        if (res.first != nullptr)
        {
-           std::cout << "Child:" << std::endl;
-           std::cout << *(res.first) << std::endl;
+           std::cout << "\nChild process:\n";
+           std::cout << *(res.first) << "\n";
        }
        else
        {
-           std::cout << "Result is null" << std::endl;
+           std::cout << "Result is null\n";
        }
 
        //We're done, delete all the objects
@@ -146,6 +149,7 @@ Output:
 ```
 Parent:
 [[0,1],[2,3]]
+
 Child:
 [[0,1],[2,3]]
 ```

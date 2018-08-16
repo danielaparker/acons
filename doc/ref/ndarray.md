@@ -15,17 +15,18 @@ The `ndarray` class represents an N-dimensional array.
 
 Member type                         |Definition|Notes
 ------------------------------------|----------|--------------------
-T||
-N||
-Order||
-Base||
-Allocator||
+`T`||
+`N`||
+`Order`||
+`Base`||
+`Allocator`||`Allocator::value_type` must be the same as `T`
 
 #### Member types
 
 Member type                         |Definition
 ------------------------------------|------------------------------
-`allocator_type`|
+`allocator_type`|Allocator
+`pointer`|std::allocator_traits<allocator_type>::pointer
 `value_type`|T
 `reference`|T&
 `const_reference`|const T&

@@ -615,9 +615,9 @@ struct init_helper<0>
 };
 
 template <typename T, size_t N, typename Order, typename Base, typename Allocator>
-class ndarray : public ndarray_base<typename std::allocator_traits<Allocator>::template rebind_alloc<T>>
+class ndarray : public ndarray_base<Allocator>
 {
-    typedef ndarray_base<typename std::allocator_traits<Allocator>::template rebind_alloc<T>> super_type;
+    typedef ndarray_base<Allocator> super_type;
 public:
     using typename super_type::allocator_type;
     using typename super_type::pointer;
