@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
        {
           shm_remove() { boost::interprocess::shared_memory_object::remove("MySharedMemory"); }
           ~shm_remove(){ boost::interprocess::shared_memory_object::remove("MySharedMemory"); }
-       } 
+       }
        remover;
 
        //Construct managed shared memory
