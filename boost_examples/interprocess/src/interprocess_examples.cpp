@@ -32,24 +32,14 @@ int main(int argc, char *argv[])
        //Initialize shared memory STL-compatible allocator
        const shmem_allocator allocator(segment.get_segment_manager());
 
-       // Create json value with all dynamic allocations in shared memory
-
+       // Create ndarray with all dynamic allocations in shared memory
        ndarray_shm* pA = segment.construct<ndarray_shm>("my ndarray")(std::array<size_t,2>{2,2}, 0.0, allocator);
        ndarray_shm& A = *pA;
 
-       std::cout << "size: " << A.size() << "\n";
-       for (size_t i = 0; i < A.dimensions().size(); ++i)
-       {
-           std::cout << A.dimensions()[i] << "\n";
-       }
-
        A(0,0) = 0;
-       std::cout << "ok!" << "\n";
        A(0,1) = 1;
        A(1,0) = 2;
        A(1,1) = 3;
-
-       std::cout << "ok" << "\n";
 
        std::pair<ndarray_shm*, boost::interprocess::managed_shared_memory::size_type> res;
        res = segment.find<ndarray_shm>("my ndarray");

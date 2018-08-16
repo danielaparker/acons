@@ -772,7 +772,7 @@ public:
 #if defined(_MSC_VER)
         std::copy(a.data(), a.data()+a.size(),stdext::make_checked_array_iterator(data_,size_));
 #else 
-        std::copy(a.data(),a.data()+a.size(),data_);
+        std::copy(a.data_,a.data_+a.size(),data_);
 #endif
     }
 
@@ -786,9 +786,9 @@ public:
         data_ = create(size_, get_allocator());
 
 #if defined(_MSC_VER)
-        std::copy(a.data_, a.data_+a.size_,stdext::make_checked_array_iterator(data_,size_));
+        std::copy(a.data(), a.data()+a.size(),stdext::make_checked_array_iterator(data_,size_));
 #else 
-        std::copy(a.data_,a.data_+a.size_,data_);
+        std::copy(a.data(),a.data()+a.size(),data_);
 #endif
     }
 
@@ -866,12 +866,12 @@ public:
 
     T* data()
     {
-        return data_;
+        return to_plain_pointer(data_);
     }
 
     const T* data() const 
     {
-        return data_;
+        return to_plain_pointer(data_);
     }
 
     size_t size(size_t i) const
@@ -1265,7 +1265,7 @@ public:
 
     template <typename Allocator>
     const_ndarray_view(ndarray<T, M, Order, Base, Allocator>& a)
-        : data_(a.data_), size_(a.size_), dim_(a.dim_), strides_(a.strides_)          
+        : data_(a.data()), size_(a.size()), dim_(a.dimensions()), strides_(a.strides())          
     {
         offsets_.fill(0);
     }
