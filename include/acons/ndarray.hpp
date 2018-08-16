@@ -1408,8 +1408,8 @@ public:
         return const_ndarray_view<T,M-K,Order,Base>(*this,origin);
     }
 
-    template <typename CharT>
-    friend std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os, const_ndarray_view<T, M, Order, Base>& v)
+    template <typename CharT, typename TPtr>
+    friend std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os, const_ndarray_view<T, M, Order, Base, TPtr>& v)
     {
         auto f = [&](const std::array<size_t,M>& indices) 
         { 
@@ -1495,12 +1495,21 @@ public:
     {
     }
 
+    using super_type::data; 
+    using super_type::size;
+    using super_type::empty;
+    using super_type::dimensions;
+    using super_type::strides;
+    using super_type::offsets;
+    using super_type::begin;
+    using super_type::end;
+    using super_type::operator();
+    using super_type::subarray;
+
     T* data()
     {
         return this->data_;
     }
-
-    using super_type::data; 
 
     iterator begin()
     {
@@ -1511,12 +1520,6 @@ public:
     {
         return iterator();
     }
-
-    using super_type::begin;
-
-    using super_type::end;
-
-    using super_type::operator();
 
     template <typename... Indices>
     T& operator()(size_t index, Indices... indices) 
@@ -1533,24 +1536,11 @@ public:
         return this->data_[off];
     }
 
-    using super_type::subarray;
-
     template <size_t m=M, size_t K>
     typename std::enable_if<(K < m),ndarray_view<T,M-K,Order,Base>>::type 
     subarray(const std::array<size_t,K>& origin) 
     {
         return ndarray_view<T,M-K,Order,Base>(*this,origin);
-    }
-
-    template <typename CharT>
-    friend std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os, ndarray_view<T, M, Order, Base>& v)
-    {
-        auto f = [&](const std::array<size_t,M>& indices) 
-        { 
-            return v(indices);
-        };
-        print(os, v.dimensions(), f);
-        return os;
     }
 };
 
@@ -1579,14 +1569,15 @@ bool operator==(const ndarray<T, N, Order, Base, Allocator>& lhs, const ndarray<
 }
 
 template <typename T, size_t N, typename Order, typename Base, typename Allocator>
-bool operator!=(const ndarray<T, N, Order, Base, Allocator>& lhs, const ndarray<T, N, Order, Base, Allocator>& rhs)
+bool operator!=(const ndarray<T, N, Order, Base, Allocator>& lhs, 
+                const ndarray<T, N, Order, Base, Allocator>& rhs)
 {
     return !(lhs == rhs);
 }
 
-template <typename T, size_t M, typename Order, typename Base>
-bool operator==(const ndarray_view<T, M, Order, Base>& lhs, 
-                const ndarray_view<T, M, Order, Base>& rhs)
+template <typename T, size_t M, typename Order, typename Base, typename TPtr>
+bool operator==(const const_ndarray_view<T, M, Order, Base, TPtr>& lhs, 
+                const const_ndarray_view<T, M, Order, Base, TPtr>& rhs)
 {
     if (&lhs == &rhs)
     {
@@ -1597,9 +1588,9 @@ bool operator==(const ndarray_view<T, M, Order, Base>& lhs,
                           rhs.data(), rhs.dimensions(), lhs.strides(), rhs.offsets());
 }
 
-template <typename T, size_t M, typename Order, typename Base, typename Allocator>
+template <typename T, size_t M, typename Order, typename Base, typename Allocator, typename TPtr>
 bool operator==(const ndarray<T, M, Order, Base, Allocator>& lhs, 
-                const ndarray_view<T, M, Order, Base>& rhs)
+                const const_ndarray_view<T, M, Order, Base, TPtr>& rhs)
 {
     std::array<size_t,M> offsets;
     offsets.fill(0);
@@ -1607,8 +1598,8 @@ bool operator==(const ndarray<T, M, Order, Base, Allocator>& lhs,
                           rhs.data(), rhs.dimensions(), lhs.strides(), rhs.offsets());
 }
 
-template <typename T, size_t M, typename Order, typename Base, typename Allocator>
-bool operator==(const ndarray_view<T, M, Order, Base>& lhs, 
+template <typename T, size_t M, typename Order, typename Base, typename Allocator, typename TPtr>
+bool operator==(const const_ndarray_view<T, M, Order, Base, TPtr>& lhs, 
                 const ndarray<T, M, Order, Base, Allocator>& rhs)
 {
     std::array<size_t,M> offsets;
@@ -1617,21 +1608,22 @@ bool operator==(const ndarray_view<T, M, Order, Base>& lhs,
                           rhs.data(), rhs.dimensions(), lhs.strides(), offsets);
 }
 
-template <typename T, size_t M, typename Order, typename Base>
-bool operator!=(const ndarray_view<T, M, Order, Base>& lhs, const ndarray_view<T, M, Order, Base>& rhs)
+template <typename T, size_t M, typename Order, typename Base, typename TPtr>
+bool operator!=(const const_ndarray_view<T, M, Order, Base, TPtr>& lhs, 
+                const const_ndarray_view<T, M, Order, Base, TPtr>& rhs)
 {
     return !(lhs == rhs);
 }
 
-template <typename T, size_t M, typename Order, typename Base, typename Allocator>
+template <typename T, size_t M, typename Order, typename Base, typename Allocator, typename TPtr>
 bool operator!=(const ndarray<T, M, Order, Base, Allocator>& lhs, 
-                const ndarray_view<T, M, Order, Base>& rhs)
+                const const_ndarray_view<T, M, Order, Base, TPtr>& rhs)
 {
     return !(lhs == rhs);
 }
 
-template <typename T, size_t M, typename Order, typename Base, typename Allocator>
-bool operator!=(const ndarray_view<T, M, Order, Base>& lhs, 
+template <typename T, size_t M, typename Order, typename Base, typename Allocator, typename TPtr>
+bool operator!=(const const_ndarray_view<T, M, Order, Base, TPtr>& lhs, 
                 const ndarray<T, M, Order, Base, Allocator>& rhs)
 {
     return !(lhs == rhs);
