@@ -261,6 +261,44 @@ struct row_major
         }
     }
 
+    template <size_t N>
+    static void initialize_walk(std::vector<output_item<N>>& stack)
+    {
+        stack.emplace_back(0);
+    }
+
+    template <size_t N, typename Callable>
+    static void walk(std::vector<output_item<N>>& stack, 
+                     const std::array<size_t,N>& dim, 
+                     const std::array<size_t,N>& strides, 
+                     const std::array<size_t,N>& offsets, 
+                     Callable callable)
+    {
+        while (!stack.empty())
+        {
+            output_item<N> current = stack.back();
+            stack.pop_back();
+
+            if (current.index+1 < N)
+            {
+                for (size_t i = dim[current.index]; i-- > 0; )
+                {
+                    current.indices[current.index] = i; 
+                    stack.push_back(output_item<N>(current.indices,current.index+1)); 
+                }
+            }
+            else if (current.index+1 == N)
+            {
+                current.indices[N-1] = 0;
+                size_t o = get_offset<N,N,zero_based>(strides, offsets, current.indices);
+                current.indices[N-1] = dim[N-1]-1;
+                size_t endo = get_offset<N,N,zero_based>(strides, offsets, current.indices);
+                callable(o, endo+1, strides[N-1]);
+                break;
+            }
+        }
+    }
+
     template <typename T, size_t N>
     static bool compare(const T* data1, const std::array<size_t,N>& dim1, const std::array<size_t,N>& strides1, const std::array<size_t,N>& offsets1, 
                         const T* data2, const std::array<size_t,N>& dim2, const std::array<size_t,N>& strides2, const std::array<size_t,N>& offsets2)
@@ -336,6 +374,44 @@ struct column_major
         {
             strides[i] = size;
             size *= dim[i];
+        }
+    }
+
+    template <size_t N>
+    static void initialize_walk(std::vector<output_item<N>>& stack)
+    {
+        stack.emplace_back(N-1);
+    }
+
+    template <size_t N, typename Callable>
+    static void walk(std::vector<output_item<N>>& stack, 
+                     const std::array<size_t,N>& dim, 
+                     const std::array<size_t,N>& strides, 
+                     const std::array<size_t,N>& offsets, 
+                     Callable callable)
+    {
+        while (!stack.empty())
+        {
+            output_item<N> current = stack.back();
+            stack.pop_back();
+
+            if (current.index > 0)
+            {
+                for (size_t i = dim[current.index]; i-- > 0; )
+                {
+                    current.indices[current.index] = i; 
+                    stack.push_back(output_item<N>(current.indices,current.index+1)); 
+                }
+            }
+            else 
+            {
+                current.indices[0] = 0;
+                size_t o = get_offset<N,N,zero_based>(strides, offsets, current.indices);
+                current.indices[0] = dim[0]-1;
+                size_t endo = get_offset<N,N,zero_based>(strides, offsets, current.indices);
+                callable(o, endo+1, strides[0]);
+                break;
+            }
         }
     }
 
@@ -530,6 +606,14 @@ struct init_helper<0>
 template <typename T, size_t N, typename Order, typename Base, typename Allocator>
 class ndarray : public ndarray_base<Allocator>
 {
+public:
+    using typename ndarray_base<Allocator>::allocator_type;
+    typedef T value_type;
+    typedef const T& const_reference;
+    static const size_t dimension = N;
+    typedef T* iterator;
+    typedef const T* const_iterator;
+private:
     friend struct init_helper<0>;
     friend class ndarray_view<T, N, Order, Base>;
 
@@ -538,15 +622,7 @@ class ndarray : public ndarray_base<Allocator>
     std::array<size_t,N> dim_;
     std::array<size_t,N> strides_;
 public:
-    using typename ndarray_base<Allocator>::allocator_type;
     using ndarray_base<Allocator>::get_allocator;
-
-    typedef T value_type;
-    typedef const T& const_reference;
-    static const size_t dimension = N;
-
-    typedef T* iterator;
-    typedef const T* const_iterator;
 
     ndarray()
         : ndarray_base<Allocator>(allocator_type()),
@@ -1023,46 +1099,92 @@ std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os, ndarray<T, 
     return os;
 }
 
-
-template <typename T, size_t N, typename Order, typename Enable = void>
-class ndarray_view_iterator;
-
-template <typename T, size_t N, typename Order>
-class ndarray_view_iterator<T, N, Order, 
-                            typename std::enable_if<N==1 && std::is_same<Order,row_major>::value>::type>
+template <typename T, size_t N, typename Order, bool is_const = false>
+class ndarray_view_iterator
 {
-T* p_;
 public:
-    typedef ptrdiff_t difference_type;
-    typedef T& reference;
-    typedef T* pointer;
     typedef std::forward_iterator_tag iterator_category;
+    typedef ptrdiff_t difference_type;
+    typedef typename std::conditional<is_const, const T&, T&>::type reference;
+    typedef typename std::conditional<is_const, const T*, T*>::type pointer;
+private:
+    pointer data_;
+    std::array<size_t,N> dim_;
+    const std::array<size_t,N> strides_;
+    const std::array<size_t,N> offsets_;
+    std::vector<output_item<N>> stack_;
+    pointer p_;
+    pointer endp_;
+    size_t stride_;
+public:
 
     ndarray_view_iterator()
-        : p_(nullptr)
+        : data_(nullptr), p_(nullptr), endp_(nullptr), stride_(0)
     {
     }
 
-    ndarray_view_iterator(T* data)
-        : p_(data)
+    ndarray_view_iterator(pointer data, 
+                          const std::array<size_t,N>& dim, 
+                          const std::array<size_t,N>& strides, 
+                          const std::array<size_t,N>& offsets)
+        : data_(data), dim_(dim), strides_(strides), offsets_(offsets), 
+          p_(nullptr), endp_(nullptr), stride_(0)
     {
+        Order::initialize_walk(stack_);
+        p_ = endp_ = nullptr;
+        auto f = [&](size_t o, size_t endo, size_t stride)
+        {
+            p_ = data_ + o;
+            endp_ = data_ + endo;
+            stride_ = stride;
+        };
+        Order::walk(stack_, dim_, strides_, offsets_, f);
     }
 
-    ndarray_view_iterator(const ndarray_view_iterator<T,N,Order>& val) 
-        : p_(val.p_)
+    ndarray_view_iterator(const ndarray_view_iterator<T,N,Order>& other) 
+        : data_(other.data_), dim_(other.dim_), strides_(other.strides_), offsets_(other.offsets_), 
+          stack_(other.stack_), p_(other.p_), endp_(other.endp_), stride_(other.stride_)
     {
     } 
 
     ndarray_view_iterator<T, N, Order>& operator++()
     {
-        ++p_;
+        if (p_+1 < endp_)
+        {
+            p_ += stride_;
+        }
+        else
+        {
+            p_ = endp_ = nullptr;
+            auto f = [&](size_t o, size_t endo, size_t stride)
+            {
+                p_ = data_ + o;
+                endp_ = data_ + endo;
+                stride_ = stride;
+            };
+            Order::walk(stack_, dim_, strides_, offsets_, f);
+        }
         return *this;
     }
 
-    ndarray_view_iterator<T, N, Order>& operator++(int)
+    ndarray_view_iterator<T, N, Order> operator++(int)
     {
         ndarray_view_iterator<T,N,Order> temp(*this);
-        ++p_;
+        if (p_+1 < endp_)
+        {
+            p_ += stride_;
+        }
+        else
+        {
+            p_ = endp_ = nullptr;
+            auto f = [&](size_t o, size_t endo, size_t stride)
+            {
+                p_ = data_ + o;
+                endp_ = data_ + endo;
+                stride_ = stride;
+            };
+            Order::walk(stack_, dim_, strides_, offsets_, f);
+        }
         return temp;
     }
 
@@ -1080,47 +1202,23 @@ public:
     {
         return !(it1 == it2);
     }
-};
-
-template <typename T, size_t N, typename Order>
-class ndarray_view_iterator<T, N, Order, 
-                            typename std::enable_if<N != 1 && std::is_same<Order,row_major>::value>::type>
-{
-T* data_;
-public:
-    ndarray_view_iterator(T* data)
-        : data_(data)
-    {
-    }
-};
-
-template <typename T, size_t N, typename Order>
-class ndarray_view_iterator<T, N, Order, 
-    typename std::enable_if<N == 1 && std::is_same<Order,column_major>::value>::type>
-{
-public:
-};
-
-template <typename T, size_t N, typename Order>
-class ndarray_view_iterator<T, N, Order, 
-    typename std::enable_if<N != 1 && std::is_same<Order,column_major>::value>::type>
-{
-public:
+private:
 };
 
 template <typename T, size_t M, typename Order, typename Base>
 class ndarray_view 
 {
+public:
+    typedef ndarray_view_iterator<T,M,Order,true> iterator;
+    typedef ndarray_view_iterator<T,M,Order,false> const_iterator;
+    typedef array_wrapper<slice,M> slices_type;
+private:
     T* data_;
     size_t size_;
     std::array<size_t,M> dim_;
     std::array<size_t,M> strides_;
     std::array<size_t,M> offsets_;
 public:
-    typedef T* iterator;
-    typedef const T* const_iterator;
-    typedef array_wrapper<slice,M> slices_type;
-
     ndarray_view()
         : data_(nullptr), size_(0)
     {
@@ -1268,6 +1366,46 @@ public:
         return dim_[i];
     }
 
+    iterator begin()
+    {
+        return iterator(data_, dim_, strides_, offsets_);
+    }
+
+    iterator end()
+    {
+        return iterator();
+    }
+
+    const_iterator begin() const
+    {
+        return const_iterator(data_, dim_, strides_, offsets_);
+    }
+
+    const_iterator end() const
+    {
+        return const_iterator();
+    }
+
+    const_iterator cbegin() const
+    {
+        return const_iterator(data_, dim_, strides_, offsets_);
+    }
+
+    const_iterator cend() const
+    {
+        return const_iterator();
+    }
+
+    const_iterator cbegin() const
+    {
+        return const_iterator(data_, dim_, strides_, offsets_);
+    }
+
+    const_iterator cend() const
+    {
+        return const_iterator();
+    }
+
     template <typename... Indices>
     T& operator()(size_t index, Indices... indices) 
     {
@@ -1298,11 +1436,11 @@ public:
         return data_[off];
     }
 
-    template <size_t n=N, size_t K>
-    typename std::enable_if<(K < n),ndarray_view<T,N-K,Order,Base>>::type 
+    template <size_t m=M, size_t K>
+    typename std::enable_if<(K < m),ndarray_view<T,M-K,Order,Base>>::type 
     subarray(const std::array<size_t,K>& origin) 
     {
-        return ndarray_view<T,N-K,Order,Base>(*this,origin);
+        return ndarray_view<T,M-K,Order,Base>(*this,origin);
     }
 
     template <typename CharT>

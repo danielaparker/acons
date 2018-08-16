@@ -28,6 +28,8 @@ Member type                         |Definition
 `value_type`|T
 `reference`|T&
 `const_reference`|const T&
+`iterator`|T*
+`const_iterator`|const T*
 
 #### Member functions
 
@@ -120,6 +122,16 @@ Exceptions:
     template <size_t n=N, size_t K>
     typename std::enable_if<(K < n),ndarray_view<T,N-K,Order,Base>>::type 
     subarray(const std::array<size_t,K>& origin);
+
+##### Iterators
+
+    iterator begin();
+    const_iterator begin() const;
+    const_iterator cbegin() const;
+
+    iterator end();
+    const_iterator end() const;
+    const_iterator cend() const;
 
 ##### Modifiers
 
