@@ -3,7 +3,6 @@ dist: trusty
 sudo: required
 
 addon_shortcuts:
-  xcode64: &xcode64
 
   clang38: &clang38
     apt:
@@ -86,13 +85,10 @@ matrix:
     - { env: 'STD=11 CXX=clang++-3.8 CMAKEFLAGS="-fsanitize=address,memory,undefined,thread,leak"', addons: *clang38 }
     - { env: 'STD=11 CXX=clang++-5.0 CMAKEFLAGS="-fsanitize=address,memory,undefined,thread,leak"', addons: *clang50 }
     - { env: 'STD=11 CXX=clang++-6.0 CMAKEFLAGS="-fsanitize=address,memory,undefined,thread,leak"', addons: *clang60 }
-    - { env: 'CXX=clang++', compiler: clang, osx_image: xcode6.4, addons: *xcode64}
+    - { env: 'CXX=clang++', compiler: clang, os: osx, osx_image: xcode6.4, addons: *xcode64}
 
   allow_failures:
-    - { env: 'STD=11 CXX=clang++-3.8 CMAKEFLAGS="-fsanitize=address,memory,undefined,thread,leak"', addons: *clang38 }
-    - { env: 'STD=11 CXX=clang++-5.0 CMAKEFLAGS="-fsanitize=address,memory,undefined,thread,leak"', addons: *clang50 }
-    - { env: 'STD=11 CXX=clang++-6.0 CMAKEFLAGS="-fsanitize=address,memory,undefined,thread,leak"', addons: *clang60 }
-    - { env: 'CXX=clang++', compiler: clang, osx_image: xcode6.4, addons: *xcode64}
+    - { env: 'CXX=clang++', compiler: clang, os: osx, osx_image: xcode6.4}
 
 script:
   - cd tests/build/cmake

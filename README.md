@@ -8,6 +8,19 @@ It is distributed under the [MIT License](https://opensource.org/licenses/MIT).
 
 Download the latest [single header file](https://raw.githubusercontent.com/danielaparker/acons/master/include/acons/ndarray.hpp). 
 
+## Supported compilers
+
+| Compiler     | Operating System
+|--------------|------------------
+| VS 2015      | Windows 10       
+| g++-4.8      | Ubuntu           
+| g++-6        | Ubuntu           
+| g++-7        | Ubuntu           
+| g++-8        | Ubuntu           
+| clang-3.8    |
+| clang-5.0    |
+| clang-6.0    |
+
 ## Examples
 
 ### Construct a 3-dimensional array
@@ -44,3 +57,5 @@ Output:
 ```
 [[[0,1],[2,3],[4,5],[6,7]],[[8,9],[10,11],[12,13],[14,15]],[[16,17],[18,19],[20,21],[22,23]]]
 ```
+
+
