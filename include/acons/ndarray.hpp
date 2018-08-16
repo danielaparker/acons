@@ -1407,18 +1407,19 @@ public:
     {
         return const_ndarray_view<T,M-K,Order,Base>(*this,origin);
     }
-
-    template <typename CharT, typename TPtr>
-    friend std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os, const_ndarray_view<T, M, Order, Base, TPtr>& v)
-    {
-        auto f = [&](const std::array<size_t,M>& indices) 
-        { 
-            return v(indices);
-        };
-        print(os, v.dimensions(), f);
-        return os;
-    }
 };
+
+template <typename CharT, typename T, size_t M, typename Order, typename Base, typename TPtr>
+std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os, 
+                                      const_ndarray_view<T, M, Order, Base, TPtr>& v)
+{
+    auto f = [&](const std::array<size_t,M>& indices) 
+    { 
+        return v(indices);
+    };
+    print(os, v.dimensions(), f);
+    return os;
+}
 
 template <typename T, size_t M, typename Order, typename Base>
 class ndarray_view : public const_ndarray_view<T, M, Order, Base, T*>
