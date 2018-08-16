@@ -482,6 +482,9 @@ struct column_major
 template <typename T, size_t N, typename Order=row_major, typename Base=zero_based, typename Allocator=std::allocator<T>>
 class ndarray;
 
+template <typename T, size_t M, typename Order=row_major, typename Base=zero_based, typename TPtr=const T*>
+class const_ndarray_view;  
+
 template <typename T, size_t M, typename Order=row_major, typename Base=zero_based>
 class ndarray_view;  
 
@@ -616,6 +619,8 @@ public:
 private:
     friend struct init_helper<0>;
     friend class ndarray_view<T, N, Order, Base>;
+    friend class const_ndarray_view<T, N, Order, Base, T*>;
+    friend class const_ndarray_view<T, N, Order, Base, const T*>;
 
     T* data_;
     size_t size_;
@@ -1205,13 +1210,13 @@ public:
 private:
 };
 
-template <typename T, size_t M, typename Order, typename Base, typename TPtr=T*>
+template <typename T, size_t M, typename Order, typename Base, typename TPtr>
 class const_ndarray_view 
 {
 public:
     typedef ndarray_view_iterator<T,M,Order,false> const_iterator;
     typedef array_wrapper<slice,M> slices_type;
-private:
+protected:
     TPtr data_;
     size_t size_;
     std::array<size_t,M> dim_;
@@ -1327,12 +1332,13 @@ public:
         }
     }
 
-    const_ndarray_view(TPtr* data, const std::array<size_t,M>& dim) 
+    const_ndarray_view(TPtr data, const std::array<size_t,M>& dim) 
         : data_(data), dim_(dim)
     {
         offsets_.fill(0);
         Order::calculate_strides(dim_, strides_, size_);
     }
+
     size_t size() const noexcept
     {
         return size_;
@@ -1415,60 +1421,39 @@ public:
 };
 
 template <typename T, size_t M, typename Order, typename Base>
-class ndarray_view 
+class ndarray_view : public const_ndarray_view<T, M, Order, Base, T*>
 {
+    typedef const_ndarray_view<T, M, Order, Base, T*> super_type;
 public:
     typedef ndarray_view_iterator<T,M,Order,true> iterator;
-    typedef ndarray_view_iterator<T,M,Order,false> const_iterator;
-    typedef array_wrapper<slice,M> slices_type;
-private:
-    T* data_;
-    size_t size_;
-    std::array<size_t,M> dim_;
-    std::array<size_t,M> strides_;
-    std::array<size_t,M> offsets_;
+    using typename super_type::const_iterator;
+    using typename super_type::slices_type;
 public:
     ndarray_view()
-        : data_(nullptr), size_(0)
+        : super_type()
     {
-        dim_.fill(0);
-        strides_.fill(0);
-        offsets_.fill(0);
     }
 
     template <typename Allocator>
     ndarray_view(ndarray<T, M, Order, Base, Allocator>& a)
-        : data_(a.data_), size_(a.size_), dim_(a.dim_), strides_(a.strides_)          
+        : super_type(a)          
     {
-        offsets_.fill(0);
     }
 
     template<size_t m = M, size_t N, typename Allocator>
     ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
                  const slices_type& slices, 
                typename std::enable_if<m == N>::type* = 0)
-        : data_(a.data()), size_(a.size())
+        : super_type(a, slices)
     {
-        for (size_t i = 0; i < M; ++i)
-        {
-            dim_[i] = slices[i].size()/slices[i].stride();
-            strides_[i] = a.strides()[i]*slices[i].stride();
-            offsets_[i] = Base::rebase_to_zero(slices[i].start()); // a.strides()[i];
-        }
     }
 
-    template<size_t m = M, size_t N, typename Allocator>
+    template<size_t m = M, size_t N>
     ndarray_view(ndarray_view<T, N, Order, Base>& a, 
                  const slices_type& slices, 
                typename std::enable_if<m == N>::type* = 0)
-        : data_(a.data()), size_(a.size())
+        : super_type(a, slices)
     {
-        for (size_t i = 0; i < M; ++i)
-        {
-            dim_[i] = slices[i].size()/slices[i].stride();
-            strides_[i] = a.strides()[i]*slices[i].stride();
-            offsets_[i] = Base::rebase_to_zero(a.offsets()[i] + slices[i].start());
-        }
     }
 
     template<size_t m = M, size_t N, typename Allocator>
@@ -1476,108 +1461,50 @@ public:
                  const std::array<size_t,N-M>& origin,
                  const slices_type& slices, 
                typename std::enable_if<m < N>::type* = 0)
-        : data_(a.data()), size_(a.size())
+        : super_type(a, origin, slices)
     {
-        size_t rel = get_offset<N,N-M,Base>(a.strides(),origin);
-
-        for (size_t i = 0; i < M; ++i)
-        {
-            dim_[i] = slices[i].size()/slices[i].stride();
-            strides_[i] = a.strides()[(N-M)+i]*slices[i].stride();
-            offsets_[i] = rel + Base::rebase_to_zero(slices[i].start());
-        }
     }
 
-    template<size_t m = M, size_t N, typename Allocator>
+    template<size_t m = M, size_t N>
     ndarray_view(ndarray_view<T, N, Order, Base>& a, 
                  const std::array<size_t,N-M>& origin,
                  const slices_type& slices, 
                typename std::enable_if<m < N>::type* = 0)
-        : data_(a.data()), size_(a.size())
+        : super_type(a, origin, slices)
     {
-        size_t rel = get_offset<N,N-M,Base>(a.strides(),a.offsets(),origin);
-
-        for (size_t i = 0; i < M; ++i)
-        {
-            dim_[i] = slices[i].size()/slices[i].stride();
-            strides_[i] = a.strides()[(N-M)+i]*slices[i].stride();
-            offsets_[i] = rel + Base::rebase_to_zero(a.offsets()[(N-M)+i] + slices[i].start());
-        }
     }
 
     template<size_t m = M, size_t N, typename Allocator>
     ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
                  const std::array<size_t,N-M>& origin,
                typename std::enable_if<m < N>::type* = 0)
-        : data_(a.data()), size_(a.size())
+        : super_type(a, origin)
     {
-        size_t rel = get_offset<N,N-M,Base>(a.strides(),origin);
-
-        for (size_t i = 0; i < M; ++i)
-        {
-            dim_[i] = a.dimensions()[(N-M)+i];
-            strides_[i] = a.strides()[(N-M)+i];
-            offsets_[i] = rel;
-        }
     }
 
-    template<size_t m = M, size_t N, typename Allocator>
+    template<size_t m = M, size_t N>
     ndarray_view(ndarray_view<T, N, Order, Base>& a, 
                  const std::array<size_t,N-M>& origin,
                typename std::enable_if<m < N>::type* = 0)
-        : data_(a.data()), size_(a.size())
+        : super_type(a, origin)
     {
-        size_t rel = get_offset<N,N-M,Base>(a.strides(),a.offsets(),origin);
-
-        for (size_t i = 0; i < M; ++i)
-        {
-            dim_[i] = a.dimension()[(N-M)+i];
-            strides_[i] = a.strides()[(N-M)+i];
-            offsets_[i] = rel + Base::rebase_to_zero(a.offsets()[(N-M)+i]);
-        }
     }
 
     ndarray_view(T* data, const std::array<size_t,M>& dim) 
-        : data_(data), dim_(dim)
+        : super_type(data, dim)
     {
-        offsets_.fill(0);
-        Order::calculate_strides(dim_, strides_, size_);
     }
-    size_t size() const noexcept
-    {
-        return size_;
-    }
-
-    bool empty() const noexcept
-    {
-        return size_ == 0;
-    }
-
-    const std::array<size_t,M>& dimensions() const {return dim_;}
-
-    const std::array<size_t,M>& strides() const {return strides_;}
-
-    const std::array<size_t,M>& offsets() const {return offsets_;}
 
     T* data()
     {
-        return data_;
+        return this->data_;
     }
 
-    const T* data() const 
-    {
-        return data_;
-    }
-
-    size_t size(size_t i) const
-    {
-        assert(i < dim_.size());
-        return dim_[i];
-    }
+    using super_type::data; 
 
     iterator begin()
     {
-        return iterator(data_, dim_, strides_, offsets_);
+        return iterator(this->data_, this->dim_, this->strides_, this->offsets_);
     }
 
     iterator end()
@@ -1585,55 +1512,28 @@ public:
         return iterator();
     }
 
-    const_iterator begin() const
-    {
-        return const_iterator(data_, dim_, strides_, offsets_);
-    }
+    using super_type::begin;
 
-    const_iterator end() const
-    {
-        return const_iterator();
-    }
+    using super_type::end;
 
-    const_iterator cbegin() const
-    {
-        return const_iterator(data_, dim_, strides_, offsets_);
-    }
-
-    const_iterator cend() const
-    {
-        return const_iterator();
-    }
+    using super_type::operator();
 
     template <typename... Indices>
     T& operator()(size_t index, Indices... indices) 
     {
-        size_t off = get_offset<M, Base, 0>(strides_, offsets_, index, indices...);
+        size_t off = get_offset<M, Base, 0>(this->strides_, this->offsets_, index, indices...);
         assert(off < size());
-        return data_[off];
-    }
-
-    template <typename... Indices>
-    const T& operator()(size_t index, Indices... indices) const
-    {
-        size_t off = get_offset<M, Base, 0>(strides_, offsets_, index, indices...);
-        assert(off < size());
-        return data_[off];
+        return this->data_[off];
     }
 
     T& operator()(const std::array<size_t,M>& indices) 
     {
-        size_t off = get_offset<M, M, Base>(strides_, offsets_, indices);
+        size_t off = get_offset<M, M, Base>(this->strides_, this->offsets_, indices);
         assert(off < size());
-        return data_[off];
+        return this->data_[off];
     }
 
-    const T& operator()(const std::array<size_t,M>& indices) const 
-    {
-        size_t off = get_offset<M, M, Base>(strides_, offsets_, indices);
-        assert(off < size());
-        return data_[off];
-    }
+    using super_type::subarray;
 
     template <size_t m=M, size_t K>
     typename std::enable_if<(K < m),ndarray_view<T,M-K,Order,Base>>::type 

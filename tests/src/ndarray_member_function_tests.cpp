@@ -43,7 +43,7 @@ TEST_CASE("constructor 2a")
         }
     }
 
-    CHECK(!a.empty());
+    CHECK_FALSE(a.empty());
     CHECK(a.size() == 6);
     CHECK(a.size(0) == 1);
     CHECK(a.size(1) == 2);
@@ -59,7 +59,7 @@ TEST_CASE("constructor 2b")
 {
     ndarray<double,3> a(1,2,3,10.0);
 
-    CHECK(!a.empty());
+    CHECK_FALSE(a.empty());
     CHECK(a.size() == 6);
     CHECK(a.size(0) == 1);
     CHECK(a.size(1) == 2);
@@ -88,7 +88,7 @@ TEST_CASE("constructor 3")
         }
     }
 
-    CHECK(!a.empty());
+    CHECK_FALSE(a.empty());
     CHECK(a.size() == 6);
     CHECK(a.size(0) == 1);
     CHECK(a.size(1) == 2);
@@ -118,7 +118,7 @@ TEST_CASE("constructor 4")
         }
     }
 
-    CHECK(!a.empty());
+    CHECK_FALSE(a.empty());
     CHECK(a.size() == 6);
     CHECK(a.size(0) == 1);
     CHECK(a.size(1) == 2);
@@ -135,7 +135,7 @@ TEST_CASE("constructor 5")
     std::array<size_t,3> dim{ 1,2,3 };
     ndarray<double, 3> a(dim, 10.0);
 
-    CHECK(!a.empty());
+    CHECK_FALSE(a.empty());
     CHECK(a.size() == 6);
     CHECK(a.size(0) == 1);
     CHECK(a.size(1) == 2);
@@ -152,7 +152,7 @@ TEST_CASE("constructor 6")
     std::array<size_t,3> dim{ 1,2,3 };
     ndarray<double, 3> a(dim, 10.0, std::allocator<double>());
 
-    CHECK(!a.empty());
+    CHECK_FALSE(a.empty());
     CHECK(a.size() == 6);
     CHECK(a.size(0) == 1);
     CHECK(a.size(1) == 2);
@@ -168,7 +168,7 @@ TEST_CASE("constructor 7")
 {
     ndarray<double, 3> a= {{{0,1,2},{3,4,5}}};
 
-    CHECK(!a.empty());
+    CHECK_FALSE(a.empty());
     CHECK(a.size() == 6);
     CHECK(a.size(0) == 1);
     CHECK(a.size(1) == 2);
@@ -184,7 +184,7 @@ TEST_CASE("constructor 8")
 {
     ndarray<double, 3> a({{{0,1,2},{3,4,5}}}, std::allocator<double>());
 
-    CHECK(!a.empty());
+    CHECK_FALSE(a.empty());
     CHECK(a.size() == 6);
     CHECK(a.size(0) == 1);
     CHECK(a.size(1) == 2);
@@ -211,15 +211,14 @@ TEST_CASE("constructor 9")
     {
         CHECK(a.data()[i] == b.data()[i]);
     }
-    bool test = a == b;
-    CHECK(test);
+    CHECK(a == b);
 }
 
 TEST_CASE("constructor 11")
 {
     ndarray<double, 3> a = {{{0,1,2},{3,4,5}}};
 
-    CHECK(!a.empty());
+    CHECK_FALSE(a.empty());
     CHECK(a.size() == 6);
     CHECK(a.size(0) == 1);
     CHECK(a.size(1) == 2);
@@ -227,7 +226,7 @@ TEST_CASE("constructor 11")
 
     ndarray<double, 3> b(std::move(a));
 
-    CHECK(!b.empty());
+    CHECK_FALSE(b.empty());
     CHECK(b.size() == 6);
     CHECK(b.size(0) == 1);
     CHECK(b.size(1) == 2);
@@ -251,7 +250,7 @@ TEST_CASE("constructor 12")
 
     ndarray<double, 3> b(std::move(a), std::allocator<double>());
 
-    CHECK(!b.empty());
+    CHECK_FALSE(b.empty());
     CHECK(b.size() == 6);
     CHECK(b.size(0) == 1);
     CHECK(b.size(1) == 2);
@@ -278,19 +277,16 @@ TEST_CASE("assignment 1")
 
     b = a;
 
-    bool test1 = b == a;
-    CHECK(test1);
+    CHECK(b == a);
 
     ndarray<double, 3> c;
     c = std::move(b);
-    bool test2 = c == a;
-    CHECK(test2);
+    CHECK(c == a);
 
     CHECK(b.empty());
 
     b = {{{0,1,2},{3,4,5}}};
-    bool test3 = b == a;
-    CHECK(test3);
+    CHECK(b == a);
 }
 
 // operator()
