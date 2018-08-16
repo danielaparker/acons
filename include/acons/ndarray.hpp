@@ -1396,16 +1396,6 @@ public:
         return const_iterator();
     }
 
-    const_iterator cbegin() const
-    {
-        return const_iterator(data_, dim_, strides_, offsets_);
-    }
-
-    const_iterator cend() const
-    {
-        return const_iterator();
-    }
-
     template <typename... Indices>
     T& operator()(size_t index, Indices... indices) 
     {
