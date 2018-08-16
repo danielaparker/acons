@@ -684,20 +684,7 @@ public:
         : super_type(alloc), 
           data_(nullptr), dim_(dim)
     {
-        std::cout << "Construct\n";
-
         Order::calculate_strides(dim_, strides_, size_);
-
-        std::cout << "strides: ";
-        for (size_t i = 0; i < strides_.size(); ++i)
-        {
-            if (i > 0)
-            {
-                std::cout << ",";
-            }
-            std::cout << strides_[i];
-        }
-        std::cout << "\n\n";
 
         data_ = create(size_, get_allocator());
         std::fill(data_, data_+size_, val);
