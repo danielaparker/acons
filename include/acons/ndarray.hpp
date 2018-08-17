@@ -176,7 +176,7 @@ get_offset(const std::array<size_t,n>& strides,
            const std::array<size_t,n>& offsets, 
            size_t index) 
 {
-    return Base::rebase_to_zero(index+offsets[n-1])*strides[n-1];
+    return (Base::rebase_to_zero(index)+offsets[n-1])*strides[n-1];
 }
 
 template <size_t n, typename Base, size_t m, typename... Indices>
@@ -186,7 +186,7 @@ get_offset(const std::array<size_t,n>& strides,
            size_t index, Indices... indices)
 {
     const size_t mplus1 = m + 1;
-    size_t i = Base::rebase_to_zero((index+offsets[m]))*strides[m] + get_offset<n, Base, mplus1>(strides,offsets,indices...);
+    size_t i = (Base::rebase_to_zero(index)+offsets[m])*strides[m] + get_offset<n, Base, mplus1>(strides,offsets,indices...);
 
     return i;
 }
@@ -200,7 +200,7 @@ get_offset(const std::array<size_t,N>& strides,
     size_t offset = 0;
     for (size_t i = 0; i < M; ++i)
     {
-        offset += Base::rebase_to_zero(indices[i]+offsets[i])*strides[i];
+        offset += (Base::rebase_to_zero(indices[i])+offsets[i])*strides[i];
     }
 
     return offset;
@@ -1346,7 +1346,7 @@ public:
         {
             dim_[i] = slices[i].size()/slices[i].stride();
             strides_[i] = a.strides()[i]*slices[i].stride();
-            offsets_[i] = Base::rebase_to_zero(slices[i].start()); // a.strides()[i];
+            offsets_[i] = Base::rebase_to_zero(slices[i].start()); 
         }
     }
 
@@ -1400,7 +1400,7 @@ public:
         {
             dim_[i] = slices[i].size()/slices[i].stride();
             strides_[i] = other.strides()[i]*slices[i].stride();
-            offsets_[i] = Base::rebase_to_zero(other.offsets()[i] + slices[i].start());
+            offsets_[i] = other.offsets()[i] + Base::rebase_to_zero(slices[i].start());
         }
     }
 
@@ -1416,7 +1416,7 @@ public:
         {
             dim_[i] = other.dimension()[(N-M)+i];
             strides_[i] = other.strides()[(N-M)+i];
-            offsets_[i] = rel + Base::rebase_to_zero(other.offsets()[(N-M)+i]);
+            offsets_[i] = rel + other.offsets()[(N-M)+i];
         }
     }
 
@@ -1433,7 +1433,7 @@ public:
         {
             dim_[i] = slices[i].size()/slices[i].stride();
             strides_[i] = other.strides()[(N-M)+i]*slices[i].stride();
-            offsets_[i] = rel + Base::rebase_to_zero(other.offsets()[(N-M)+i] + slices[i].start());
+            offsets_[i] = rel + other.offsets()[(N-M)+i] + Base::rebase_to_zero(slices[i].start());
         }
     }
 
