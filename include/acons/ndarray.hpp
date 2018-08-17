@@ -713,52 +713,64 @@ public:
         data_from_initializer_list(list,indices,0);
     }
 
-    ndarray(const ndarray& a)
-        : super_type(a.get_allocator()), 
-          data_(nullptr), size_(0), dim_(a.dim_), strides_(a.strides_)          
+    ndarray(const ndarray& other)
+        : super_type(std::allocator_traits<allocator_type>::select_on_container_copy_construction(other.get_allocator())), 
+          data_(nullptr), size_(0), dim_(other.dim_), strides_(other.strides_)          
     {
-        size_ = a.size();
+        size_ = other.size();
         data_ = create(size_, get_allocator());
 
 #if defined(_MSC_VER)
-        std::copy(a.data_, a.data_+a.size_,stdext::make_checked_array_iterator(data_,size_));
+        std::copy(other.data_, other.data_+other.size_,stdext::make_checked_array_iterator(data_,size_));
 #else 
-        std::copy(a.data_,a.data_+a.size_,data_);
+        std::copy(other.data_,other.data_+other.size_,data_);
 #endif
     }
 
-    ndarray(const ndarray& a, const Allocator& alloc)
+    ndarray(const ndarray& other, const Allocator& alloc)
         : super_type(alloc), 
-          data_(nullptr), size_(0), dim_(a.dim_), strides_(a.strides_)          
+          data_(nullptr), size_(other.size()), dim_(other.dim_), strides_(other.strides_)          
     {
-        size_ = a.size();
         data_ = create(size_, get_allocator());
 
 #if defined(_MSC_VER)
-        std::copy(a.data_, a.data_+a.size_,stdext::make_checked_array_iterator(data_,size_));
+        std::copy(other.data_, other.data_+other.size_,stdext::make_checked_array_iterator(data_,size_));
 #else 
-        std::copy(a.data_,a.data_+a.size_,data_);
+        std::copy(other.data_,other.data_+other.size_,data_);
 #endif
     }
 
-    ndarray(ndarray&& a)
-        : super_type(a.get_allocator()), 
-          data_(a.data_), size_(a.size_), dim_(a.dim_), strides_(a.strides_)          
+    ndarray(ndarray&& other)
+        : super_type(other.get_allocator()), 
+          data_(other.data_), size_(other.size_), dim_(other.dim_), strides_(other.strides_)          
     {
-        a.data_ = nullptr;
-        a.size_ = 0;
-        a.dim_.fill(0);
-        a.strides_.fill(0);
+        other.data_ = nullptr;
+        other.size_ = 0;
+        other.dim_.fill(0);
+        other.strides_.fill(0);
     }
 
-    ndarray(ndarray&& a, const Allocator& alloc)
+    ndarray(ndarray&& other, const Allocator& alloc)
         : super_type(alloc), 
-          data_(a.data_), size_(a.size_), dim_(a.dim_), strides_(a.strides_)          
+          data_(nullptr), size_(other.size()), dim_(other.dim_), strides_(other.strides_)          
     {
-        a.data_ = nullptr;
-        a.size_ = 0;
-        a.dim_.fill(0);
-        a.strides_.fill(0);
+        if (alloc == other.get_allocator())
+        {
+            data_ = other.data_;
+            other.data_ = nullptr;
+            other.size_ = 0;
+            other.dim_.fill(0);
+            other.strides_.fill(0);
+        }
+        else
+        {
+            data_ = create(size_, get_allocator());
+#if defined(_MSC_VER)
+            std::copy(other.data_, other.data_+other.size_,stdext::make_checked_array_iterator(data_,size_));
+#else 
+            std::copy(other.data_,other.data_+other.size_,data_);
+#endif
+        }
     }
 
     template <typename TPtr>
