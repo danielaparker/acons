@@ -115,7 +115,7 @@ Exceptions:
 
     bool empty() const noexcept;
 
-    size_t size() const noexcept;
+    size_t capacity() const noexcept;
 
 ##### Element access
 

@@ -19,7 +19,7 @@ TEST_CASE("1 dim row major iterator test")
 
 /*
     ndarray_view_iterator<double, 1, row_major> it(a.data());
-    ndarray_view_iterator<double, 1, row_major> end(a.data() + a.size());
+    ndarray_view_iterator<double, 1, row_major> end(a.data() + a.capacity());
 
     while (it != end)
     {
