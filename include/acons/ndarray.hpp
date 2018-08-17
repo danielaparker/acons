@@ -1325,7 +1325,7 @@ public:
                        const slices_type& slices)
         : data_(a.data()), size_(a.size())
     {
-        static_assert(m == N, "Dimension of view must match dimension of array");
+        static_assert(m == N, "View must have the same dimensionality as array");
         for (size_t i = 0; i < M; ++i)
         {
             dim_[i] = (slices[i].stop() - slices[i].start()) /slices[i].step();
@@ -1334,12 +1334,12 @@ public:
         }
     }
 
-    template<size_t m = M, size_t N, typename Allocator>
+    template<size_t m = M, size_t N, size_t K, typename Allocator>
     const_ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
-                       const std::array<size_t,N-M>& origin,
-                       typename std::enable_if<m < N>::type* = 0)
+                       const std::array<size_t,K>& origin)
         : data_(nullptr), size_(0)
     {
+        static_assert(m == N-K, "View must have dimension N-K");
         size_t offset = get_offset<N,N-M,Base>(a.strides(),origin);
 
         data_ = a.data() + offset;
@@ -1353,13 +1353,14 @@ public:
         offsets_.fill(0);
     }
 
-    template<size_t m = M, size_t N, typename Allocator>
+    template<size_t m = M, size_t N, size_t K, typename Allocator>
     const_ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
-                       const std::array<size_t,N-M>& origin,
-                       const slices_type& slices, 
-                       typename std::enable_if<m < N>::type* = 0)
+                       const std::array<size_t,K>& origin,
+                       const slices_type& slices)
         : data_(nullptr), size_(0)
     {
+        static_assert(m == N-K, "View must have dimension N-K");
+
         size_t offset = get_offset<N,N-M,Base>(a.strides(),origin);
 
         data_ = a.data() + offset;
@@ -1382,10 +1383,11 @@ public:
 
     template<size_t m = M, size_t N, typename OtherTPtr>
     const_ndarray_view(const_ndarray_view<T, N, Order, Base, OtherTPtr>& other, 
-                       const slices_type& slices, 
-                       typename std::enable_if<m == N>::type* = 0)
+                       const slices_type& slices)
         : data_(other.data()), size_(other.size())
     {
+        static_assert(m == N, "View must have the same dimensionality as other view");
+
         for (size_t i = 0; i < M; ++i)
         {
             dim_[i] = (slices[i].stop() - slices[i].start())/slices[i].step();
@@ -1394,12 +1396,13 @@ public:
         }
     }
 
-    template<size_t m = M, size_t N, typename OtherTPtr>
+    template<size_t m = M, size_t N, size_t K, typename OtherTPtr>
     const_ndarray_view(const_ndarray_view<T, N, Order, Base, OtherTPtr>& other, 
-                       const std::array<size_t,N-M>& origin,
-                       typename std::enable_if<m < N>::type* = 0)
+                       const std::array<size_t,K>& origin)
         : data_(other.data()), size_(other.size())
     {
+        static_assert(m == N-K, "View must have dimension N-K");
+
         size_t rel = get_offset<N,N-M,Base>(other.strides(),other.offsets(),origin);
 
         for (size_t i = 0; i < M; ++i)
@@ -1410,13 +1413,14 @@ public:
         }
     }
 
-    template<size_t m = M, size_t N, typename OtherTPtr>
+    template<size_t m = M, size_t N, size_t K, typename OtherTPtr>
     const_ndarray_view(const_ndarray_view<T, N, Order, Base, OtherTPtr>& other, 
-                       const std::array<size_t,N-M>& origin,
-                       const slices_type& slices, 
-                       typename std::enable_if<m < N>::type* = 0)
+                       const std::array<size_t,K>& origin,
+                       const slices_type& slices)
         : data_(other.data()), size_(other.size())
     {
+        static_assert(m == N-K, "View must have dimension N-K");
+
         size_t rel = get_offset<N,N-M,Base>(other.strides(),other.offsets(),origin);
 
         for (size_t i = 0; i < M; ++i)
