@@ -464,7 +464,6 @@ struct column_major
                 size_t offset2 = get_offset<N,N,zero_based>(strides2, offsets2, val.indices);
                 const T* p1 = data1 + offset1;
                 const T* p2 = data2 + offset2;
-                //const T* end = p1 + dim1[val.index];
                 size_t stride1 = strides1[val.index]; 
                 size_t stride2 = strides2[val.index]; 
                 val.indices[val.index] = dim1[val.index] - 1;
@@ -963,21 +962,6 @@ public:
         assert(off < size());
         return data_[off];
     }
-
-    template <size_t n=N, size_t K>
-    typename std::enable_if<(K < n),ndarray_view<T,N-K,Order,Base>>::type 
-    subarray(const std::array<size_t,K>& origin) 
-    {
-        return ndarray_view<T,N-K,Order,Base>(*this,origin);
-    }
-
-    template <size_t n=N, size_t K>
-    typename std::enable_if<(K < n),const_ndarray_view<T,N-K,Order,Base>>::type 
-    subarray(const std::array<size_t,K>& origin) const 
-    {
-        return const_ndarray_view<T,N-K,Order,Base>(*this,origin);
-    }
-
 private:
 
     static pointer create(size_t size, const Allocator& allocator)
@@ -1354,16 +1338,19 @@ public:
     const_ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
                        const std::array<size_t,N-M>& origin,
                        typename std::enable_if<m < N>::type* = 0)
-        : data_(a.data()), size_(a.size())
+        : data_(nullptr), size_(0)
     {
-        size_t rel = get_offset<N,N-M,Base>(a.strides(),origin);
+        size_t offset = get_offset<N,N-M,Base>(a.strides(),origin);
+
+        data_ = a.data() + offset;
+        size_ = a.size() - offset;
 
         for (size_t i = 0; i < M; ++i)
         {
             dim_[i] = a.dimensions()[(N-M)+i];
             strides_[i] = a.strides()[(N-M)+i];
-            offsets_[i] = rel;
         }
+        offsets_.fill(0);
     }
 
     template<size_t m = M, size_t N, typename Allocator>
@@ -1371,27 +1358,30 @@ public:
                        const std::array<size_t,N-M>& origin,
                        const slices_type& slices, 
                        typename std::enable_if<m < N>::type* = 0)
-        : data_(a.data()), size_(a.size())
+        : data_(nullptr), size_(0)
     {
-        size_t rel = get_offset<N,N-M,Base>(a.strides(),origin);
+        size_t offset = get_offset<N,N-M,Base>(a.strides(),origin);
+
+        data_ = a.data() + offset;
+        size_ = a.size() - offset;
 
         for (size_t i = 0; i < M; ++i)
         {
             dim_[i] = slices[i].size()/slices[i].stride();
             strides_[i] = a.strides()[(N-M)+i]*slices[i].stride();
-            offsets_[i] = rel + Base::rebase_to_zero(slices[i].start());
+            offsets_[i] = Base::rebase_to_zero(slices[i].start());
         }
     }
 
-    template<typename OPtr>
-    const_ndarray_view(const_ndarray_view<T, M, Order, Base, OPtr>& other)
+    template<typename OtherTPtr>
+    const_ndarray_view(const_ndarray_view<T, M, Order, Base, OtherTPtr>& other)
         : data_(other.data()), size_(other.size()), dim_(other.dimensions()), strides_(other.strides())          
     {
         offsets_.fill(0);
     }
 
-    template<size_t m = M, size_t N, typename OPtr>
-    const_ndarray_view(const_ndarray_view<T, N, Order, Base, OPtr>& other, 
+    template<size_t m = M, size_t N, typename OtherTPtr>
+    const_ndarray_view(const_ndarray_view<T, N, Order, Base, OtherTPtr>& other, 
                        const slices_type& slices, 
                        typename std::enable_if<m == N>::type* = 0)
         : data_(other.data()), size_(other.size())
@@ -1404,8 +1394,8 @@ public:
         }
     }
 
-    template<size_t m = M, size_t N, typename OPtr>
-    const_ndarray_view(const_ndarray_view<T, N, Order, Base, OPtr>& other, 
+    template<size_t m = M, size_t N, typename OtherTPtr>
+    const_ndarray_view(const_ndarray_view<T, N, Order, Base, OtherTPtr>& other, 
                        const std::array<size_t,N-M>& origin,
                        typename std::enable_if<m < N>::type* = 0)
         : data_(other.data()), size_(other.size())
@@ -1420,8 +1410,8 @@ public:
         }
     }
 
-    template<size_t m = M, size_t N, typename OPtr>
-    const_ndarray_view(const_ndarray_view<T, N, Order, Base, OPtr>& other, 
+    template<size_t m = M, size_t N, typename OtherTPtr>
+    const_ndarray_view(const_ndarray_view<T, N, Order, Base, OtherTPtr>& other, 
                        const std::array<size_t,N-M>& origin,
                        const slices_type& slices, 
                        typename std::enable_if<m < N>::type* = 0)
@@ -1437,8 +1427,8 @@ public:
         }
     }
 
-    template<typename OPtr>
-    const_ndarray_view(OPtr data, const std::array<size_t,M>& dim) 
+    template<typename OtherTPtr>
+    const_ndarray_view(OtherTPtr data, const std::array<size_t,M>& dim) 
         : data_(data), dim_(dim)
     {
         offsets_.fill(0);
@@ -1505,13 +1495,6 @@ public:
         size_t off = get_offset<M, M, Base>(strides_, offsets_, indices);
         assert(off < size());
         return data_[off];
-    }
-
-    template <size_t m=M, size_t K>
-    typename std::enable_if<(K < m),const_ndarray_view<T,M-K,Order,Base>>::type 
-    subarray(const std::array<size_t,K>& origin) const
-    {
-        return const_ndarray_view<T,M-K,Order,Base>(*this,origin);
     }
 };
 
@@ -1583,7 +1566,6 @@ public:
     using super_type::begin;
     using super_type::end;
     using super_type::operator();
-    using super_type::subarray;
 
     T* data()
     {
@@ -1613,13 +1595,6 @@ public:
         size_t off = get_offset<M, M, Base>(this->strides_, this->offsets_, indices);
         assert(off < size());
         return this->data_[off];
-    }
-
-    template <size_t m=M, size_t K>
-    typename std::enable_if<(K < m),ndarray_view<T,M-K,Order,Base>>::type 
-    subarray(const std::array<size_t,K>& origin) 
-    {
-        return ndarray_view<T,M-K,Order,Base>(*this,origin);
     }
 };
 

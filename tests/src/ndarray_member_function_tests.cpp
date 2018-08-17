@@ -307,14 +307,6 @@ TEST_CASE("indexing operator 1")
         }
     }
     std::cout << "a: " << a << "\n\n";
-
-    ndarray_view<double,2> v = a.subarray(std::array<size_t,1>{0});
-
-    std::cout << "v: " << v << "\n\n";
-
-    ndarray<double,2> u = a.subarray(std::array<size_t,1>{0});
-
-    std::cout << "u: " << u << "\n\n";
 }
 
 TEST_CASE("shrink row_major array")

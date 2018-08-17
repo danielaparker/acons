@@ -96,10 +96,6 @@ Exceptions:
 
     const T& operator()(const std::array<size_t,N>& indices) const; 
 
-    template <size_t n=N, size_t K>
-    typename std::enable_if<(K < n),ndarray_view<T,N-K,Order,Base>>::type 
-    subarray(const std::array<size_t,K>& origin);
-
 ##### Iterators
 
     iterator begin();
