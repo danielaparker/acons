@@ -147,10 +147,10 @@ int main(int argc, char *argv[])
 ```
 Output:
 ```
-Parent:
+Parent process:
 [[0,1],[2,3]]
 
-Child:
+Child process:
 [[0,1],[2,3]]
 ```
 

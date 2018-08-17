@@ -784,7 +784,7 @@ public:
 #if defined(_MSC_VER)
         std::copy(av.data(), av.data()+av.capacity(),stdext::make_checked_array_iterator(data_,capacity_));
 #else 
-        std::copy(av.data_,av.data_+av.capacity(),data_);
+        std::copy(av.data(),av.data()+av.capacity(),data_);
 #endif
     }
 
