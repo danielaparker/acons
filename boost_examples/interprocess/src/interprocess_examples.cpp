@@ -36,12 +36,12 @@ int main(int argc, char *argv[])
 
        // Create ndarray with all dynamic allocations in shared memory
        ndarray_shm* pA = segment.construct<ndarray_shm>("my ndarray")(std::array<size_t,2>{2,2}, 0.0, allocator);
-       ndarray_shm& A = *pA;
+       ndarray_shm& a = *pA;
 
-       A(0,0) = 0;
-       A(0,1) = 1;
-       A(1,0) = 2;
-       A(1,1) = 3;
+       a(0,0) = 0;
+       a(0,1) = 1;
+       a(1,0) = 2;
+       a(1,1) = 3;
 
        std::pair<ndarray_shm*, boost::interprocess::managed_shared_memory::size_type> res;
        res = segment.find<ndarray_shm>("my ndarray");

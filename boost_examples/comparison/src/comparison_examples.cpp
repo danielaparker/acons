@@ -8,47 +8,47 @@ using namespace acons;
 void acons_example()
 {
     // Construct a 3-dimensional array with dimensions 2 x 3 x 4
-    ndarray<double, 3> A(2,3,4);
+    ndarray<double, 3> a(2,3,4);
 
     // Assign values to the elements
     int init = 0;
-    for (size_t i = 0; i < A.size(0); ++i)
+    for (size_t i = 0; i < a.size(0); ++i)
     {
-        for (size_t j = 0; j < A.size(1); ++j)
+        for (size_t j = 0; j < a.size(1); ++j)
         {
-            for (size_t k = 0; k < A.size(2); ++k)
+            for (size_t k = 0; k < a.size(2); ++k)
             {
-                A(i,j,k) = init++;
+                a(i,j,k) = init++;
             }
         }
     }
 
     // Write to stdout
-    std::cout << A << std::endl;
+    std::cout << a << std::endl;
 
     std::cout << "dimensions: ";
-    for (size_t i = 0; i < A.dimensions().size(); ++i)
+    for (size_t i = 0; i < a.dimensions().size(); ++i)
     {
         if (i > 0)
         {
             std::cout << ",";
         }
-        std::cout << A.dimensions()[i];
+        std::cout << a.dimensions()[i];
     }
     std::cout << "\n\n";
 
     std::cout << "strides: ";
-    for (size_t i = 0; i < A.strides().size(); ++i)
+    for (size_t i = 0; i < a.strides().size(); ++i)
     {
         if (i > 0)
         {
             std::cout << ",";
         }
-        std::cout << A.strides()[i];
+        std::cout << a.strides()[i];
     }
     std::cout << "\n\n";
 
-    ndarray_view<double,3> v(A,{{0,2},{1,2},{0,4,2}});
+    ndarray_view<double,3> v(a,{{0,2},{1,2},{0,4,2}});
 
     std::cout << "dimensions: ";
     for (size_t i = 0; i < v.dimensions().size(); ++i)
@@ -109,14 +109,14 @@ void boost_example()
     // Create a 3D array that is 2 x 3 x 4
     typedef boost::multi_array<double, 3> array_type;
     typedef array_type::index index;
-    array_type A(boost::extents[2][3][4]);
+    array_type a(boost::extents[2][3][4]);
 
     // Assign values to the elements
     int values = 0;
     for(index i = 0; i != 2; ++i) 
         for(index j = 0; j != 3; ++j)
             for(index k = 0; k != 4; ++k)
-                A[i][j][k] = values++;
+                a[i][j][k] = values++;
 
     // Verify values
     int verify = 0;
@@ -130,7 +130,7 @@ void boost_example()
                 {
                     std::cout << ",";
                 }
-                std::cout << A[i][j][k];
+                std::cout << a[i][j][k];
             }
             std::cout << "\n";
         }
@@ -138,7 +138,7 @@ void boost_example()
     }
 
     typedef boost::multi_array_types::index_range range;
-    array_type::array_view<3>::type v = A[ boost::indices[range(0,2)][range(1,3)][range(0,4,2)]];
+    array_type::array_view<3>::type v = a[ boost::indices[range(0,2)][range(1,3)][range(0,4,2)]];
 
     for (array_type::index i = 0; i != 2; ++i)
     {
@@ -146,7 +146,7 @@ void boost_example()
         {
             for (array_type::index k = 0; k != 2; ++k) 
             {
-                assert(v[i][j][k] == A[i][j+1][k*2]);
+                assert(v[i][j][k] == a[i][j+1][k*2]);
             }
         }
     }
@@ -174,7 +174,7 @@ void boost_example2()
     // Create a 2D array that is 2 x 3
     typedef boost::multi_array<double, 2> array_type;
     typedef array_type::index index;
-    array_type A(boost::extents[2][3]);
+    array_type a(boost::extents[2][3]);
 
     // Assign values to the elements
     int values = 0;
@@ -182,12 +182,12 @@ void boost_example2()
     {
         for(index j = 0; j < 3; ++j)
         {
-                A[i][j] = values++;
+                a[i][j] = values++;
         }
     }
 
     typedef boost::multi_array_types::index_range range;
-    array_type::array_view<2>::type v = A[ boost::indices[range(0,1)][range(1,2)]];
+    array_type::array_view<2>::type v = a[ boost::indices[range(0,1)][range(1,2)]];
 
     for (array_type::index i = 0; i < 1; ++i)
     {

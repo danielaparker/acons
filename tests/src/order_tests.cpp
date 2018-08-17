@@ -55,7 +55,7 @@ TEST_CASE("row major tests")
     a(1, 1) = 4;
     a(1, 2) = 5;
 
-    REQUIRE(a.capacity() == 6);
+    REQUIRE(a.size() == 6);
     CHECK(a.data()[0] == 0);
     CHECK(a.data()[1] == 1);
     CHECK(a.data()[2] == 2);
@@ -94,7 +94,7 @@ TEST_CASE("column major tests")
     a(1, 1) = 4;
     a(1, 2) = 5;
 
-    REQUIRE(a.capacity() == 6);
+    REQUIRE(a.size() == 6);
     CHECK(a.data()[0] == 0);
     CHECK(a.data()[1] == 3);
     CHECK(a.data()[2] == 1);
