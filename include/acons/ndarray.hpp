@@ -58,15 +58,15 @@ public:
 class slice
 {
     size_t start_;
-    size_t size_;
-    size_t stride_;
+    size_t stop_;
+    size_t step_;
 public:
     slice()
-        : start_(0), size_(0), stride_(0)
+        : start_(0), stop_(0), step_(0)
     {
     }
-    slice(size_t start, size_t size, size_t stride)
-        : start_(start), size_(size), stride_(stride)
+    slice(size_t start, size_t stop, size_t step)
+        : start_(start), stop_(stop), step_(step)
     {
     }
     slice(std::initializer_list<size_t> list)
@@ -79,8 +79,8 @@ public:
             }
             auto it = list.begin();
             start_ = *it++;
-            size_ = *it++;
-            stride_ = list.size() == 3 ? *it : 1;
+            stop_ = *it++;
+            step_ = list.size() == 3 ? *it : 1;
         }
         else
         {
@@ -88,7 +88,7 @@ public:
         }
     }
     slice(const slice& other)
-        : start_(other.start_), size_(other.size_), stride_(other.stride_)
+        : start_(other.start_), stop_(other.stop_), step_(other.step_)
     {
     }
 
@@ -98,13 +98,13 @@ public:
     {
         return start_;
     }
-    size_t size() const
+    size_t stop() const
     {
-        return size_;
+        return stop_;
     }
-    size_t stride() const
+    size_t step() const
     {
-        return stride_;
+        return step_;
     }
 };
 
@@ -1322,14 +1322,14 @@ public:
 
     template<size_t m = M, size_t N, typename Allocator>
     const_ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
-                       const slices_type& slices, 
-                       typename std::enable_if<m == N>::type* = 0)
+                       const slices_type& slices)
         : data_(a.data()), size_(a.size())
     {
+        static_assert(m == N, "Dimension of view must match dimension of array");
         for (size_t i = 0; i < M; ++i)
         {
-            dim_[i] = slices[i].size()/slices[i].stride();
-            strides_[i] = a.strides()[i]*slices[i].stride();
+            dim_[i] = (slices[i].stop() - slices[i].start()) /slices[i].step();
+            strides_[i] = a.strides()[i]*slices[i].step();
             offsets_[i] = Base::rebase_to_zero(slices[i].start()); 
         }
     }
@@ -1367,8 +1367,8 @@ public:
 
         for (size_t i = 0; i < M; ++i)
         {
-            dim_[i] = slices[i].size()/slices[i].stride();
-            strides_[i] = a.strides()[(N-M)+i]*slices[i].stride();
+            dim_[i] = (slices[i].stop() - slices[i].start())/slices[i].step();
+            strides_[i] = a.strides()[(N-M)+i]*slices[i].step();
             offsets_[i] = Base::rebase_to_zero(slices[i].start());
         }
     }
@@ -1388,8 +1388,8 @@ public:
     {
         for (size_t i = 0; i < M; ++i)
         {
-            dim_[i] = slices[i].size()/slices[i].stride();
-            strides_[i] = other.strides()[i]*slices[i].stride();
+            dim_[i] = (slices[i].stop() - slices[i].start())/slices[i].step();
+            strides_[i] = other.strides()[i]*slices[i].step();
             offsets_[i] = other.offsets()[i] + Base::rebase_to_zero(slices[i].start());
         }
     }
@@ -1421,8 +1421,8 @@ public:
 
         for (size_t i = 0; i < M; ++i)
         {
-            dim_[i] = slices[i].size()/slices[i].stride();
-            strides_[i] = other.strides()[(N-M)+i]*slices[i].stride();
+            dim_[i] = (slices[i].stop() - slices[i].start())/slices[i].step();
+            strides_[i] = other.strides()[(N-M)+i]*slices[i].step();
             offsets_[i] = rel + other.offsets()[(N-M)+i] + Base::rebase_to_zero(slices[i].start());
         }
     }

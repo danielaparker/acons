@@ -3,13 +3,13 @@
 #include <iostream>
 
 using namespace acons;
-#if 0
+
 TEST_CASE("2x3x4 dim row major zero_based, slices")
 {
     // Construct a 3-dimensional array with dimensions 2 x 3 x 4
     ndarray<double,3,row_major,zero_based> a = { {{0,1,2,3},{4,5,6,7},{8,9,10,11}}, {{12,13,14,15},{16,17,18,19},{20,21,22,23}} };
 
-    ndarray_view<double,3,row_major,zero_based> v(a,{{1,1},{1,2},{0,4,2}});
+    ndarray_view<double,3,row_major,zero_based> v(a,{{1,2},{1,3},{0,4,2}});
 
     auto it = v.begin();
     auto end = v.end();
@@ -34,7 +34,7 @@ TEST_CASE("2x3x4 dim column major one_based, slices")
     // Construct a 3-dimensional array with dimensions 2 x 3 x 4
     ndarray<double,3,column_major,one_based> a = { {{0,1,2,3},{4,5,6,7},{8,9,10,11}}, {{12,13,14,15},{16,17,18,19},{20,21,22,23}} };
 
-    ndarray_view<double,3,column_major,one_based> v(a,{{2,1},{2,2},{1,4,2}});
+    ndarray_view<double,3,column_major,one_based> v(a,{{2,3},{2,4},{1,5,2}});
 
     REQUIRE(v.size(0) == 1);
     REQUIRE(v.size(1) == 2);
@@ -52,7 +52,7 @@ TEST_CASE("2x3x4 dim column major one_based, slices")
     CHECK(*it++ == 22);
     CHECK(it == end);
 }
-#endif
+
 TEST_CASE("2x3x4 dim row major zero_based, origin")
 {
     // Construct a 3-dimensional array with dimensions 2 x 3 x 4
@@ -93,13 +93,13 @@ TEST_CASE("2x3x4 dim row major zero_based, origin")
     CHECK(*it++ == 23);
     CHECK(it == end);
 }
-#if 0
+
 TEST_CASE("2x3x4 dim column major one_based, origin")
 {
     // Construct a 3-dimensional array with dimensions 2 x 3 x 4
-    ndarray<double,2,column_major,one_based> a = { {{0,1,2,3},{4,5,6,7},{8,9,10,11}}, {{12,13,14,15},{16,17,18,19},{20,21,22,23}} };
+    ndarray<double,3,column_major,one_based> a = { {{0,1,2,3},{4,5,6,7},{8,9,10,11}}, {{12,13,14,15},{16,17,18,19},{20,21,22,23}} };
 
-    ndarray_view<double,3,column_major,one_based> v(a,{{2,1},{2,2},{1,4,2}});
+    ndarray_view<double,3,column_major,one_based> v(a,{{2,3},{2,4},{1,5,2}});
 
     REQUIRE(v.size(0) == 1);
     REQUIRE(v.size(1) == 2);
@@ -117,5 +117,4 @@ TEST_CASE("2x3x4 dim column major one_based, origin")
     CHECK(*it++ == 22);
     CHECK(it == end);
 }
-#endif
 

@@ -8,7 +8,7 @@ using namespace acons;
 TEST_CASE("1 dim row major iterator test")
 {
     ndarray<double, 1, row_major> a = { 0,1,2,3 };
-    ndarray_view<double, 1, row_major> v(a, {{1,2}});
+    ndarray_view<double, 1, row_major> v(a, {{1,3}});
     auto it = v.begin();
     auto end = v.end();
 
@@ -22,7 +22,7 @@ TEST_CASE("2x3x4 dim row major iterator test")
     // Construct a 3-dimensional array with dimensions 2 x 3 x 4
     ndarray<double, 3, row_major> a = { {{0,1,2,3},{4,5,6,7},{8,9,10,11}}, {{12,13,14,15},{16,17,18,19},{20,21,22,23}} };
 
-    ndarray_view<double, 3> v(a,{{1,1},{1,2},{0,4,2}});
+    ndarray_view<double, 3> v(a,{{1,2},{1,3},{0,4,2}});
     auto it = v.begin();
     auto end = v.end();
 
@@ -46,7 +46,7 @@ TEST_CASE("2x3x4 dim column major iterator test")
     // Construct a 3-dimensional array with dimensions 2 x 3 x 4
     ndarray<double,3,column_major> a = { {{0,1,2,3},{4,5,6,7},{8,9,10,11}}, {{12,13,14,15},{16,17,18,19},{20,21,22,23}} };
 
-    ndarray_view<double,3,column_major> v(a,{{1,1},{1,2},{0,4,2}});
+    ndarray_view<double,3,column_major> v(a,{{1,2},{1,3},{0,4,2}});
 
     REQUIRE(v.size(0) == 1);
     REQUIRE(v.size(1) == 2);
