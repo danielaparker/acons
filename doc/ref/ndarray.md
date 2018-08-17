@@ -57,23 +57,20 @@ Member type                         |Definition
     ndarray(std::initializer_list<array_item<T>> list, 
             const Allocator& alloc); // (8)
 
-    ndarray(const ndarray& a); // (9)
+    ndarray(const ndarray& other); // (9)
 
-    ndarray(const ndarray& a, 
-            const Allocator& alloc); // (10)
+    ndarray(const ndarray& other, const Allocator& alloc); // (10)
 
-    ndarray(ndarray&& a); // (11)
+    ndarray(ndarray&& other); // (11)
 
-    ndarray(ndarray&& a, 
-            const Allocator& alloc); // (12)
+    ndarray(ndarray&& other, const Allocator& alloc); // (12)
 
     template <typename TPtr>
-    ndarray(const const_ndarray_view<T,N,Order,Base,TPtr>& a); // (13)
+    ndarray(const const_ndarray_view<T,N,Order,Base,TPtr>& av); // (13)
 
     template <typename TPtr>
-    ndarray(const const_ndarray_view<T,N,Order,Base,TPtr>& a, 
+    ndarray(const const_ndarray_view<T,N,Order,Base,TPtr>& av, 
             const Allocator& alloc); // (14)
-
 
 Constructs a new N-dimensional array, optionally using a user supplied allocator.
 
@@ -153,6 +150,12 @@ Exceptions:
 
     void swap(ndarray<T,N,Order,Base,Allocator>& other) noexcept
 Swaps the contents of the two N-dimensional arrays
+
+    void resize(const std::array<size_t,N>& dim, T value = T());
+Resizes the dimensions of the array. If the array size is shrunk, 
+the array is flattened in the order that the elements are stored in memory.
+If the array size is expanded, storage is reallocated if required, and
+additional elements are filled with `value`.
 
 #### See also
 
