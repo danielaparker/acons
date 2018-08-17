@@ -17,7 +17,7 @@ Member type                         |Definition|Notes
 ------------------------------------|----------|--------------------
 `T`|The type of the elements.|
 `N`|The number of dimensions of the array|
-`Order`|`row_major` or `column_major`|
+`Order`|`row_major` or `column_major` storage order|`row_major` is C storage order and `column_major` is FORTRAN storage order 
 `Base`|`zero_based` or `one_based`|
 `Allocator`||`Allocator::value_type` must be the same as `T`
 

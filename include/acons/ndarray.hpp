@@ -55,21 +55,21 @@ public:
     }
 };
 
-class slice
+class index_range
 {
     size_t start_;
     size_t stop_;
     size_t step_;
 public:
-    slice()
+    index_range()
         : start_(0), stop_(0), step_(0)
     {
     }
-    slice(size_t start, size_t stop, size_t step)
+    index_range(size_t start, size_t stop, size_t step)
         : start_(start), stop_(stop), step_(step)
     {
     }
-    slice(std::initializer_list<size_t> list)
+    index_range(std::initializer_list<size_t> list)
     {
         if (list.size() <= 3)
         {
@@ -84,15 +84,15 @@ public:
         }
         else
         {
-            throw std::invalid_argument("Too many arguments to slice");
+            throw std::invalid_argument("Too many arguments to index_range");
         }
     }
-    slice(const slice& other)
+    index_range(const index_range& other)
         : start_(other.start_), stop_(other.stop_), step_(other.step_)
     {
     }
 
-    slice& operator=(const slice& other) = default;
+    index_range& operator=(const index_range& other) = default;
 
     size_t start() const
     {
@@ -1202,11 +1202,11 @@ private:
     std::vector<output_item<N>> stack_;
     pointer p_;
     pointer endp_;
-    size_t stride_;
+    size_t step_;
 public:
 
     ndarray_view_iterator()
-        : data_(nullptr), p_(nullptr), endp_(nullptr), stride_(0)
+        : data_(nullptr), p_(nullptr), endp_(nullptr), step_(0)
     {
     }
 
@@ -1215,7 +1215,7 @@ public:
                           const std::array<size_t,N>& strides, 
                           const std::array<size_t,N>& offsets)
         : data_(data), dim_(dim), strides_(strides), offsets_(offsets), 
-          p_(nullptr), endp_(nullptr), stride_(0)
+          p_(nullptr), endp_(nullptr), step_(0)
     {
         Order::initialize_walk(stack_);
         p_ = endp_ = nullptr;
@@ -1223,14 +1223,14 @@ public:
         {
             p_ = data_ + o;
             endp_ = data_ + endo;
-            stride_ = stride;
+            step_ = stride;
         };
         Order::walk(stack_, dim_, strides_, offsets_, f);
     }
 
     ndarray_view_iterator(const ndarray_view_iterator<T,N,Order>& other) 
         : data_(other.data_), dim_(other.dim_), strides_(other.strides_), offsets_(other.offsets_), 
-          stack_(other.stack_), p_(other.p_), endp_(other.endp_), stride_(other.stride_)
+          stack_(other.stack_), p_(other.p_), endp_(other.endp_), step_(other.step_)
     {
     } 
 
@@ -1238,7 +1238,7 @@ public:
     {
         if (p_+1 < endp_)
         {
-            p_ += stride_;
+            p_ += step_;
         }
         else
         {
@@ -1247,7 +1247,7 @@ public:
             {
                 p_ = data_ + o;
                 endp_ = data_ + endo;
-                stride_ = stride;
+                step_ = stride;
             };
             Order::walk(stack_, dim_, strides_, offsets_, f);
         }
@@ -1259,7 +1259,7 @@ public:
         ndarray_view_iterator<T,N,Order,IsConst> temp(*this);
         if (p_+1 < endp_)
         {
-            p_ += stride_;
+            p_ += step_;
         }
         else
         {
@@ -1268,7 +1268,7 @@ public:
             {
                 p_ = data_ + o;
                 endp_ = data_ + endo;
-                stride_ = stride;
+                step_ = stride;
             };
             Order::walk(stack_, dim_, strides_, offsets_, f);
         }
@@ -1297,7 +1297,7 @@ class const_ndarray_view
 {
 public:
     typedef ndarray_view_iterator<T,M,Order,false> const_iterator;
-    typedef array_wrapper<slice,M> slices_type;
+    typedef array_wrapper<index_range,M> slices_type;
 protected:
     TPtr data_;
     size_t size_;
@@ -1325,7 +1325,7 @@ public:
                        const slices_type& slices)
         : data_(a.data()), size_(a.size())
     {
-        static_assert(m == N, "View must have the same dimensionality as array");
+        static_assert(m == N, "A view constructed from a list of index ranges on an array must have the same dimensionality as the array");
         for (size_t i = 0; i < M; ++i)
         {
             dim_[i] = (slices[i].stop() - slices[i].start()) /slices[i].step();
@@ -1386,7 +1386,7 @@ public:
                        const slices_type& slices)
         : data_(other.data()), size_(other.size())
     {
-        static_assert(m == N, "View must have the same dimensionality as other view");
+        static_assert(m == N, "A view constructed from a list of index ranges on another view must have the same dimensionality as the other view");
 
         for (size_t i = 0; i < M; ++i)
         {
