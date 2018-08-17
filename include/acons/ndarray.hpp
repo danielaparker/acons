@@ -230,26 +230,25 @@ struct output_item
 
     std::array<size_t, N> indices;
     size_t index;
-    size_t dim;
 
     output_item()
-        : index(0),dim(0)
+        : index(0)
     {
     }
 
     output_item(const output_item<N>& item)
-        : indices(item.indices), index(item.index), dim(item.dim)
+        : indices(item.indices), index(item.index)
     {
 
     }
 
-    output_item(const std::array<size_t,N>& x, size_t idx, size_t d=0)
-        : indices(x), index(idx), dim(d)
+    output_item(const std::array<size_t,N>& x, size_t idx)
+        : indices(x), index(idx)
     {
     }
 
-    output_item(size_t idx, size_t d = 0)
-        : index(idx), dim(d)
+    output_item(size_t idx)
+        : index(idx)
     {
     }
 
@@ -269,10 +268,9 @@ struct row_major
     }
 
     template <size_t N>
-    static void initialize_walk(std::vector<output_item<N>>& stack,
-                                const std::array<size_t,N>& dim)
+    static void initialize_walk(std::vector<output_item<N>>& stack)
     {
-        stack.emplace_back(0, dim[0]);
+        stack.emplace_back(0);
     }
 
     template <size_t N, typename Callable>
@@ -302,43 +300,6 @@ struct row_major
                 current.indices[N-1] = dim[N-1]-1;
                 size_t endo = get_offset<N,N,zero_based>(strides, offsets, current.indices);
                 callable(o, endo+1, strides[N-1]);
-                break;
-            }
-        }
-    }
-
-    template <size_t N, typename Callable>
-    static void walk2(std::vector<output_item<N>>& stack, 
-                     const std::array<size_t,N>& dim, 
-                     const std::array<size_t,N>& strides, 
-                     const std::array<size_t,N>& offsets, 
-                     Callable callable)
-    {
-        while (!stack.empty())
-        {
-            output_item<N> current = stack.back();
-
-            if (current.index+1 < N)
-            {
-                if (current.dim <= dim[current.index])
-                {
-                    current.indices[current.index] = current.dim++; 
-                    stack.push_back(output_item<N>(current.indices,current.index+1)); 
-                }
-                else
-                {
-                    current.indices[current.index] = current.dim++; 
-                    break;
-                }
-            }
-            else if (current.index+1 == N)
-            {
-                current.indices[N-1] = 0;
-                size_t o = get_offset<N,N,zero_based>(strides, offsets, current.indices);
-                current.indices[N-1] = dim[N-1]-1;
-                size_t endo = get_offset<N,N,zero_based>(strides, offsets, current.indices);
-                callable(o, endo+1, strides[N-1]);
-                current.index = 0;
                 break;
             }
         }
@@ -423,8 +384,7 @@ struct column_major
     }
 
     template <size_t N>
-    static void initialize_walk(std::vector<output_item<N>>& stack, 
-                                const std::array<size_t,N>& dim)
+    static void initialize_walk(std::vector<output_item<N>>& stack)
     {
         stack.emplace_back(N-1);
     }
@@ -446,7 +406,7 @@ struct column_major
                 for (size_t i = dim[current.index]; i-- > 0; )
                 {
                     current.indices[current.index] = i; 
-                    stack.push_back(output_item<N>(current.indices,current.index+1)); 
+                    stack.push_back(output_item<N>(current.indices,current.index-1)); 
                 }
             }
             else 
@@ -1273,7 +1233,7 @@ public:
         : data_(data), dim_(dim), strides_(strides), offsets_(offsets), 
           p_(nullptr), endp_(nullptr), stride_(0)
     {
-        Order::initialize_walk(stack_, dim);
+        Order::initialize_walk(stack_);
         p_ = endp_ = nullptr;
         auto f = [&](size_t o, size_t endo, size_t stride)
         {
