@@ -1551,7 +1551,7 @@ public:
     }
 
     using super_type::data; 
-    using super_type::size;
+    using super_type::capacity;
     using super_type::empty;
     using super_type::dimensions;
     using super_type::strides;
