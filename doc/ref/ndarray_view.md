@@ -11,14 +11,18 @@ The `ndarray_view` class represents a view on an N-dimensional array.
 #include <acons/ndarray.hpp>
 ```
 
+#### Base class
+
+[const_ndarray_view](const_ndarray_view.md)
+
 #### Template parameters
 
 Member type                         |Definition|Notes
 ------------------------------------|----------|--------------------
-T||
-N||
-Order||
-Base||
+`T`|The type of the elements.|
+`N`|The number of dimensions of the array|
+`Order`|`row_major` or `column_major`|
+`Base`|`zero_based` or `one_based`|
 
 #### Member types
 

@@ -1,10 +1,10 @@
 ### acons::const_ndarray_view
 
 ```c++
-template <typename T, size_t N, typename Order, typename Base, typename Allocator>
-class ndarray
+template <typename T, size_t M, typename Order=row_major, typename Base=zero_based, typename TPtr=const T*>
+class const_ndarray_view;  
 ```
-The `ndarray` class represents an N-dimensional array.
+The `const_ndarray_view` class represents a const view on an N-dimensional array.
 
 #### Header
 ```c++
@@ -15,11 +15,11 @@ The `ndarray` class represents an N-dimensional array.
 
 Member type                         |Definition|Notes
 ------------------------------------|----------|--------------------
-T||
-N||
-Order||
-Base||
-Allocator||
+`T`|The type of the elements.|
+`N`|The number of dimensions of the array|
+`Order`|`row_major` or `column_major`|
+`Base`|`zero_based` or `one_based`|
+`TPtr`|
 
 #### Member types
 
