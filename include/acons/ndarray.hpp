@@ -952,6 +952,27 @@ public:
     T& operator()(const std::array<size_t,N>& indices) 
     {
         size_t off = get_offset<N, N, Base>(strides_,indices);
+        std::cout << "strides:\n";
+        for (size_t i = 0; i < strides_.size(); ++i)
+        {
+            if (i > 0)
+            {
+                std::cout << ",";
+            }
+            std::cout << strides_[i];
+        }
+        std::cout << "\n\n";
+        for (size_t i = 0; i < indices.size(); ++i)
+        {
+            if (i > 0)
+            {
+                std::cout << ",";
+            }
+            std::cout << indices[i];
+        }
+        std::cout << "\n\n";
+        std::cout << "off: " << off << ", size: " << size() << "\n\n";
+
         assert(off < size());
         return data_[off];
     }
@@ -1180,7 +1201,8 @@ std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os, ndarray<T, 
 {
     auto f = [&](const std::array<size_t,N>& indices) 
     { 
-        return a(indices);
+        size_t off = get_offset<N, N, zero_based>(a.strides(),indices);
+        return a.data()[off];
     };
     print(os, a.dimensions(), f);
     return os;
@@ -1234,7 +1256,7 @@ public:
     {
     } 
 
-    ndarray_view_iterator<T, N, Order>& operator++()
+    ndarray_view_iterator<T, N, Order, IsConst>& operator++()
     {
         if (p_+1 < endp_)
         {
@@ -1508,7 +1530,8 @@ std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os,
 {
     auto f = [&](const std::array<size_t,M>& indices) 
     { 
-        return v(indices);
+        size_t off = get_offset<M, M, zero_based>(v.strides(),indices);
+        return v.data()[off];
     };
     print(os, v.dimensions(), f);
     return os;

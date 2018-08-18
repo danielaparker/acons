@@ -23,7 +23,7 @@ Download the latest [single header file](https://raw.githubusercontent.com/danie
 
 ## Examples
 
-### Construct a 3-dimensional array
+### Row major, zero based indexing example
 
 ```c++
 #include <acons/ndarray.hpp>
@@ -33,29 +33,114 @@ using namespace acons;
 
 int main()
 {
-    // Construct a 3-dimensional array with dimensions 3 x 4 x 2
-    ndarray<double, 3> A(3,4,2);
+    // Construct a 3-dimensional 2 x 3 x 4 array 
+    ndarray<double, 3> a = {{{0,1,2,3},{4,5,6,7},{8,9,10,11}}, 
+                            {{12,13,14,15},{16,17,18,19},{20,21,22,23}}};
 
-    // Assign values to the elements
-    int init = 0;
-    for (size_t i = 0; i < A.size(0); ++i)
+    std::cout << "(1)\n" << a << "\n\n";
+
+    // Construct a 3-dimensional 1 x 2 x 2 view on the array.
+    // The second argument provides a list of index ranges 
+    // on the three dimensions of the array.
+    ndarray_view<double,3> v(a, {{1,2},{1,3},{0,4,2}});
+
+    std::cout << "(2)\n" << v << "\n\n";
+
+    // Construct a 2-dimensional 3 x 4 slice from the array
+    ndarray_view<double,2> s(a,{1});
+
+    std::cout << "(3)\n" << s << "\n\n";
+
+    // Iterate over the 2-dimensional view
+    auto begin = s.begin();
+    auto end = s.end();
+
+    std::cout << "(4)\n";
+
+    for (auto it = begin; it != end; ++it)
     {
-        for (size_t j = 0; j < A.size(1); ++j)
+        if (it != begin)
         {
-            for (size_t k = 0; k < A.size(2); ++k)
-            {
-                A(i,j,k) = init++;
-            }
+            std::cout << ",";
         }
+        std::cout << *it;
     }
-
-    // Write to stdout
-    std::cout << A << std::endl;
+    std::cout << "\n\n";
 }
 ```
 Output:
 ```
-[[[0,1],[2,3],[4,5],[6,7]],[[8,9],[10,11],[12,13],[14,15]],[[16,17],[18,19],[20,21],[22,23]]]
+(1)
+[[[0,1,2,3],[4,5,6,7],[8,9,10,11]],[[12,13,14,15],[16,17,18,19],[20,21,22,23]]]
+
+(2)
+[[[0,2],[4,6]]]
+
+(3)
+[[12,13,14,15],[16,17,18,19],[20,21,22,23]]
+
+(4)
+12,13,14,15,16,17,18,19,20,21,22,23
+```
+
+### Column major, one based indexing example
+
+```c++
+#include <acons/ndarray.hpp>
+#include <iostream>
+
+using namespace acons;
+
+int main()
+{
+    // Construct a 3-dimensional 2 x 3 x 4 array 
+    ndarray<double, 3, column_major, one_based> a = {{{0,1,2,3},{4,5,6,7},{8,9,10,11}}, 
+                                                     {{12,13,14,15},{16,17,18,19},{20,21,22,23}}};
+
+    std::cout << "(1)\n" << a << "\n\n";
+
+    // Construct a 3-dimensional 1 x 2 x 2 view on the array.
+    // The second argument provides a list of index ranges 
+    // on the three dimensions of the array.
+    ndarray_view<double, 3, column_major, one_based> v(a, {{2,3},{2,4},{1,5,2}});
+
+    std::cout << "(2)\n" << v << "\n\n";
+
+    // Construct a 2-dimensional 3 x 4 slice from the array
+    ndarray_view<double, 2, column_major, one_based> s(a,{2});
+
+    std::cout << "(3)\n" << s << "\n\n";
+
+    // Iterate over the 2-dimensional view
+    auto begin = s.begin();
+    auto end = s.end();
+
+    std::cout << "(4)\n";
+
+    for (auto it = begin; it != end; ++it)
+    {
+        if (it != begin)
+        {
+            std::cout << ",";
+        }
+        std::cout << *it;
+    }
+    std::cout << "\n\n";
+}
+```
+Output:
+```
+(1)
+[[[0,1,2,3],[4,5,6,7],[8,9,10,11]],[[12,13,14,15],[16,17,18,19],[20,21,22,23]]]
+
+(2)
+[[[0,2],[4,6]]]
+
+(3)
+[[12,13,14,15],[16,17,18,19],[20,21,22,23]]
+
+(4)
+12,16,20,13,17,21,14,18,22,15,19,23
 ```
 
 ### Creating ndarrays in managed shared memory with Boost interprocess allocators
