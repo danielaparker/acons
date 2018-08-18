@@ -1,6 +1,6 @@
 # acons
 
-acons is a C++, header-only library for constructing N-dimensional arrays.
+acons is a modern C++, header-only library for constructing N-dimensional arrays.
 
 It is distributed under the [MIT License](https://opensource.org/licenses/MIT).
 
