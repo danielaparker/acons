@@ -10,16 +10,11 @@ Download the latest [single header file](https://raw.githubusercontent.com/danie
 
 ## Supported compilers
 
-| Compiler     | Operating System
-|--------------|------------------
-| VS 2015      | Windows 10       
-| g++-4.8      | Ubuntu           
-| g++-6        | Ubuntu           
-| g++-7        | Ubuntu           
-| g++-8        | Ubuntu           
-| clang-3.8    |
-| clang-5.0    |
-| clang-6.0    |
+Compiler      | Versions      |Operating System
+--------------|---------------|-----------------
+ VS           | 14.0          |Windows 10       
+ g++-         | 4.8, 6, 7,8   |Ubuntu           
+ clang-3.8    | 3.8, 5.0. 6.0 |
 
 ## Examples
 
@@ -52,11 +47,11 @@ int main()
     std::cout << "(3)\n" << s << "\n\n";
 
     // Iterate over the 2-dimensional view
-    auto begin = s.begin();
-    auto end = s.end();
 
     std::cout << "(4)\n";
 
+    auto begin = s.begin();
+    auto end = s.end();
     for (auto it = begin; it != end; ++it)
     {
         if (it != begin)
@@ -112,11 +107,11 @@ int main()
     std::cout << "(3)\n" << s << "\n\n";
 
     // Iterate over the 2-dimensional view
-    auto begin = s.begin();
-    auto end = s.end();
 
     std::cout << "(4)\n";
 
+    auto begin = s.begin();
+    auto end = s.end();
     for (auto it = begin; it != end; ++it)
     {
         if (it != begin)
