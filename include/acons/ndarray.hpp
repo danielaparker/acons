@@ -662,6 +662,7 @@ public:
         Order::calculate_strides(dim_, strides_, size_);
         capacity_ = size_;
         data_ = create(capacity_, get_allocator());
+        std::fill(data_, data_+size_, T());
     }
 
     ndarray(const std::array<size_t,N>& dim, const Allocator& alloc)
@@ -671,6 +672,7 @@ public:
         Order::calculate_strides(dim_, strides_, size_);
         capacity_ = size_;
         data_ = create(capacity_, get_allocator());
+        std::fill(data_, data_+size_, T());
     }
 
     ndarray(const std::array<size_t,N>& dim, T val)
