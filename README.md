@@ -141,8 +141,8 @@ Output:
 12,16,20,13,17,21,14,18,22,15,19,23
 ```
 
-Note that the `start` and `stop` arguments in the index range have become one-based. 
-(`stop` - `start`)/`step` gives the size of the dimension, as previously.
+Note that the `start` and `stop` arguments in the index range are now one-based. 
+As previously, (`stop` - `start`)/`step` gives the size of the dimension.
 
 ### Creating ndarrays in managed shared memory with Boost interprocess allocators
 
