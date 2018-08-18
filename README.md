@@ -14,7 +14,7 @@ Compiler      | Versions      |Operating System
 --------------|---------------|-----------------
  VS           | 14.0          |Windows 10       
  g++-         | 4.8, 6, 7,8   |Ubuntu           
- clang-3.8    | 3.8, 5.0. 6.0 |
+ clang        | 3.8, 5.0. 6.0 |
 
 ## Examples
 
