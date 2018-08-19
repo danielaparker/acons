@@ -162,4 +162,35 @@ additional elements are filled with `value`.
 
 ### Examples
   
+#### resize examples
+
+```c++
+// Construct a 2-dimensional 2 x 2 array 
+ndarray<double,2> a = {{0, 1}, {2, 3}};
+
+// Shrink to 2 x 1
+a.resize({2,1});
+
+std::cout << a << "\n\n";
+```
+
+Output:
+```
+[[0],[1]]
+```
+
+```c++
+// Construct a 2-dimensional 2 x 2 array 
+ndarray<double,2> a = {{0, 1}, {2, 3}};
+
+// Enlarge to 2 x 3
+a.resize({2,3});
+
+std::cout << a << "\n\n";
+```
+
+Output:
+```
+[[0,1,2],[3,0,0]]
+```
 

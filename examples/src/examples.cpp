@@ -90,8 +90,32 @@ void column_major_one_based_example()
     assert (a(2, 2, 1) = 99);
 }
 
+void shrink_array_example()
+{
+    // Construct a 2-dimensional 2 x 2 array 
+    ndarray<double,2> a = {{0, 1}, {2, 3}};
+
+    // Shrink to 2 x 1
+    a.resize({2,1});
+
+    std::cout << a << "\n\n";
+}
+
+void enlarge_array_example()
+{
+    // Construct a 2-dimensional 2 x 2 array 
+    ndarray<double,2> a = {{0, 1}, {2, 3}};
+
+    // Enlarge to 2 x 3
+    a.resize({2,3});
+
+    std::cout << a << "\n\n";
+}
+
 int main()
 {
     row_major_zero_based_example();
     column_major_one_based_example();
+    shrink_array_example();
+    enlarge_array_example();
 }
