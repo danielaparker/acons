@@ -23,6 +23,7 @@ Download the latest [single header file](https://raw.githubusercontent.com/danie
 ```c++
 #include <acons/ndarray.hpp>
 #include <iostream>
+#include <cassert>
 
 using namespace acons;
 
@@ -47,11 +48,11 @@ int main()
     std::cout << "(3)\n" << s << "\n\n";
 
     // Iterate over the 2-dimensional view
+    auto begin = s.begin();
+    auto end = s.end();
 
     std::cout << "(4)\n";
 
-    auto begin = s.begin();
-    auto end = s.end();
     for (auto it = begin; it != end; ++it)
     {
         if (it != begin)
@@ -61,6 +62,12 @@ int main()
         std::cout << *it;
     }
     std::cout << "\n\n";
+
+    // Change one of the view's elements
+    s(1,0) = 99;
+
+    // Verify that the change is reflected in the original array
+    assert (a(1, 1, 0) = 99);
 }
 ```
 Output:
@@ -86,6 +93,7 @@ that defaults to 1. (`stop` - `start`)/`step` gives the size of the dimension.
 ```c++
 #include <acons/ndarray.hpp>
 #include <iostream>
+#include <cassert>
 
 using namespace acons;
 
@@ -110,11 +118,11 @@ int main()
     std::cout << "(3)\n" << s << "\n\n";
 
     // Iterate over the 2-dimensional view
+    auto begin = s.begin();
+    auto end = s.end();
 
     std::cout << "(4)\n";
 
-    auto begin = s.begin();
-    auto end = s.end();
     for (auto it = begin; it != end; ++it)
     {
         if (it != begin)
@@ -124,6 +132,12 @@ int main()
         std::cout << *it;
     }
     std::cout << "\n\n";
+
+    // Change one of the view's elements
+    s(2,1) = 99;
+
+    // Verify that the change is reflected in the original array
+    assert (a(2, 2, 1) = 99);
 }
 ```
 Output:

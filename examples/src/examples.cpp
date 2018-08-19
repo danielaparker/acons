@@ -1,5 +1,6 @@
 #include <acons/ndarray.hpp>
 #include <iostream>
+#include <cassert>
 
 using namespace acons;
 
@@ -38,6 +39,12 @@ void row_major_zero_based_example()
         std::cout << *it;
     }
     std::cout << "\n\n";
+
+    // Change one of the view's elements
+    s(1,0) = 99;
+
+    // Verify that the change is reflected in the original array
+    assert (a(1, 1, 0) = 99);
 }
 
 void column_major_one_based_example()
@@ -75,6 +82,12 @@ void column_major_one_based_example()
         std::cout << *it;
     }
     std::cout << "\n\n";
+
+    // Change one of the view's elements
+    s(2,1) = 99;
+
+    // Verify that the change is reflected in the original array
+    assert (a(2, 2, 1) = 99);
 }
 
 int main()
