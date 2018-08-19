@@ -80,16 +80,17 @@ Constructs a new N-dimensional array, optionally using a user supplied allocator
 (2) The first N arguments specify the dimensions of the N-dimensional array, 
 and an optional (N+1)th argument specifies an initial value.
 
-(3) Constructs an N-dimensional array with dimensions specified by `dimensions`.
+(3) Constructs an N-dimensional array with dimensions specified by `dimensions`
+    and values initialized to `T()`.
 
 (4) Constructs an N-dimensional array with dimensions specified by `dimensions`
-    using the supplied allocator.
+    and values initialized to `T()` and using the supplied allocator.
 
 (5) Constructs an N-dimensional array with dimensions specified by `dimensions`
     and values initialized to `val`.
 
 (6) Constructs an N-dimensional array with dimensions specified by `dimensions`
-    and values initialized to `val` using the supplied allocator.
+    and values initialized to `val` and using the supplied allocator.
 
 (7) Constructs an N-dimensional array from the initializer list init.
 
