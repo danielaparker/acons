@@ -223,7 +223,7 @@ struct one_based
 };
 
 template <size_t N>
-struct output_item
+struct snapshot
 {
     static const size_t close_bracket = N+1;
     static const size_t insert_comma = N+2;
@@ -231,23 +231,23 @@ struct output_item
     std::array<size_t, N> indices;
     size_t index;
 
-    output_item()
+    snapshot()
         : index(0)
     {
     }
 
-    output_item(const output_item<N>& item)
+    snapshot(const snapshot<N>& item)
         : indices(item.indices), index(item.index)
     {
 
     }
 
-    output_item(const std::array<size_t,N>& x, size_t idx)
+    snapshot(const std::array<size_t,N>& x, size_t idx)
         : indices(x), index(idx)
     {
     }
 
-    output_item(size_t idx)
+    snapshot(size_t idx)
         : index(idx)
     {
     }
@@ -268,13 +268,13 @@ struct row_major
     }
 
     template <size_t N>
-    static void initialize_walk(std::vector<output_item<N>>& stack)
+    static void initialize_walk(std::vector<snapshot<N>>& stack)
     {
         stack.emplace_back(0);
     }
 
     template <size_t N, typename Callable>
-    static void walk(std::vector<output_item<N>>& stack, 
+    static void walk(std::vector<snapshot<N>>& stack, 
                      const std::array<size_t,N>& dim, 
                      const std::array<size_t,N>& strides, 
                      const std::array<size_t,N>& offsets, 
@@ -282,7 +282,7 @@ struct row_major
     {
         while (!stack.empty())
         {
-            output_item<N> current = stack.back();
+            snapshot<N> current = stack.back();
             stack.pop_back();
 
             if (current.index+1 < N)
@@ -290,7 +290,7 @@ struct row_major
                 for (size_t i = dim[current.index]; i-- > 0; )
                 {
                     current.indices[current.index] = i; 
-                    stack.push_back(output_item<N>(current.indices,current.index+1)); 
+                    stack.push_back(snapshot<N>(current.indices,current.index+1)); 
                 }
             }
             else if (current.index+1 == N)
@@ -322,7 +322,7 @@ struct row_major
         {
             stack_depth *= dim1[i];
         }
-        std::vector<output_item<N>> stack(stack_depth);
+        std::vector<snapshot<N>> stack(stack_depth);
 
         size_t count = 1;
         stack[0].index = 0;
@@ -384,13 +384,13 @@ struct column_major
     }
 
     template <size_t N>
-    static void initialize_walk(std::vector<output_item<N>>& stack)
+    static void initialize_walk(std::vector<snapshot<N>>& stack)
     {
         stack.emplace_back(N-1);
     }
 
     template <size_t N, typename Callable>
-    static void walk(std::vector<output_item<N>>& stack, 
+    static void walk(std::vector<snapshot<N>>& stack, 
                      const std::array<size_t,N>& dim, 
                      const std::array<size_t,N>& strides, 
                      const std::array<size_t,N>& offsets, 
@@ -398,7 +398,7 @@ struct column_major
     {
         while (!stack.empty())
         {
-            output_item<N> current = stack.back();
+            snapshot<N> current = stack.back();
             stack.pop_back();
 
             if (current.index > 0)
@@ -406,7 +406,7 @@ struct column_major
                 for (size_t i = dim[current.index]; i-- > 0; )
                 {
                     current.indices[current.index] = i; 
-                    stack.push_back(output_item<N>(current.indices,current.index-1)); 
+                    stack.push_back(snapshot<N>(current.indices,current.index-1)); 
                 }
             }
             else 
@@ -438,7 +438,7 @@ struct column_major
         {
             stack_depth *= dim1[i];
         }
-        std::vector<output_item<N>> stack(stack_depth);
+        std::vector<snapshot<N>> stack(stack_depth);
 
         size_t count = 1;
         stack[0].index = N-1;
@@ -954,26 +954,6 @@ public:
     T& operator()(const std::array<size_t,N>& indices) 
     {
         size_t off = get_offset<N, N, Base>(strides_,indices);
-        std::cout << "strides:\n";
-        for (size_t i = 0; i < strides_.size(); ++i)
-        {
-            if (i > 0)
-            {
-                std::cout << ",";
-            }
-            std::cout << strides_[i];
-        }
-        std::cout << "\n\n";
-        for (size_t i = 0; i < indices.size(); ++i)
-        {
-            if (i > 0)
-            {
-                std::cout << ",";
-            }
-            std::cout << indices[i];
-        }
-        std::cout << "\n\n";
-        std::cout << "off: " << off << ", size: " << size() << "\n\n";
 
         assert(off < size());
         return data_[off];
@@ -1152,7 +1132,7 @@ private:
 template <typename CharT, size_t N, typename Getter>
 void print(std::basic_ostream<CharT>& os, const std::array<size_t,N>& dimensions, Getter getter)
 {
-    std::vector<output_item<N>> stack;
+    std::vector<snapshot<N>> stack;
     stack.emplace_back(0);
     while (!stack.empty())
     {
@@ -1162,14 +1142,14 @@ void print(std::basic_ostream<CharT>& os, const std::array<size_t,N>& dimensions
         if (val.index+1 < N)
         {
             os << '[';
-            stack.push_back(output_item<N>(output_item<N>::close_bracket)); 
+            stack.push_back(snapshot<N>(snapshot<N>::close_bracket)); 
             for (size_t i = dimensions[val.index]; i-- > 0; )
             {
                 val.indices[val.index] = i; 
-                stack.push_back(output_item<N>(val.indices,val.index+1)); 
+                stack.push_back(snapshot<N>(val.indices,val.index+1)); 
                 if (i > 0)
                 {
-                    stack.push_back(output_item<N>(output_item<N>::insert_comma)); 
+                    stack.push_back(snapshot<N>(snapshot<N>::insert_comma)); 
                 }
             }
         }
@@ -1187,11 +1167,11 @@ void print(std::basic_ostream<CharT>& os, const std::array<size_t,N>& dimensions
             }
             os << ']';
         }
-        else if (val.index == output_item<N>::close_bracket)
+        else if (val.index == snapshot<N>::close_bracket)
         {
             os << ']';
         }
-        else if (val.index == output_item<N>::insert_comma)
+        else if (val.index == snapshot<N>::insert_comma)
         {
             os << ',';
         }
@@ -1223,7 +1203,7 @@ private:
     std::array<size_t,N> dim_;
     std::array<size_t,N> strides_;
     std::array<size_t,N> offsets_;
-    std::vector<output_item<N>> stack_;
+    std::vector<snapshot<N>> stack_;
     pointer p_;
     pointer endp_;
     size_t step_;
