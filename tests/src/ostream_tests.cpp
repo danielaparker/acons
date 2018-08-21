@@ -49,6 +49,17 @@ TEST_CASE("2x2x2 ostream test")
     CHECK(os.str() == std::string("[[[0,1],[2,3]],[[4,5],[6,7]]]"));
 }
 
+TEST_CASE("1x2x2 ndarray_view ostream test")
+{
+    ndarray<double, 3, row_major> a = { {{0,1,2,3},{4,5,6,7},{8,9,10,11}}, {{12,13,14,15},{16,17,18,19},{20,21,22,23}} };
+
+    ndarray_view<double, 3> v(a,{{1,2},{1,3},{0,4,2}});
+
+    std::ostringstream os;
+    os << v;
+    CHECK(os.str() == std::string("[[[16,18],[20,22]]]"));
+}
+
 TEST_CASE("ostream test")
 {
     ndarray<double,1,row_major> a0 = {1.0,2.0};

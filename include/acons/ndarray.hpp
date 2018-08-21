@@ -1512,7 +1512,7 @@ std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os,
 {
     auto f = [&](const std::array<size_t,M>& indices) 
     { 
-        size_t off = get_offset<M, M, zero_based>(v.strides(),indices);
+        size_t off = get_offset<M, M, zero_based>(v.strides(), v.offsets(), indices);
         return v.data()[off];
     };
     print(os, v.dimensions(), f);
@@ -1555,6 +1555,34 @@ public:
 
     template<size_t N, typename Allocator>
     ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
+                 const std::array<size_t,N-M>& origin,
+                 const slices_type& slices)
+        : super_type(a, origin, slices)
+    {
+    }
+
+    template <typename OtherTPtr>
+    ndarray_view(const const_ndarray_view<T, M, Order, Base, OtherTPtr>& a)
+        : super_type(a)          
+    {
+    }
+
+    template<size_t N, typename OtherTPtr>
+    ndarray_view(const const_ndarray_view<T, N, Order, Base, OtherTPtr>& a, 
+                 const slices_type& slices)
+        : super_type(a, slices)
+    {
+    }
+
+    template<size_t N, typename OtherTPtr>
+    ndarray_view(const const_ndarray_view<T, N, Order, Base, OtherTPtr>& a, 
+                 const std::array<size_t,N-M>& origin)
+        : super_type(a, origin)
+    {
+    }
+
+    template<size_t N, typename OtherTPtr>
+    ndarray_view(const const_ndarray_view<T, N, Order, Base, OtherTPtr>& a, 
                  const std::array<size_t,N-M>& origin,
                  const slices_type& slices)
         : super_type(a, origin, slices)
