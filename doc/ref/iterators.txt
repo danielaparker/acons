@@ -1,0 +1,12 @@
+v: [1,2]
+
+dimensions: 2
+
+strides: 1
+
+offsets: 1
+
+walk N-1: 0, dimensions[N-1]: 2
+
+f: start: 1, stop: 1, stride: 1
+

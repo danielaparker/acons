@@ -4,6 +4,29 @@
 
 using namespace acons;
 
+TEST_CASE("2x3 dim row major zero_based, with right offsets")
+{
+    ndarray<double, 2, row_major> a = { {0,1,2,3}, {4,5,6,7}, {8,9,10,11} };
+    ndarray_view<double, 2, row_major> v(a, {{0,2}, {1,3}});
+
+    std::cout << "data: ";
+    for (size_t i = 0; i < v.size(); ++i)
+    {
+        if (i > 0)
+        {
+            std::cout << ",";
+        }
+        std::cout << v.data()[i];
+    }
+    std::cout << "\n\n";
+
+    std::cout << "v: " << v << "\n\n";
+    std::cout << "dimensions: " << v.dimensions() << "\n\n";
+    std::cout << "strides: " << v.strides() << "\n\n";
+    std::cout << "offsets: " << v.offsets() << "\n\n";
+}
+
+#if 0
 TEST_CASE("2x3x4 dim row major zero_based, slices")
 {
     // Construct a 3-dimensional array with dimensions 2 x 3 x 4
@@ -117,4 +140,4 @@ TEST_CASE("2x3x4 dim column major one_based, origin")
     CHECK(*it++ == 22);
     CHECK(it == end);
 }
-
+#endif

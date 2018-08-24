@@ -16,6 +16,20 @@
   
 namespace acons {
 
+template <typename T, size_t N>
+std::ostream& operator<<(std::ostream& os, const std::array<T,N>& a)
+{
+    for (auto it = std::begin(a); it != std::end(a); ++it)
+    {
+        if (it != std::begin(a))
+        {
+            os << ",";
+        }
+        os << *it;
+    }
+    return os;
+}
+
 template<class Pointer> inline
 typename std::pointer_traits<Pointer>::element_type* to_plain_pointer(Pointer ptr)
 {       
@@ -254,6 +268,31 @@ struct snapshot
 
 };
 
+struct snapshot2
+{
+    size_t start;
+    size_t size;
+    size_t dim;
+
+    snapshot2()
+        : start(0), size(0), dim(0)
+    {
+    }
+
+    snapshot2(size_t start, size_t size, size_t dim)
+        : start(start), size(size), dim(dim)
+    {
+    }
+
+    snapshot2(const snapshot2&) = default;
+
+    friend std::ostream& operator<<(std::ostream& os, const snapshot2& s)
+    {
+        os << "[" << s.start << "," << s.size << "," << s.dim << "]";
+        return os;
+    }
+};
+
 struct row_major
 {
     template <size_t N>
@@ -268,38 +307,73 @@ struct row_major
     }
 
     template <size_t N>
-    static void initialize_walk(std::vector<snapshot<N>>& stack)
+    static void initialize_walk(std::vector<snapshot2>& stack)
     {
-        stack.emplace_back(0);
+        stack.emplace_back(0, 1, 0);
     }
 
     template <size_t N, typename Callable>
-    static void walk(std::vector<snapshot<N>>& stack, 
-                     const std::array<size_t,N>& dim, 
+    static void walk(std::vector<snapshot2>& stack, 
+                     const std::array<size_t,N>& dimensions, 
                      const std::array<size_t,N>& strides, 
                      const std::array<size_t,N>& offsets, 
                      Callable callable)
     {
         while (!stack.empty())
         {
-            snapshot<N> current = stack.back();
+            snapshot2 current = stack.back();
+            std::cout << "stack: ";
+            for (size_t i = 0; i < stack.size(); ++i)
+            {
+                if (i > 0)
+                {
+                    std::cout << ",";
+                }
+                std::cout << stack[i];
+            }
+            std::cout << "\n";
             stack.pop_back();
 
-            if (current.index+1 < N)
+            if (current.dim+1 < N)
             {
-                for (size_t i = dim[current.index]; i-- > 0; )
+                if (/* offsets[current.dim+1] > 0 ||*/ (dimensions[current.dim+1]*strides[current.dim+1] != strides[current.dim]))
                 {
-                    current.indices[current.index] = i; 
-                    stack.push_back(snapshot<N>(current.indices,current.index+1)); 
+                    for (size_t j = dimensions[current.dim]; j-- > 0;)
+                    {
+                        size_t start = current.start + offsets[current.dim+1] + (j+offsets[current.dim])*strides[current.dim];
+                        size_t len = dimensions[current.dim+1];
+
+                        std::cout << "current.start: " 
+                                  << current.start 
+                                  << ", j: " 
+                                  << j 
+                                  << ", offsets[current.dim+1]: " 
+                                  << offsets[current.dim+1] 
+                                  << ", strides[current.dim]: " 
+                                  << strides[current.dim] 
+                                  << ", start: " 
+                                  << start << "\n";
+                        stack.emplace_back(start,len,current.dim+1);
+                    }
+                }
+                else
+                {
+                    size_t start = current.start + offsets[current.dim+1] + (offsets[current.dim])*strides[current.dim];
+                    std::cout << "path2 current:" << current << "\n";
+                    size_t len = 1;
+                    for (size_t j = 0; j <= current.dim+1; ++j)
+                    {
+                        len *= dimensions[j];
+                    }
+                    stack.emplace_back(start,len,current.dim+1);
                 }
             }
-            else if (current.index+1 == N)
+            else
             {
-                current.indices[N-1] = 0;
-                size_t o = get_offset<N,N,zero_based>(strides, offsets, current.indices);
-                current.indices[N-1] = dim[N-1]-1;
-                size_t endo = get_offset<N,N,zero_based>(strides, offsets, current.indices);
-                callable(o, endo+1, strides[N-1]);
+                size_t stride = strides[N-1];
+
+                std::cout << "current: " << current  << ", stride: " << stride << "\n";
+                callable(current.start, current.start + current.size*stride, stride);
                 break;
             }
         }
@@ -384,38 +458,50 @@ struct column_major
     }
 
     template <size_t N>
-    static void initialize_walk(std::vector<snapshot<N>>& stack)
+    static void initialize_walk(std::vector<snapshot2>& stack)
     {
-        stack.emplace_back(N-1);
+        stack.emplace_back(0, 1, N-1);
     }
 
     template <size_t N, typename Callable>
-    static void walk(std::vector<snapshot<N>>& stack, 
-                     const std::array<size_t,N>& dim, 
+    static void walk(std::vector<snapshot2>& stack, 
+                     const std::array<size_t,N>& dimensions, 
                      const std::array<size_t,N>& strides, 
                      const std::array<size_t,N>& offsets, 
                      Callable callable)
     {
         while (!stack.empty())
         {
-            snapshot<N> current = stack.back();
+            snapshot2 current = stack.back();
             stack.pop_back();
 
-            if (current.index > 0)
+            if (current.dim > 0)
             {
-                for (size_t i = dim[current.index]; i-- > 0; )
+                if (offsets[current.dim] > 0)
                 {
-                    current.indices[current.index] = i; 
-                    stack.push_back(snapshot<N>(current.indices,current.index-1)); 
+                    for (size_t j = 0; j <= current.dim; ++j)
+                    {
+                        size_t start = current.start + offsets[current.dim]*strides[j];
+                        size_t len = dimensions[j];
+                        stack.emplace_back(start,len,current.dim-1);
+                    }
+                }
+                else
+                {
+                    size_t len = 1;
+                    for (size_t j = 0; j <= current.dim; ++j)
+                    {
+                        len *= dimensions[j];
+                    }
+                    stack.emplace_back(current.start,len,current.dim-1);
                 }
             }
-            else 
+            else
             {
-                current.indices[0] = 0;
-                size_t o = get_offset<N,N,zero_based>(strides, offsets, current.indices);
-                current.indices[0] = dim[0]-1;
-                size_t endo = get_offset<N,N,zero_based>(strides, offsets, current.indices);
-                callable(o, endo+1, strides[0]);
+                size_t start = current.start + offsets[0];
+                size_t len = current.size * dimensions[0];
+                size_t stride = strides[0];
+                callable(start, start + len*stride, stride);
                 break;
             }
         }
@@ -1203,14 +1289,15 @@ private:
     std::array<size_t,N> dim_;
     std::array<size_t,N> strides_;
     std::array<size_t,N> offsets_;
-    std::vector<snapshot<N>> stack_;
-    pointer p_;
-    pointer endp_;
+    std::vector<snapshot2> stack_;
+
+    size_t offset_;
+    size_t end_offset_;
     size_t step_;
 public:
 
     ndarray_view_iterator()
-        : data_(nullptr), p_(nullptr), endp_(nullptr), step_(0)
+        : data_(nullptr), offset_(0), end_offset_(0), step_(0)
     {
     }
 
@@ -1219,14 +1306,13 @@ public:
                           const std::array<size_t,N>& strides, 
                           const std::array<size_t,N>& offsets)
         : data_(data), dim_(dim), strides_(strides), offsets_(offsets), 
-          p_(nullptr), endp_(nullptr), step_(0)
+          offset_(0), end_offset_(0), step_(0)
     {
-        Order::initialize_walk(stack_);
-        p_ = endp_ = nullptr;
+        Order::initialize_walk<N>(stack_);
         auto f = [&](size_t o, size_t endo, size_t stride)
         {
-            p_ = data_ + o;
-            endp_ = data_ + endo;
+            offset_ = o;
+            end_offset_ = endo;
             step_ = stride;
         };
         Order::walk(stack_, dim_, strides_, offsets_, f);
@@ -1234,23 +1320,24 @@ public:
 
     ndarray_view_iterator(const ndarray_view_iterator<T,N,Order>& other) 
         : data_(other.data_), dim_(other.dim_), strides_(other.strides_), offsets_(other.offsets_), 
-          stack_(other.stack_), p_(other.p_), endp_(other.endp_), step_(other.step_)
+          stack_(other.stack_), 
+          offset_(other.offset_), end_offset_(other.end_offset_), step_(other.step_)
     {
     } 
 
     ndarray_view_iterator<T, N, Order, IsConst>& operator++()
     {
-        if (p_+1 < endp_)
+        if (offset_ + step_ < end_offset_)
         {
-            p_ += step_;
+            offset_ += step_;
         }
         else
         {
-            p_ = endp_ = nullptr;
+            offset_ = end_offset_ = 0;
             auto f = [&](size_t o, size_t endo, size_t stride)
             {
-                p_ = data_ + o;
-                endp_ = data_ + endo;
+                offset_ = o;
+                end_offset_ = endo;
                 step_ = stride;
             };
             Order::walk(stack_, dim_, strides_, offsets_, f);
@@ -1261,32 +1348,19 @@ public:
     ndarray_view_iterator<T, N, Order, IsConst> operator++(int)
     {
         ndarray_view_iterator<T,N,Order,IsConst> temp(*this);
-        if (p_+1 < endp_)
-        {
-            p_ += step_;
-        }
-        else
-        {
-            p_ = endp_ = nullptr;
-            auto f = [&](size_t o, size_t endo, size_t stride)
-            {
-                p_ = data_ + o;
-                endp_ = data_ + endo;
-                step_ = stride;
-            };
-            Order::walk(stack_, dim_, strides_, offsets_, f);
-        }
+        ++(*this);
         return temp;
     }
 
     reference operator*() const
     {
-        return *p_;
+        return *(data_+offset_);
     }
 
     friend bool operator==(const ndarray_view_iterator<T,N,Order,IsConst>& it1, const ndarray_view_iterator<T,N,Order,IsConst>& it2)
     {
-        return it1.p_ == it2.p_;
+        std::cout << "offset1: " << it1.offset_ << ", offset2: " << it2.offset_ << "\n";
+        return it1.offset_ == it2.offset_;
     }
 
     friend bool operator!=(const ndarray_view_iterator<T,N,Order,IsConst>& it1, const ndarray_view_iterator<T,N,Order,IsConst>& it2)
