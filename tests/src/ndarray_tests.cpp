@@ -1,4 +1,5 @@
 #include <catch/catch.hpp>
+#include <iostream>
 #include "acons/ndarray.hpp"
 #include <iostream>
 

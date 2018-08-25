@@ -1,6 +1,6 @@
 #include <catch/catch.hpp>
-#include "acons/ndarray.hpp"
 #include <iostream>
+#include "acons/ndarray.hpp"
 #include <sstream>
 
 using namespace acons;
