@@ -473,35 +473,58 @@ struct column_major
         while (!stack.empty())
         {
             snapshot2 current = stack.back();
+            std::cout << "stack: ";
+            for (size_t i = 0; i < stack.size(); ++i)
+            {
+                if (i > 0)
+                {
+                    std::cout << ",";
+                }
+                std::cout << stack[i];
+            }
+            std::cout << "\n";
             stack.pop_back();
 
             if (current.dim > 0)
             {
-                if (offsets[current.dim] > 0)
+                if (/* offsets[current.dim-1] > 0 ||*/ (dimensions[current.dim-1]*strides[current.dim-1] != strides[current.dim]))
                 {
-                    for (size_t j = 0; j <= current.dim; ++j)
+                    for (size_t j = dimensions[current.dim]; j-- > 0;)
                     {
-                        size_t start = current.start + offsets[current.dim]*strides[j];
-                        size_t len = dimensions[j];
+                        size_t start = current.start + offsets[current.dim-1] + (j+offsets[current.dim])*strides[current.dim];
+                        size_t len = dimensions[current.dim-1];
+
+                        std::cout << "current.start: " 
+                                  << current.start 
+                                  << ", j: " 
+                                  << j 
+                                  << ", offsets[current.dim-1]: " 
+                                  << offsets[current.dim-1] 
+                                  << ", strides[current.dim]: " 
+                                  << strides[current.dim] 
+                                  << ", start: " 
+                                  << start << "\n";
                         stack.emplace_back(start,len,current.dim-1);
                     }
                 }
                 else
                 {
+                    size_t start = current.start + offsets[current.dim-1] + (offsets[current.dim])*strides[current.dim];
+                    std::cout << "path2 current:" << current << "\n";
                     size_t len = 1;
-                    for (size_t j = 0; j <= current.dim; ++j)
+                    for (size_t j = 0; j <= current.dim-1; ++j)
                     {
                         len *= dimensions[j];
                     }
-                    stack.emplace_back(current.start,len,current.dim-1);
+                    stack.emplace_back(start,len,current.dim-1);
                 }
             }
             else
             {
-                size_t start = current.start + offsets[0];
-                size_t len = current.size * dimensions[0];
                 size_t stride = strides[0];
-                callable(start, start + len*stride, stride);
+
+                std::cout << "current: " << current  << ", stride: " << stride << "\n";
+                callable(current.start, current.start + current.size*stride, stride);
                 break;
             }
         }
