@@ -1331,7 +1331,7 @@ public:
         : data_(data), dim_(dim), strides_(strides), offsets_(offsets), 
           offset_(0), end_offset_(0), step_(0)
     {
-        Order::initialize_walk<N>(stack_);
+        Order:: template initialize_walk<N>(stack_);
         auto f = [&](size_t o, size_t endo, size_t stride)
         {
             offset_ = o;
