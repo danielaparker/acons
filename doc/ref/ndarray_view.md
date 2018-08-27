@@ -20,7 +20,7 @@ The `ndarray_view` class represents a view on an N-dimensional array.
 Member type                         |Definition|Notes
 ------------------------------------|----------|--------------------
 `T`|The type of the elements.|
-`N`|The number of dimensions of the array|
+`M`|The number of dimensions of the array view|
 `Order`|`row_major` or `column_major`|
 `Base`|`zero_based` or `one_based`|
 
@@ -28,11 +28,14 @@ Member type                         |Definition|Notes
 
 Member type                         |Definition
 ------------------------------------|------------------------------
+`dimension`|The number of dimensions of the array view
 `value_type`|T
 `reference`|T&
 `const_reference`|const T&
-`iterator`|T*
-`const_iterator`|const T*
+`order_type`|T
+`base_type`|T
+`iterator`|
+`const_iterator`|
 
 #### Member functions
 

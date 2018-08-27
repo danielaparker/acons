@@ -236,57 +236,25 @@ struct one_based
     }
 };
 
-template <size_t N>
-struct snapshot
-{
-    static const size_t close_bracket = N+1;
-    static const size_t insert_comma = N+2;
-
-    std::array<size_t, N> indices;
-    size_t index;
-
-    snapshot()
-        : index(0)
-    {
-    }
-
-    snapshot(const snapshot<N>& item)
-        : indices(item.indices), index(item.index)
-    {
-
-    }
-
-    snapshot(const std::array<size_t,N>& x, size_t idx)
-        : indices(x), index(idx)
-    {
-    }
-
-    snapshot(size_t idx)
-        : index(idx)
-    {
-    }
-
-};
-
-struct snapshot2
+struct walk_snapshot
 {
     size_t start;
     size_t size;
     size_t dim;
 
-    snapshot2()
+    walk_snapshot()
         : start(0), size(0), dim(0)
     {
     }
 
-    snapshot2(size_t start, size_t size, size_t dim)
+    walk_snapshot(size_t start, size_t size, size_t dim)
         : start(start), size(size), dim(dim)
     {
     }
 
-    snapshot2(const snapshot2&) = default;
+    walk_snapshot(const walk_snapshot&) = default;
 
-    friend std::ostream& operator<<(std::ostream& os, const snapshot2& s)
+    friend std::ostream& operator<<(std::ostream& os, const walk_snapshot& s)
     {
         os << "[" << s.start << "," << s.size << "," << s.dim << "]";
         return os;
@@ -307,7 +275,7 @@ struct row_major
     }
 
     template <size_t N>
-    static void initialize_walk(std::vector<snapshot2>& stack,
+    static void initialize_walk(std::vector<walk_snapshot>& stack,
                                 const std::array<size_t,N>& dimensions,
                                 const std::array<size_t,N>& strides,
                                 const std::array<size_t,N>& offsets)
@@ -316,7 +284,7 @@ struct row_major
     }
 
     template <size_t N, typename Callable>
-    static void walk(std::vector<snapshot2>& stack, 
+    static void walk(std::vector<walk_snapshot>& stack, 
                      const std::array<size_t,N>& dimensions, 
                      const std::array<size_t,N>& strides, 
                      const std::array<size_t,N>& offsets, 
@@ -324,7 +292,7 @@ struct row_major
     {
         while (!stack.empty())
         {
-            snapshot2 current = stack.back();
+            walk_snapshot current = stack.back();
             /*std::cout << "stack: ";
             for (size_t i = 0; i < stack.size(); ++i)
             {
@@ -396,7 +364,7 @@ struct column_major
     }
 
     template <size_t N>
-    static void initialize_walk(std::vector<snapshot2>& stack,
+    static void initialize_walk(std::vector<walk_snapshot>& stack,
                                 const std::array<size_t,N>& dimensions,
                                 const std::array<size_t,N>& strides,
                                 const std::array<size_t,N>& offsets)
@@ -405,7 +373,7 @@ struct column_major
     }
 
     template <size_t N, typename Callable>
-    static void walk(std::vector<snapshot2>& stack, 
+    static void walk(std::vector<walk_snapshot>& stack, 
                      const std::array<size_t,N>& dimensions, 
                      const std::array<size_t,N>& strides, 
                      const std::array<size_t,N>& offsets, 
@@ -413,7 +381,7 @@ struct column_major
     {
         while (!stack.empty())
         {
-            snapshot2 current = stack.back();
+            walk_snapshot current = stack.back();
             /*std::cout << "stack: ";
             for (size_t i = 0; i < stack.size(); ++i)
             {
@@ -614,6 +582,8 @@ public:
     static const size_t dimension = N;
     typedef T* iterator;
     typedef const T* const_iterator;
+    typedef Order order_type;
+    typedef Base base_type;
 private:
     friend struct init_helper<0>;
     friend class ndarray_view<T, N, Order, Base>;
@@ -809,6 +779,26 @@ public:
     ~ndarray()
     {
         get_allocator().deallocate(to_plain_pointer(data_), capacity_);
+    }
+
+    iterator begin()
+    {
+        return data_;
+    }
+
+    const_iterator begin() const
+    {
+        return data_;
+    }
+
+    iterator end()
+    {
+        return data_ + size_;
+    }
+
+    const_iterator end() const
+    {
+        return data_ + size_;
     }
 
     void resize(const std::array<size_t,N>& dim, T value = T())
@@ -1117,65 +1107,92 @@ private:
     }
 };
 
-
-template <typename CharT, size_t N, typename Getter>
-void print(std::basic_ostream<CharT>& os, const std::array<size_t,N>& dimensions, Getter getter)
+template <typename CharT, typename A>
+void print(std::basic_ostream<CharT>& os, A& a)
 {
-    std::vector<snapshot<N>> stack;
-    stack.emplace_back(0);
-    while (!stack.empty())
+    os << '[';
+    if (A::dimension == 1)
     {
-        auto val = stack.back();
-        stack.pop_back();
-
-        if (val.index+1 < N)
+        auto begin = a.begin();
+        auto end = a.end();
+        for (auto it = a.begin(); it != a.end(); ++it)
         {
-            os << '[';
-            stack.push_back(snapshot<N>(snapshot<N>::close_bracket)); 
-            for (size_t i = dimensions[val.index]; i-- > 0; )
+            if (it != begin)
             {
-                val.indices[val.index] = i; 
-                stack.push_back(snapshot<N>(val.indices,val.index+1)); 
-                if (i > 0)
-                {
-                    stack.push_back(snapshot<N>(snapshot<N>::insert_comma)); 
-                }
+                os << ',';
             }
-        }
-        else if (val.index+1 == N)
-        {
-            os << '[';
-            for (size_t i = 0; i < dimensions[val.index]; ++i)
-            {
-                val.indices[val.index] = i; 
-                if (i > 0)
-                {
-                    os << ',';
-                }
-                os << getter(val.indices);
-            }
-            os << ']';
-        }
-        else if (val.index == snapshot<N>::close_bracket)
-        {
-            os << ']';
-        }
-        else if (val.index == snapshot<N>::insert_comma)
-        {
-            os << ',';
+            os << *it;
         }
     }
+    else
+    {
+        std::array<size_t,A::dimension-1> indices;
+        indices.fill(0);
+        print(os, a, indices, 0);
+    }
+    os << ']';
 }
+
+
+template <typename CharT, typename A>
+void print(std::basic_ostream<CharT>& os, 
+           A& a, 
+           std::array<size_t,A::dimension-1>& indices, 
+           size_t i)
+{
+    if (i+1 < A::dimension)
+    {
+        for (size_t j = 0; j < a.size(i); ++j)
+        {
+            if (j > 0)
+            {
+                os << ',';
+            }
+            os << '[';
+            indices[i] = j;
+            print(os, a, indices, i+1);
+            os << ']';
+        }
+    }
+    else
+    {
+        const_ndarray_view<typename A::value_type, 1, typename A::order_type, typename A::base_type> v(a,indices);
+
+        auto begin = v.begin();
+        auto end = v.end();
+        for (auto it = begin; it != end; ++it)
+        {
+            if (it != begin)
+            {
+                os << ',';
+            }
+            os << *it;
+        }
+/*
+        for (size_t j = 0; j < a.size(i); ++j)
+        {
+            if (j > 0)
+            {
+                os << ',';
+            }
+            indices[i] = j;
+            os << a(indices);
+        }
+ */
+    }   
+}
+ 
 
 template <typename T, size_t N, typename Order, typename Base, typename Allocator, typename CharT>
 std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os, ndarray<T, N, Order, Base, Allocator>& a)
 {
-    auto f = [&](const std::array<size_t,N>& indices) 
-    { 
-        size_t off = get_offset<N, N, zero_based>(a.strides(),indices);
-        return a.data()[off];
-    };
-    print(os, a.dimensions(), f);
+    //auto f = [&](const std::array<size_t,N>& indices) 
+    //{ 
+    //    size_t off = get_offset<N, N, zero_based>(a.strides(),indices);
+    //    return a.data()[off];
+    //};
+    //print(os, a.dimensions(), f);
+    print(os, a);
     return os;
 }
 
@@ -1193,7 +1210,7 @@ private:
     std::array<size_t,N> dim_;
     std::array<size_t,N> strides_;
     std::array<size_t,N> offsets_;
-    std::vector<snapshot2> stack_;
+    std::vector<walk_snapshot> stack_;
 
     size_t offset_;
     size_t end_offset_;
@@ -1304,7 +1321,12 @@ template <typename T, size_t M, typename Order, typename Base, typename TPtr>
 class const_ndarray_view 
 {
 public:
-    typedef slice_iterator<T,M,Order,false> const_iterator;
+    static const size_t dimension = M;
+    typedef T value_type;
+    typedef const T& const_reference;
+    typedef Order order_type;
+    typedef Base base_type;
+    typedef slice_iterator<T,M,Order,true> const_iterator;
     typedef array_wrapper<slice,M> slices_type;
 protected:
     TPtr data_;
@@ -1415,7 +1437,7 @@ public:
 
         for (size_t i = 0; i < M; ++i)
         {
-            dim_[i] = other.dimension()[(N-M)+i];
+            dim_[i] = other.dimensions()[(N-M)+i];
             strides_[i] = other.strides()[(N-M)+i];
             offsets_[i] = rel + other.offsets()[(N-M)+i];
         }
@@ -1514,12 +1536,13 @@ template <typename CharT, typename T, size_t M, typename Order, typename Base, t
 std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os, 
                                       const_ndarray_view<T, M, Order, Base, TPtr>& v)
 {
-    auto f = [&](const std::array<size_t,M>& indices) 
+    /* auto f = [&](const std::array<size_t,M>& indices) 
     { 
         size_t off = get_offset<M, M, zero_based>(v.strides(), v.offsets(), indices);
         return v.data()[off];
     };
-    print(os, v.dimensions(), f);
+    print(os, v.dimensions(), f);*/
+    print(os, v);
     return os;
 }
 
@@ -1531,6 +1554,9 @@ public:
     typedef slice_iterator<T,M,Order,true> iterator;
     using typename super_type::const_iterator;
     using typename super_type::slices_type;
+    using typename super_type::value_type;
+    using typename super_type::order_type;
+    using typename super_type::base_type;
 public:
     ndarray_view()
         : super_type()

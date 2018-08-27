@@ -31,6 +31,8 @@ Member type                         |Definition
 `value_type`|T
 `reference`|T&
 `const_reference`|const T&
+`order_type`|T
+`base_type`|T
 `iterator`|T*
 `const_iterator`|const T*
 
