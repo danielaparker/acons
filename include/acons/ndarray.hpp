@@ -307,9 +307,12 @@ struct row_major
     }
 
     template <size_t N>
-    static void initialize_walk(std::vector<snapshot2>& stack)
+    static void initialize_walk(std::vector<snapshot2>& stack,
+                                const std::array<size_t,N>& dimensions,
+                                const std::array<size_t,N>& strides,
+                                const std::array<size_t,N>& offsets)
     {
-        stack.emplace_back(0, 1, 0);
+        stack.emplace_back(offsets[0]*strides[0], dimensions[0], 0);
     }
 
     template <size_t N, typename Callable>
@@ -336,21 +339,19 @@ struct row_major
 
             if (current.dim+1 < N)
             {
-                if (/* offsets[current.dim+1] > 0 ||*/ (dimensions[current.dim+1]*strides[current.dim+1] != strides[current.dim]))
+                if (dimensions[current.dim+1]*strides[current.dim+1] != strides[current.dim])
                 {
                     for (size_t j = dimensions[current.dim]; j-- > 0;)
                     {
-                        size_t start = current.start + offsets[current.dim+1] + (j+offsets[current.dim])*strides[current.dim];
+                        size_t start = current.start + offsets[current.dim+1]*strides[current.dim+1] + j*strides[current.dim];
                         size_t len = dimensions[current.dim+1];
 
-                        std::cout << "current.start: " 
-                                  << current.start 
+                        std::cout << "current: " 
+                                  << current 
                                   << ", j: " 
                                   << j 
                                   << ", offsets[current.dim+1]: " 
                                   << offsets[current.dim+1] 
-                                  << ", strides[current.dim]: " 
-                                  << strides[current.dim] 
                                   << ", start: " 
                                   << start << "\n";
                         stack.emplace_back(start,len,current.dim+1);
@@ -358,13 +359,14 @@ struct row_major
                 }
                 else
                 {
-                    size_t start = current.start + offsets[current.dim+1] + (offsets[current.dim])*strides[current.dim];
+                    size_t start = current.start + offsets[current.dim+1]*strides[current.dim+1];
                     std::cout << "path2 current:" << current << "\n";
-                    size_t len = 1;
-                    for (size_t j = 0; j <= current.dim+1; ++j)
-                    {
-                        len *= dimensions[j];
-                    }
+                    //size_t len = 1;
+                    //for (size_t j = 0; j <= current.dim+1; ++j)
+                    //{
+                    //    len *= dimensions[j];
+                    //}
+                    size_t len = current.size * dimensions[current.dim+1];
                     stack.emplace_back(start,len,current.dim+1);
                 }
             }
@@ -458,9 +460,12 @@ struct column_major
     }
 
     template <size_t N>
-    static void initialize_walk(std::vector<snapshot2>& stack)
+    static void initialize_walk(std::vector<snapshot2>& stack,
+                                const std::array<size_t,N>& dimensions,
+                                const std::array<size_t,N>& strides,
+                                const std::array<size_t,N>& offsets)
     {
-        stack.emplace_back(0, 1, N-1);
+        stack.emplace_back(offsets[N-1]*strides[N-1], dimensions[N-1], N-1);
     }
 
     template <size_t N, typename Callable>
@@ -487,21 +492,19 @@ struct column_major
 
             if (current.dim > 0)
             {
-                if (/* offsets[current.dim-1] > 0 ||*/ (dimensions[current.dim-1]*strides[current.dim-1] != strides[current.dim]))
+                if (dimensions[current.dim-1]*strides[current.dim-1] != strides[current.dim])
                 {
                     for (size_t j = dimensions[current.dim]; j-- > 0;)
                     {
-                        size_t start = current.start + offsets[current.dim-1] + (j+offsets[current.dim])*strides[current.dim];
+                        size_t start = current.start + offsets[current.dim-1]*strides[current.dim-1] + j*strides[current.dim];
                         size_t len = dimensions[current.dim-1];
 
-                        std::cout << "current.start: " 
-                                  << current.start 
+                        std::cout << "current: " 
+                                  << current 
                                   << ", j: " 
                                   << j 
                                   << ", offsets[current.dim-1]: " 
                                   << offsets[current.dim-1] 
-                                  << ", strides[current.dim]: " 
-                                  << strides[current.dim] 
                                   << ", start: " 
                                   << start << "\n";
                         stack.emplace_back(start,len,current.dim-1);
@@ -509,13 +512,15 @@ struct column_major
                 }
                 else
                 {
-                    size_t start = current.start + offsets[current.dim-1] + (offsets[current.dim])*strides[current.dim];
+                    size_t start = current.start + offsets[current.dim-1]*strides[current.dim-1];
                     std::cout << "path2 current:" << current << "\n";
-                    size_t len = 1;
-                    for (size_t j = 0; j <= current.dim-1; ++j)
-                    {
-                        len *= dimensions[j];
-                    }
+                    //size_t len = 1;
+                    //for (size_t j = 0; j <= current.dim; ++j)
+                    //{
+                    //    len *= dimensions[j];
+                    //}
+                    //size_t len = current.size * dimensions[current.dim+1];
+                    size_t len = current.size * dimensions[current.dim-1];
                     stack.emplace_back(start,len,current.dim-1);
                 }
             }
@@ -1325,13 +1330,13 @@ public:
     }
 
     ndarray_view_iterator(pointer data, 
-                          const std::array<size_t,N>& dim, 
+                          const std::array<size_t,N>& dimensions, 
                           const std::array<size_t,N>& strides, 
                           const std::array<size_t,N>& offsets)
-        : data_(data), dim_(dim), strides_(strides), offsets_(offsets), 
+        : data_(data), dim_(dimensions), strides_(strides), offsets_(offsets), 
           offset_(0), end_offset_(0), step_(0)
     {
-        Order:: template initialize_walk<N>(stack_);
+        Order:: template initialize_walk(stack_, dim_, strides_, offsets_);
         auto f = [&](size_t o, size_t endo, size_t stride)
         {
             offset_ = o;
