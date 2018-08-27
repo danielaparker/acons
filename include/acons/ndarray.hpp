@@ -69,21 +69,21 @@ public:
     }
 };
 
-class index_range
+class slice
 {
     size_t start_;
     size_t stop_;
     size_t step_;
 public:
-    index_range()
+    slice()
         : start_(0), stop_(0), step_(0)
     {
     }
-    index_range(size_t start, size_t stop, size_t step)
+    slice(size_t start, size_t stop, size_t step)
         : start_(start), stop_(stop), step_(step)
     {
     }
-    index_range(std::initializer_list<size_t> list)
+    slice(std::initializer_list<size_t> list)
     {
         if (list.size() <= 3)
         {
@@ -98,15 +98,15 @@ public:
         }
         else
         {
-            throw std::invalid_argument("Too many arguments to index_range");
+            throw std::invalid_argument("Too many arguments to slice");
         }
     }
-    index_range(const index_range& other)
+    slice(const slice& other)
         : start_(other.start_), stop_(other.stop_), step_(other.step_)
     {
     }
 
-    index_range& operator=(const index_range& other) = default;
+    slice& operator=(const slice& other) = default;
 
     size_t start() const
     {
@@ -116,7 +116,7 @@ public:
     {
         return stop_;
     }
-    size_t step() const
+    size_t stride() const
     {
         return step_;
     }
@@ -381,6 +381,74 @@ struct row_major
         }
     }
 
+    template <size_t N>
+    static void calculate_chunks(const std::array<size_t,N>& dimensions, 
+                                 const std::array<size_t,N>& strides, 
+                                 const std::array<size_t,N>& offsets, 
+                                 std::vector<slice>& chunks)
+    {
+        std::vector<snapshot2> stack;
+        stack.emplace_back(offsets[0]*strides[0], dimensions[0], 0);
+
+        while (!stack.empty())
+        {
+            snapshot2 current = stack.back();
+            std::cout << "stack: ";
+            for (size_t i = 0; i < stack.size(); ++i)
+            {
+                if (i > 0)
+                {
+                    std::cout << ",";
+                }
+                std::cout << stack[i];
+            }
+            std::cout << "\n";
+            stack.pop_back();
+
+            if (current.dim+1 < N)
+            {
+                if (dimensions[current.dim+1]*strides[current.dim+1] != strides[current.dim])
+                {
+                    for (size_t j = dimensions[current.dim]; j-- > 0;)
+                    {
+                        size_t start = current.start + offsets[current.dim+1]*strides[current.dim+1] + j*strides[current.dim];
+                        size_t len = dimensions[current.dim+1];
+
+                        std::cout << "current: " 
+                                  << current 
+                                  << ", j: " 
+                                  << j 
+                                  << ", offsets[current.dim+1]: " 
+                                  << offsets[current.dim+1] 
+                                  << ", start: " 
+                                  << start << "\n";
+                        stack.emplace_back(start,len,current.dim+1);
+                    }
+                }
+                else
+                {
+                    size_t start = current.start + offsets[current.dim+1]*strides[current.dim+1];
+                    std::cout << "path2 current:" << current << "\n";
+                    //size_t len = 1;
+                    //for (size_t j = 0; j <= current.dim+1; ++j)
+                    //{
+                    //    len *= dimensions[j];
+                    //}
+                    size_t len = current.size * dimensions[current.dim+1];
+                    stack.emplace_back(start,len,current.dim+1);
+                }
+            }
+            else
+            {
+                size_t stride = strides[N-1];
+
+                std::cout << "current: " << current  << ", stride: " << stride << "\n";
+                chunks.emplace_back(current.start, current.start + current.size*stride, stride);
+                break;
+            }
+        }
+    }
+
     template <typename T, size_t N>
     static bool compare(const T* data1, const std::array<size_t,N>& dim1, const std::array<size_t,N>& strides1, const std::array<size_t,N>& offsets1, 
                         const T* data2, const std::array<size_t,N>& dim2, const std::array<size_t,N>& strides2, const std::array<size_t,N>& offsets2)
@@ -530,6 +598,74 @@ struct column_major
 
                 std::cout << "current: " << current  << ", stride: " << stride << "\n";
                 callable(current.start, current.start + current.size*stride, stride);
+                break;
+            }
+        }
+    }
+
+    template <size_t N>
+    static void calculate_chunks(const std::array<size_t,N>& dimensions, 
+                                 const std::array<size_t,N>& strides, 
+                                 const std::array<size_t,N>& offsets, 
+                                 std::vector<slice>& chunks)
+    {
+        std::vector<snapshot2> stack;
+        stack.emplace_back(offsets[N-1]*strides[N-1], dimensions[N-1], N-1);
+        while (!stack.empty())
+        {
+            snapshot2 current = stack.back();
+            std::cout << "stack: ";
+            for (size_t i = 0; i < stack.size(); ++i)
+            {
+                if (i > 0)
+                {
+                    std::cout << ",";
+                }
+                std::cout << stack[i];
+            }
+            std::cout << "\n";
+            stack.pop_back();
+
+            if (current.dim > 0)
+            {
+                if (dimensions[current.dim-1]*strides[current.dim-1] != strides[current.dim])
+                {
+                    for (size_t j = dimensions[current.dim]; j-- > 0;)
+                    {
+                        size_t start = current.start + offsets[current.dim-1]*strides[current.dim-1] + j*strides[current.dim];
+                        size_t len = dimensions[current.dim-1];
+
+                        std::cout << "current: " 
+                                  << current 
+                                  << ", j: " 
+                                  << j 
+                                  << ", offsets[current.dim-1]: " 
+                                  << offsets[current.dim-1] 
+                                  << ", start: " 
+                                  << start << "\n";
+                        stack.emplace_back(start,len,current.dim-1);
+                    }
+                }
+                else
+                {
+                    size_t start = current.start + offsets[current.dim-1]*strides[current.dim-1];
+                    std::cout << "path2 current:" << current << "\n";
+                    //size_t len = 1;
+                    //for (size_t j = 0; j <= current.dim; ++j)
+                    //{
+                    //    len *= dimensions[j];
+                    //}
+                    //size_t len = current.size * dimensions[current.dim+1];
+                    size_t len = current.size * dimensions[current.dim-1];
+                    stack.emplace_back(start,len,current.dim-1);
+                }
+            }
+            else
+            {
+                size_t stride = strides[0];
+
+                std::cout << "current: " << current  << ", stride: " << stride << "\n";
+                chunks.emplace_back(current.start, current.start + current.size*stride, stride);
                 break;
             }
         }
@@ -1305,7 +1441,7 @@ std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os, ndarray<T, 
 }
 
 template <typename T, size_t N, typename Order, bool IsConst = false>
-class ndarray_view_iterator
+class chunk_iterator
 {
 public:
     typedef std::forward_iterator_tag iterator_category;
@@ -1324,12 +1460,12 @@ private:
     size_t step_;
 public:
 
-    ndarray_view_iterator()
+    chunk_iterator()
         : data_(nullptr), offset_(0), end_offset_(0), step_(0)
     {
     }
 
-    ndarray_view_iterator(pointer data, 
+    chunk_iterator(pointer data, 
                           const std::array<size_t,N>& dimensions, 
                           const std::array<size_t,N>& strides, 
                           const std::array<size_t,N>& offsets)
@@ -1346,14 +1482,14 @@ public:
         Order::walk(stack_, dim_, strides_, offsets_, f);
     }
 
-    ndarray_view_iterator(const ndarray_view_iterator<T,N,Order>& other) 
+    chunk_iterator(const chunk_iterator<T,N,Order>& other) 
         : data_(other.data_), dim_(other.dim_), strides_(other.strides_), offsets_(other.offsets_), 
           stack_(other.stack_), 
           offset_(other.offset_), end_offset_(other.end_offset_), step_(other.step_)
     {
     } 
 
-    ndarray_view_iterator<T, N, Order, IsConst>& operator++()
+    chunk_iterator<T, N, Order, IsConst>& operator++()
     {
         if (offset_ + step_ < end_offset_)
         {
@@ -1373,9 +1509,9 @@ public:
         return *this;
     }
 
-    ndarray_view_iterator<T, N, Order, IsConst> operator++(int)
+    chunk_iterator<T, N, Order, IsConst> operator++(int)
     {
-        ndarray_view_iterator<T,N,Order,IsConst> temp(*this);
+        chunk_iterator<T,N,Order,IsConst> temp(*this);
         ++(*this);
         return temp;
     }
@@ -1385,13 +1521,13 @@ public:
         return *(data_+offset_);
     }
 
-    friend bool operator==(const ndarray_view_iterator<T,N,Order,IsConst>& it1, const ndarray_view_iterator<T,N,Order,IsConst>& it2)
+    friend bool operator==(const chunk_iterator<T,N,Order,IsConst>& it1, const chunk_iterator<T,N,Order,IsConst>& it2)
     {
         std::cout << "offset1: " << it1.offset_ << ", offset2: " << it2.offset_ << "\n";
         return it1.offset_ == it2.offset_;
     }
 
-    friend bool operator!=(const ndarray_view_iterator<T,N,Order,IsConst>& it1, const ndarray_view_iterator<T,N,Order,IsConst>& it2)
+    friend bool operator!=(const chunk_iterator<T,N,Order,IsConst>& it1, const chunk_iterator<T,N,Order,IsConst>& it2)
     {
         return !(it1 == it2);
     }
@@ -1402,8 +1538,8 @@ template <typename T, size_t M, typename Order, typename Base, typename TPtr>
 class const_ndarray_view 
 {
 public:
-    typedef ndarray_view_iterator<T,M,Order,false> const_iterator;
-    typedef array_wrapper<index_range,M> slices_type;
+    typedef chunk_iterator<T,M,Order,false> const_iterator;
+    typedef array_wrapper<slice,M> slices_type;
 protected:
     TPtr data_;
     size_t size_;
@@ -1434,8 +1570,8 @@ public:
         static_assert(m == N, "A view constructed from a list of index ranges on an array must have the same dimensionality as the array");
         for (size_t i = 0; i < M; ++i)
         {
-            dim_[i] = (slices[i].stop() - slices[i].start()) /slices[i].step();
-            strides_[i] = a.strides()[i]*slices[i].step();
+            dim_[i] = (slices[i].stop() - slices[i].start()) /slices[i].stride();
+            strides_[i] = a.strides()[i]*slices[i].stride();
             offsets_[i] = Base::rebase_to_zero(slices[i].start()); 
         }
     }
@@ -1474,8 +1610,8 @@ public:
 
         for (size_t i = 0; i < M; ++i)
         {
-            dim_[i] = (slices[i].stop() - slices[i].start())/slices[i].step();
-            strides_[i] = a.strides()[(N-M)+i]*slices[i].step();
+            dim_[i] = (slices[i].stop() - slices[i].start())/slices[i].stride();
+            strides_[i] = a.strides()[(N-M)+i]*slices[i].stride();
             offsets_[i] = Base::rebase_to_zero(slices[i].start());
         }
     }
@@ -1496,8 +1632,8 @@ public:
 
         for (size_t i = 0; i < M; ++i)
         {
-            dim_[i] = (slices[i].stop() - slices[i].start())/slices[i].step();
-            strides_[i] = other.strides()[i]*slices[i].step();
+            dim_[i] = (slices[i].stop() - slices[i].start())/slices[i].stride();
+            strides_[i] = other.strides()[i]*slices[i].stride();
             offsets_[i] = other.offsets()[i] + Base::rebase_to_zero(slices[i].start());
         }
     }
@@ -1531,8 +1667,8 @@ public:
 
         for (size_t i = 0; i < M; ++i)
         {
-            dim_[i] = (slices[i].stop() - slices[i].start())/slices[i].step();
-            strides_[i] = other.strides()[(N-M)+i]*slices[i].step();
+            dim_[i] = (slices[i].stop() - slices[i].start())/slices[i].stride();
+            strides_[i] = other.strides()[(N-M)+i]*slices[i].stride();
             offsets_[i] = rel + other.offsets()[(N-M)+i] + Base::rebase_to_zero(slices[i].start());
         }
     }
@@ -1626,7 +1762,7 @@ class ndarray_view : public const_ndarray_view<T, M, Order, Base, T*>
 {
     typedef const_ndarray_view<T, M, Order, Base, T*> super_type;
 public:
-    typedef ndarray_view_iterator<T,M,Order,true> iterator;
+    typedef chunk_iterator<T,M,Order,true> iterator;
     using typename super_type::const_iterator;
     using typename super_type::slices_type;
 public:
