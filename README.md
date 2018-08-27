@@ -10,7 +10,7 @@ Download the latest [single header file](https://raw.githubusercontent.com/danie
 
 ## How to use it
 
-[Examples](#Examples)
+[Examples](#Examples)  
 [Reference](doc\ref\index.md)
 
 ## Supported compilers
