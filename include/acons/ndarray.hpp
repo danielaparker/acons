@@ -1441,7 +1441,7 @@ std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os, ndarray<T, 
 }
 
 template <typename T, size_t N, typename Order, bool IsConst = false>
-class chunk_iterator
+class slice_iterator
 {
 public:
     typedef std::forward_iterator_tag iterator_category;
@@ -1460,12 +1460,12 @@ private:
     size_t step_;
 public:
 
-    chunk_iterator()
+    slice_iterator()
         : data_(nullptr), offset_(0), end_offset_(0), step_(0)
     {
     }
 
-    chunk_iterator(pointer data, 
+    slice_iterator(pointer data, 
                           const std::array<size_t,N>& dimensions, 
                           const std::array<size_t,N>& strides, 
                           const std::array<size_t,N>& offsets)
@@ -1482,14 +1482,14 @@ public:
         Order::walk(stack_, dim_, strides_, offsets_, f);
     }
 
-    chunk_iterator(const chunk_iterator<T,N,Order>& other) 
+    slice_iterator(const slice_iterator<T,N,Order>& other) 
         : data_(other.data_), dim_(other.dim_), strides_(other.strides_), offsets_(other.offsets_), 
           stack_(other.stack_), 
           offset_(other.offset_), end_offset_(other.end_offset_), step_(other.step_)
     {
     } 
 
-    chunk_iterator<T, N, Order, IsConst>& operator++()
+    slice_iterator<T, N, Order, IsConst>& operator++()
     {
         if (offset_ + step_ < end_offset_)
         {
@@ -1509,9 +1509,9 @@ public:
         return *this;
     }
 
-    chunk_iterator<T, N, Order, IsConst> operator++(int)
+    slice_iterator<T, N, Order, IsConst> operator++(int)
     {
-        chunk_iterator<T,N,Order,IsConst> temp(*this);
+        slice_iterator<T,N,Order,IsConst> temp(*this);
         ++(*this);
         return temp;
     }
@@ -1521,13 +1521,13 @@ public:
         return *(data_+offset_);
     }
 
-    friend bool operator==(const chunk_iterator<T,N,Order,IsConst>& it1, const chunk_iterator<T,N,Order,IsConst>& it2)
+    friend bool operator==(const slice_iterator<T,N,Order,IsConst>& it1, const slice_iterator<T,N,Order,IsConst>& it2)
     {
         std::cout << "offset1: " << it1.offset_ << ", offset2: " << it2.offset_ << "\n";
         return it1.offset_ == it2.offset_;
     }
 
-    friend bool operator!=(const chunk_iterator<T,N,Order,IsConst>& it1, const chunk_iterator<T,N,Order,IsConst>& it2)
+    friend bool operator!=(const slice_iterator<T,N,Order,IsConst>& it1, const slice_iterator<T,N,Order,IsConst>& it2)
     {
         return !(it1 == it2);
     }
@@ -1538,7 +1538,7 @@ template <typename T, size_t M, typename Order, typename Base, typename TPtr>
 class const_ndarray_view 
 {
 public:
-    typedef chunk_iterator<T,M,Order,false> const_iterator;
+    typedef slice_iterator<T,M,Order,false> const_iterator;
     typedef array_wrapper<slice,M> slices_type;
 protected:
     TPtr data_;
@@ -1762,7 +1762,7 @@ class ndarray_view : public const_ndarray_view<T, M, Order, Base, T*>
 {
     typedef const_ndarray_view<T, M, Order, Base, T*> super_type;
 public:
-    typedef chunk_iterator<T,M,Order,true> iterator;
+    typedef slice_iterator<T,M,Order,true> iterator;
     using typename super_type::const_iterator;
     using typename super_type::slices_type;
 public:
