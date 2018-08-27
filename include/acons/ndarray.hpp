@@ -380,70 +380,6 @@ struct row_major
             }
         }
     }
-
-    template <typename T, size_t N>
-    static bool compare(const T* data1, const std::array<size_t,N>& dim1, const std::array<size_t,N>& strides1, const std::array<size_t,N>& offsets1, 
-                        const T* data2, const std::array<size_t,N>& dim2, const std::array<size_t,N>& strides2, const std::array<size_t,N>& offsets2)
-    {
-        for (size_t i = 0; i < N; ++i)
-        {
-            if (dim1[i] != dim2[i])
-            {
-                return false;
-            }
-        }
-
-        size_t stack_depth = 1;
-        for (size_t i = 0; i+1 < dim1.size(); ++i)
-        {
-            stack_depth *= dim1[i];
-        }
-        std::vector<snapshot<N>> stack(stack_depth);
-
-        size_t count = 1;
-        stack[0].index = 0;
-        while (count != 0)
-        {
-            auto val = stack[count-1];
-            --count;
-
-            if (val.index+1 < N)
-            {
-                for (size_t i = dim1[val.index]; i-- > 0; )
-                {
-                    val.indices[val.index] = i; 
-                    stack[count].indices = val.indices;
-                    stack[count].index = val.index+1;
-                    count++;
-                }
-            }
-            else if (val.index+1 == N)
-            {
-                val.indices[val.index] = 0;
-                size_t offset1 = get_offset<N,N,zero_based>(strides1, offsets1, val.indices);
-                size_t offset2 = get_offset<N,N,zero_based>(strides2, offsets2, val.indices);
-                const T* p1 = data1 + offset1;
-                const T* p2 = data2 + offset2;
-                size_t stride1 = strides1[N-1];
-                size_t stride2 = strides2[N-1];
-
-                val.indices[val.index] = dim1[val.index]-1;
-                size_t end_offset1 = get_offset<N,N,zero_based>(strides1, offsets1, val.indices);
-                const T* end = data1 + end_offset1;
-
-                while (p1 <= end)
-                {
-                    if (*p1 != *p2)
-                    {
-                        return false;
-                    }
-                    p1 += stride1;
-                    p2 += stride2;
-                }
-            }
-        }
-        return true;
-    }
 };
 
 struct column_major
@@ -533,68 +469,6 @@ struct column_major
                 break;
             }
         }
-    }
-
-    template <typename T, size_t N>
-    static bool compare(const T* data1, const std::array<size_t,N>& dim1, const std::array<size_t,N>& strides1, const std::array<size_t,N>& offsets1, 
-                        const T* data2, const std::array<size_t,N>& dim2, const std::array<size_t,N>& strides2, const std::array<size_t,N>& offsets2)
-    {
-        for (size_t i = 0; i < N; ++i)
-        {
-            if (dim1[i] != dim2[i])
-            {
-                return false;
-            }
-        }
-
-        size_t stack_depth = 1;
-        for (size_t i = 0; i+1 < dim1.size(); ++i)
-        {
-            stack_depth *= dim1[i];
-        }
-        std::vector<snapshot<N>> stack(stack_depth);
-
-        size_t count = 1;
-        stack[0].index = N-1;
-        while (count != 0)
-        {
-            auto val = stack[count-1];
-            --count;
-
-            if (val.index > 0)
-            {
-                for (size_t i = dim1[val.index]; i-- > 0; )
-                {
-                    val.indices[val.index] = i; 
-                    stack[count].indices = val.indices;
-                    stack[count].index = val.index-1;
-                    count++;
-                }
-            }
-            else 
-            {
-                val.indices[val.index] = 0;
-                size_t offset1 = get_offset<N,N,zero_based>(strides1, offsets1, val.indices);
-                size_t offset2 = get_offset<N,N,zero_based>(strides2, offsets2, val.indices);
-                const T* p1 = data1 + offset1;
-                const T* p2 = data2 + offset2;
-                size_t stride1 = strides1[val.index]; 
-                size_t stride2 = strides2[val.index]; 
-                val.indices[val.index] = dim1[val.index] - 1;
-                size_t end_offset1 = get_offset<N,N,zero_based>(strides1, offsets1, val.indices);
-                const T* end = data1 + end_offset1;
-                while (p1 <= end)
-                {
-                    if (*p1 != *p2)
-                    {
-                        return false;
-                    }
-                    p1 += stride1;
-                    p2 += stride2;
-                }
-            }
-        }
-        return true;
     }
 };
 
