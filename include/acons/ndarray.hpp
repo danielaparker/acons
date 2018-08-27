@@ -325,7 +325,7 @@ struct row_major
         while (!stack.empty())
         {
             snapshot2 current = stack.back();
-            std::cout << "stack: ";
+            /*std::cout << "stack: ";
             for (size_t i = 0; i < stack.size(); ++i)
             {
                 if (i > 0)
@@ -334,7 +334,7 @@ struct row_major
                 }
                 std::cout << stack[i];
             }
-            std::cout << "\n";
+            std::cout << "\n";*/
             stack.pop_back();
 
             if (current.dim+1 < N)
@@ -346,21 +346,21 @@ struct row_major
                         size_t start = current.start + offsets[current.dim+1]*strides[current.dim+1] + j*strides[current.dim];
                         size_t len = dimensions[current.dim+1];
 
-                        std::cout << "current: " 
+                        /* std::cout << "current: " 
                                   << current 
                                   << ", j: " 
                                   << j 
                                   << ", offsets[current.dim+1]: " 
                                   << offsets[current.dim+1] 
                                   << ", start: " 
-                                  << start << "\n";
+                                  << start << "\n"; */
                         stack.emplace_back(start,len,current.dim+1);
                     }
                 }
                 else
                 {
                     size_t start = current.start + offsets[current.dim+1]*strides[current.dim+1];
-                    std::cout << "path2 current:" << current << "\n";
+                    //std::cout << "path2 current:" << current << "\n";
                     //size_t len = 1;
                     //for (size_t j = 0; j <= current.dim+1; ++j)
                     //{
@@ -374,76 +374,8 @@ struct row_major
             {
                 size_t stride = strides[N-1];
 
-                std::cout << "current: " << current  << ", stride: " << stride << "\n";
+                //std::cout << "current: " << current  << ", stride: " << stride << "\n";
                 callable(current.start, current.start + current.size*stride, stride);
-                break;
-            }
-        }
-    }
-
-    template <size_t N>
-    static void calculate_chunks(const std::array<size_t,N>& dimensions, 
-                                 const std::array<size_t,N>& strides, 
-                                 const std::array<size_t,N>& offsets, 
-                                 std::vector<slice>& chunks)
-    {
-        std::vector<snapshot2> stack;
-        stack.emplace_back(offsets[0]*strides[0], dimensions[0], 0);
-
-        while (!stack.empty())
-        {
-            snapshot2 current = stack.back();
-            std::cout << "stack: ";
-            for (size_t i = 0; i < stack.size(); ++i)
-            {
-                if (i > 0)
-                {
-                    std::cout << ",";
-                }
-                std::cout << stack[i];
-            }
-            std::cout << "\n";
-            stack.pop_back();
-
-            if (current.dim+1 < N)
-            {
-                if (dimensions[current.dim+1]*strides[current.dim+1] != strides[current.dim])
-                {
-                    for (size_t j = dimensions[current.dim]; j-- > 0;)
-                    {
-                        size_t start = current.start + offsets[current.dim+1]*strides[current.dim+1] + j*strides[current.dim];
-                        size_t len = dimensions[current.dim+1];
-
-                        std::cout << "current: " 
-                                  << current 
-                                  << ", j: " 
-                                  << j 
-                                  << ", offsets[current.dim+1]: " 
-                                  << offsets[current.dim+1] 
-                                  << ", start: " 
-                                  << start << "\n";
-                        stack.emplace_back(start,len,current.dim+1);
-                    }
-                }
-                else
-                {
-                    size_t start = current.start + offsets[current.dim+1]*strides[current.dim+1];
-                    std::cout << "path2 current:" << current << "\n";
-                    //size_t len = 1;
-                    //for (size_t j = 0; j <= current.dim+1; ++j)
-                    //{
-                    //    len *= dimensions[j];
-                    //}
-                    size_t len = current.size * dimensions[current.dim+1];
-                    stack.emplace_back(start,len,current.dim+1);
-                }
-            }
-            else
-            {
-                size_t stride = strides[N-1];
-
-                std::cout << "current: " << current  << ", stride: " << stride << "\n";
-                chunks.emplace_back(current.start, current.start + current.size*stride, stride);
                 break;
             }
         }
@@ -546,7 +478,7 @@ struct column_major
         while (!stack.empty())
         {
             snapshot2 current = stack.back();
-            std::cout << "stack: ";
+            /*std::cout << "stack: ";
             for (size_t i = 0; i < stack.size(); ++i)
             {
                 if (i > 0)
@@ -555,7 +487,7 @@ struct column_major
                 }
                 std::cout << stack[i];
             }
-            std::cout << "\n";
+            std::cout << "\n";*/
             stack.pop_back();
 
             if (current.dim > 0)
@@ -567,21 +499,21 @@ struct column_major
                         size_t start = current.start + offsets[current.dim-1]*strides[current.dim-1] + j*strides[current.dim];
                         size_t len = dimensions[current.dim-1];
 
-                        std::cout << "current: " 
+                        /*std::cout << "current: " 
                                   << current 
                                   << ", j: " 
                                   << j 
                                   << ", offsets[current.dim-1]: " 
                                   << offsets[current.dim-1] 
                                   << ", start: " 
-                                  << start << "\n";
+                                  << start << "\n";*/
                         stack.emplace_back(start,len,current.dim-1);
                     }
                 }
                 else
                 {
                     size_t start = current.start + offsets[current.dim-1]*strides[current.dim-1];
-                    std::cout << "path2 current:" << current << "\n";
+                    //std::cout << "path2 current:" << current << "\n";
                     //size_t len = 1;
                     //for (size_t j = 0; j <= current.dim; ++j)
                     //{
@@ -596,76 +528,8 @@ struct column_major
             {
                 size_t stride = strides[0];
 
-                std::cout << "current: " << current  << ", stride: " << stride << "\n";
+                //std::cout << "current: " << current  << ", stride: " << stride << "\n";
                 callable(current.start, current.start + current.size*stride, stride);
-                break;
-            }
-        }
-    }
-
-    template <size_t N>
-    static void calculate_chunks(const std::array<size_t,N>& dimensions, 
-                                 const std::array<size_t,N>& strides, 
-                                 const std::array<size_t,N>& offsets, 
-                                 std::vector<slice>& chunks)
-    {
-        std::vector<snapshot2> stack;
-        stack.emplace_back(offsets[N-1]*strides[N-1], dimensions[N-1], N-1);
-        while (!stack.empty())
-        {
-            snapshot2 current = stack.back();
-            std::cout << "stack: ";
-            for (size_t i = 0; i < stack.size(); ++i)
-            {
-                if (i > 0)
-                {
-                    std::cout << ",";
-                }
-                std::cout << stack[i];
-            }
-            std::cout << "\n";
-            stack.pop_back();
-
-            if (current.dim > 0)
-            {
-                if (dimensions[current.dim-1]*strides[current.dim-1] != strides[current.dim])
-                {
-                    for (size_t j = dimensions[current.dim]; j-- > 0;)
-                    {
-                        size_t start = current.start + offsets[current.dim-1]*strides[current.dim-1] + j*strides[current.dim];
-                        size_t len = dimensions[current.dim-1];
-
-                        std::cout << "current: " 
-                                  << current 
-                                  << ", j: " 
-                                  << j 
-                                  << ", offsets[current.dim-1]: " 
-                                  << offsets[current.dim-1] 
-                                  << ", start: " 
-                                  << start << "\n";
-                        stack.emplace_back(start,len,current.dim-1);
-                    }
-                }
-                else
-                {
-                    size_t start = current.start + offsets[current.dim-1]*strides[current.dim-1];
-                    std::cout << "path2 current:" << current << "\n";
-                    //size_t len = 1;
-                    //for (size_t j = 0; j <= current.dim; ++j)
-                    //{
-                    //    len *= dimensions[j];
-                    //}
-                    //size_t len = current.size * dimensions[current.dim+1];
-                    size_t len = current.size * dimensions[current.dim-1];
-                    stack.emplace_back(start,len,current.dim-1);
-                }
-            }
-            else
-            {
-                size_t stride = strides[0];
-
-                std::cout << "current: " << current  << ", stride: " << stride << "\n";
-                chunks.emplace_back(current.start, current.start + current.size*stride, stride);
                 break;
             }
         }
@@ -1379,6 +1243,7 @@ private:
     }
 };
 
+
 template <typename CharT, size_t N, typename Getter>
 void print(std::basic_ostream<CharT>& os, const std::array<size_t,N>& dimensions, Getter getter)
 {
@@ -1443,6 +1308,7 @@ std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os, ndarray<T, 
 template <typename T, size_t N, typename Order, bool IsConst = false>
 class slice_iterator
 {
+    static const size_t npos = size_t(-1);
 public:
     typedef std::forward_iterator_tag iterator_category;
     typedef ptrdiff_t difference_type;
@@ -1461,14 +1327,14 @@ private:
 public:
 
     slice_iterator()
-        : data_(nullptr), offset_(0), end_offset_(0), step_(0)
+        : data_(nullptr), offset_(npos), end_offset_(npos), step_(0)
     {
     }
 
     slice_iterator(pointer data, 
-                          const std::array<size_t,N>& dimensions, 
-                          const std::array<size_t,N>& strides, 
-                          const std::array<size_t,N>& offsets)
+                   const std::array<size_t,N>& dimensions, 
+                   const std::array<size_t,N>& strides, 
+                   const std::array<size_t,N>& offsets)
         : data_(data), dim_(dimensions), strides_(strides), offsets_(offsets), 
           offset_(0), end_offset_(0), step_(0)
     {
@@ -1497,7 +1363,7 @@ public:
         }
         else
         {
-            offset_ = end_offset_ = 0;
+            offset_ = end_offset_ = npos;
             auto f = [&](size_t o, size_t endo, size_t stride)
             {
                 offset_ = o;
@@ -1523,7 +1389,6 @@ public:
 
     friend bool operator==(const slice_iterator<T,N,Order,IsConst>& it1, const slice_iterator<T,N,Order,IsConst>& it2)
     {
-        std::cout << "offset1: " << it1.offset_ << ", offset2: " << it2.offset_ << "\n";
         return it1.offset_ == it2.offset_;
     }
 
@@ -1533,6 +1398,33 @@ public:
     }
 private:
 };
+
+template <typename T, size_t N, typename Order>
+bool compare(const T* data1, const std::array<size_t,N>& dim1, const std::array<size_t,N>& strides1, const std::array<size_t,N>& offsets1, 
+             const T* data2, const std::array<size_t,N>& dim2, const std::array<size_t,N>& strides2, const std::array<size_t,N>& offsets2)
+{
+    for (size_t i = 0; i < N; ++i)
+    {
+        if (dim1[i] != dim2[i])
+        {
+            return false;
+        }
+    }
+
+    slice_iterator<T,N,Order,true> it1(data1,dim1,strides1,offsets1);
+    slice_iterator<T,N,Order,true> end;
+    slice_iterator<T,N,Order,true> it2(data2,dim2,strides2,offsets2);
+
+    bool are_equal = true;
+    while (are_equal && (it1 != end))
+    {
+        if (*it1++ != *it2++)
+        {
+            are_equal = false;
+        }
+    }
+    return are_equal;
+}
 
 template <typename T, size_t M, typename Order, typename Base, typename TPtr>
 class const_ndarray_view 
@@ -1913,8 +1805,8 @@ bool operator==(const const_ndarray_view<T, M, Order, Base, TPtr>& lhs,
         return true;
     }
 
-    return Order::compare(lhs.data(), lhs.dimensions(), lhs.strides(), lhs.offsets(),
-                          rhs.data(), rhs.dimensions(), lhs.strides(), rhs.offsets());
+    return compare<T,M,Order>(lhs.data(), lhs.dimensions(), lhs.strides(), lhs.offsets(),
+                   rhs.data(), rhs.dimensions(), lhs.strides(), rhs.offsets());
 }
 
 template <typename T, size_t M, typename Order, typename Base, typename Allocator, typename TPtr>
@@ -1923,7 +1815,7 @@ bool operator==(const ndarray<T, M, Order, Base, Allocator>& lhs,
 {
     std::array<size_t,M> offsets;
     offsets.fill(0);
-    return Order::compare(lhs.data(), lhs.dimensions(), lhs.strides(), offsets,
+    return compare<T,M,Order>(lhs.data(), lhs.dimensions(), lhs.strides(), offsets,
                           rhs.data(), rhs.dimensions(), lhs.strides(), rhs.offsets());
 }
 
@@ -1933,7 +1825,7 @@ bool operator==(const const_ndarray_view<T, M, Order, Base, TPtr>& lhs,
 {
     std::array<size_t,M> offsets;
     offsets.fill(0);
-    return Order::compare(lhs.data(), lhs.dimensions(), lhs.strides(), lhs.offsets(),
+    return compare<T,M,Order>(lhs.data(), lhs.dimensions(), lhs.strides(), lhs.offsets(),
                           rhs.data(), rhs.dimensions(), lhs.strides(), offsets);
 }
 

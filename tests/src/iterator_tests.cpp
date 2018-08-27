@@ -20,6 +20,9 @@ TEST_CASE("1 dim row major iterator test")
     auto it = v.begin();
     auto end = v.end();
 
+    CHECK(v(0) == 1);
+    CHECK(v(1) == 2);
+
     CHECK(*it++ == v(0));
     CHECK(*it++ == v(1));
     CHECK(it == end);
