@@ -1462,7 +1462,8 @@ public:
     }
 
     template<typename OtherTPtr>
-    const_ndarray_view(OtherTPtr data, const std::array<size_t,M>& dim) 
+    const_ndarray_view(OtherTPtr data, const std::array<size_t,M>& dim,
+                       typename std::enable_if<std::is_convertible<OtherTPtr,TPtr>::value>::type* = 0) 
         : data_(data), dim_(dim)
     {
         offsets_.fill(0);
