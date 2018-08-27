@@ -34,71 +34,53 @@ Member type                         |Definition
 
 #### Member functions
 
-    ndarray(); // (1)
+    const_ndarray_view(); // (1)
 
-    template <typename... Args>
-    ndarray(size_t i, Args... args); // (2)
+    template <typename Allocator>
+    const_ndarray_view(ndarray<T, M, Order, Base, Allocator>& a); // (2)
 
-    explicit ndarray(const std::array<size_t,N>& dimensions); // (3)
+    template<size_t m = M, size_t N, typename Allocator>
+    const_ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
+                       const slices_type& slices); // (3)
 
-    ndarray(const std::array<size_t,N>& dimensions, 
-            const Allocator& alloc); // (4)
+    template<size_t m = M, size_t N, size_t K, typename Allocator>
+    const_ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
+                       const std::array<size_t,K>& origin); // (4)
 
-    ndarray(const std::array<size_t,N>& dimensions,
-            T val); // (5)
+    template<size_t m = M, size_t N, size_t K, typename Allocator>
+    const_ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
+                       const std::array<size_t,K>& origin,
+                       const slices_type& slices); // (5)
 
-    ndarray(const std::array<size_t,N>& dimensions, 
-            T val,
-            const Allocator& alloc); // (6)
+    template<typename OtherTPtr>
+    const_ndarray_view(const_ndarray_view<T, M, Order, Base, OtherTPtr>& other); // (6)
 
-    ndarray(std::initializer_list<array_item<T>> list); // (7)
+    template<size_t m = M, size_t N, typename OtherTPtr>
+    const_ndarray_view(const_ndarray_view<T, N, Order, Base, OtherTPtr>& other, 
+                       const slices_type& slices); // (7)
 
-    ndarray(std::initializer_list<array_item<T>> list, 
-            const Allocator& alloc); // (8)
+    template<size_t m = M, size_t N, size_t K, typename OtherTPtr>
+    const_ndarray_view(const_ndarray_view<T, N, Order, Base, OtherTPtr>& other, 
+                       const std::array<size_t,K>& origin); // (8)
 
-    ndarray(const ndarray& a); // (9)
+    template<size_t m = M, size_t N, size_t K, typename OtherTPtr>
+    const_ndarray_view(const_ndarray_view<T, N, Order, Base, OtherTPtr>& other, 
+                       const std::array<size_t,K>& origin,
+                       const slices_type& slices); // (9)
 
-    ndarray(const ndarray& a, 
-            const Allocator& alloc); // (10)
+    template<typename OtherTPtr>
+    const_ndarray_view(OtherTPtr data, const std::array<size_t,M>& dim,
+                       typename std::enable_if<std::is_convertible<OtherTPtr,TPtr>::value>::type* = 0); // (10) 
 
-    ndarray(ndarray&& a); // (11)
+Constructs a new M-dimensional array view.
 
-    ndarray(ndarray&& a, 
-            const Allocator& alloc); // (12)
+(1) Default constructor. Constructs an empty M-dimensional array view.
 
-Constructs a new N-dimensional array, optionally using a user supplied allocator.
+    const_ndarray_view& operator=(const const_ndarray_view& other);
 
-(1) Default constructor. Constructs an empty N-dimensional array.
+    const_ndarray_view& operator=(const_ndarray_view&& other);
 
-(2) The first N arguments specify the dimensions of the N-dimensional array, 
-and an optional (N+1)th argument specifies an initial value.
-
-(3) Constructs an N-dimensional array with dimensions specified by `dimensions`.
-
-(4) Constructs an N-dimensional array with dimensions specified by `dimensions`
-    using the supplied allocator.
-
-(5) Constructs an N-dimensional array with dimensions specified by `dimensions`
-    and values initialized to `val`.
-
-(6) Constructs an N-dimensional array with dimensions specified by `dimensions`
-    and values initialized to `val` using the supplied allocator.
-
-(7) Constructs an N-dimensional array from the initializer list init.
-
-(8) Constructs an N-dimensional array from the initializer list init
-    using the supplied allocator.
-
-Exceptions:
-
-(1) - (8) Calls to `Allocator::allocate` may throw.
-(7) - (8) Throws `std::invalid_argument` if the initializer list contains non-comforming shapes.
-
-    ndarray& operator=(const ndarray& other);
-
-    ndarray& operator=(ndarray&& other);
-
-    ndarray& operator=(std::initializer_list<array_item<T>> list);
+    const_ndarray_view& operator=(std::initializer_list<array_item<T>> list);
 
 ##### Capacity
 
@@ -116,9 +98,9 @@ Exceptions:
     template <typename... Indices>
     const T& operator()(size_t index, Indices... indices) const;
 
-    T& operator()(const std::array<size_t,N>& indices); 
+    T& operator()(const std::array<size_t,M>& indices); 
 
-    const T& operator()(const std::array<size_t,N>& indices) const; 
+    const T& operator()(const std::array<size_t,M>& indices) const; 
 
 ##### Iterators
 
@@ -132,8 +114,8 @@ Exceptions:
 
 ##### Modifiers
 
-    void swap(ndarray<T,N,Order,Base,Allocator>& other) noexcept
-Swaps the contents of the two N-dimensional arrays
+    void swap(ndarray<T,M,Order,Base,Allocator>& other) noexcept
+Swaps the contents of the two M-dimensional array views
 
 #### See also
 

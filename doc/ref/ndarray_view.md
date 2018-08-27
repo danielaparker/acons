@@ -46,42 +46,46 @@ Member type                         |Definition
 
     template<size_t N, typename Allocator>
     ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
-                 const slices_type& slices);
+                 const slices_type& slices); // (3)
 
+    template<size_t N, typename Allocator>
+    ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
+                 const std::array<size_t,N-M>& origin); // (4)
 
-Constructs a new N-dimensional array, optionally using a user supplied allocator.
+    template<size_t N, typename Allocator>
+    ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
+                 const std::array<size_t,N-M>& origin,
+                 const slices_type& slices); // (5)
 
-(1) Default constructor. Constructs an empty N-dimensional array.
+    template <typename OtherTPtr>
+    ndarray_view(const const_ndarray_view<T, M, Order, Base, OtherTPtr>& a); // (6)
 
-(2) The first N arguments specify the dimensions of the N-dimensional array, 
-and an optional (N+1)th argument specifies an initial value.
+    template<size_t N, typename OtherTPtr>
+    ndarray_view(const const_ndarray_view<T, N, Order, Base, OtherTPtr>& a, 
+                 const slices_type& slices); // (7)
 
-(3) Constructs an N-dimensional array with dimensions specified by `dimensions`.
+    template<size_t N, typename OtherTPtr>
+    ndarray_view(const const_ndarray_view<T, N, Order, Base, OtherTPtr>& a, 
+                 const std::array<size_t,N-M>& origin); // (8)
 
-(4) Constructs an N-dimensional array with dimensions specified by `dimensions`
-    using the supplied allocator.
+    template<size_t N, typename OtherTPtr>
+    ndarray_view(const const_ndarray_view<T, N, Order, Base, OtherTPtr>& a, 
+                 const std::array<size_t,N-M>& origin,
+                 const slices_type& slices); // (9)
 
-(5) Constructs an N-dimensional array with dimensions specified by `dimensions`
-    and values initialized to `val`.
+    ndarray_view(T* data, const std::array<size_t,M>& dim); // (10) 
 
-(6) Constructs an N-dimensional array with dimensions specified by `dimensions`
-    and values initialized to `val` using the supplied allocator.
+Constructs a new M-dimensional array view.
 
-(7) Constructs an N-dimensional array from the initializer list init.
-
-(8) Constructs an N-dimensional array from the initializer list init
-    using the supplied allocator.
+(1) Default constructor. Constructs an empty M-dimensional array view.
 
 Exceptions:
 
-(1) - (8) Calls to `Allocator::allocate` may throw.
-(7) - (8) Throws `std::invalid_argument` if the initializer list contains non-comforming shapes.
+    ndarray_view& operator=(const ndarray_view& other);
 
-    ndarray& operator=(const ndarray& other);
+    ndarray_view& operator=(ndarray_view&& other);
 
-    ndarray& operator=(ndarray&& other);
-
-    ndarray& operator=(std::initializer_list<array_item<T>> list);
+    ndarray_view& operator=(std::initializer_list<array_item<T>> list);
 
 ##### Capacity
 
@@ -115,8 +119,8 @@ Exceptions:
 
 ##### Modifiers
 
-    void swap(ndarray<T,N,Order,Base,Allocator>& other) noexcept
-Swaps the contents of the two N-dimensional arrays
+    void swap(ndarray<T,M,Order,Base,Allocator>& other) noexcept
+Swaps the contents of the two M-dimensional array views
 
 #### See also
 
