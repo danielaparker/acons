@@ -8,6 +8,11 @@ It is distributed under the [MIT License](https://opensource.org/licenses/MIT).
 
 Download the latest [single header file](https://raw.githubusercontent.com/danielaparker/acons/master/include/acons/ndarray.hpp). 
 
+## How to use it
+
+[Examples](#Examples)
+[Reference](doc\ref\index.md)
+
 ## Supported compilers
 
  Compiler     | Versions      | Operating System
@@ -16,6 +21,7 @@ Download the latest [single header file](https://raw.githubusercontent.com/danie
  g++-         | 4.8, 6, 7,8   | Ubuntu           
  clang        | 3.8, 5.0. 6.0 |
 
+<div id="Examples"/>
 ## Examples
 
 ### Row major, zero based indexing example
