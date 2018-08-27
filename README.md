@@ -11,7 +11,7 @@ Download the latest [single header file](https://raw.githubusercontent.com/danie
 ## How to use it
 
 [Examples](#ExamplesLabel)  
-[Reference](doc\ref\index.md)
+[Reference](doc/ref/index.md)
 
 ## Supported compilers
 
