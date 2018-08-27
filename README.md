@@ -10,7 +10,7 @@ Download the latest [single header file](https://raw.githubusercontent.com/danie
 
 ## How to use it
 
-[Examples](#Examples)  
+[Examples](#ExamplesLabel)  
 [Reference](doc\ref\index.md)
 
 ## Supported compilers
@@ -21,7 +21,7 @@ Download the latest [single header file](https://raw.githubusercontent.com/danie
  g++-         | 4.8, 6, 7,8   | Ubuntu           
  clang        | 3.8, 5.0. 6.0 |
 
-<div id="Examples"/>
+<div id="ExamplesLabel"/>
 ## Examples
 
 ### Row major, zero based indexing example
