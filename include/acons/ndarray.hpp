@@ -786,17 +786,27 @@ public:
         return data_;
     }
 
-    const_iterator begin() const
-    {
-        return data_;
-    }
-
     iterator end()
     {
         return data_ + size_;
     }
 
+    const_iterator begin() const
+    {
+        return data_;
+    }
+
     const_iterator end() const
+    {
+        return data_ + size_;
+    }
+
+    const_iterator cbegin() const
+    {
+        return data_;
+    }
+
+    const_iterator cend() const
     {
         return data_ + size_;
     }
@@ -1168,17 +1178,6 @@ void print(std::basic_ostream<CharT>& os,
             }
             os << *it;
         }
-/*
-        for (size_t j = 0; j < a.size(i); ++j)
-        {
-            if (j > 0)
-            {
-                os << ',';
-            }
-            indices[i] = j;
-            os << a(indices);
-        }
- */
     }   
 }
  
@@ -1186,12 +1185,6 @@ void print(std::basic_ostream<CharT>& os,
 template <typename T, size_t N, typename Order, typename Base, typename Allocator, typename CharT>
 std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os, ndarray<T, N, Order, Base, Allocator>& a)
 {
-    //auto f = [&](const std::array<size_t,N>& indices) 
-    //{ 
-    //    size_t off = get_offset<N, N, zero_based>(a.strides(),indices);
-    //    return a.data()[off];
-    //};
-    //print(os, a.dimensions(), f);
     print(os, a);
     return os;
 }
@@ -1537,12 +1530,6 @@ template <typename CharT, typename T, size_t M, typename Order, typename Base, t
 std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os, 
                                       const_ndarray_view<T, M, Order, Base, TPtr>& v)
 {
-    /* auto f = [&](const std::array<size_t,M>& indices) 
-    { 
-        size_t off = get_offset<M, M, zero_based>(v.strides(), v.offsets(), indices);
-        return v.data()[off];
-    };
-    print(os, v.dimensions(), f);*/
     print(os, v);
     return os;
 }
