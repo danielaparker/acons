@@ -80,7 +80,8 @@ Constructs a new N-dimensional array, optionally using a user supplied allocator
 (1) Default constructor. Constructs an empty N-dimensional array.
 
 (2) The first N arguments specify the dimensions of the N-dimensional array, 
-and an optional (N+1)th argument specifies an initial value.
+an optional (N+1)th argument specifies an initial value, and an optional
+last argument supplies an allocator.
 
 (3) Constructs an N-dimensional array with dimensions specified by `dimensions`
     and values initialized to `T()`.

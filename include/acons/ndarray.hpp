@@ -329,11 +329,6 @@ struct row_major
                 {
                     size_t start = current.start + offsets[current.dim+1]*strides[current.dim+1];
                     //std::cout << "path2 current:" << current << "\n";
-                    //size_t len = 1;
-                    //for (size_t j = 0; j <= current.dim+1; ++j)
-                    //{
-                    //    len *= dimensions[j];
-                    //}
                     size_t len = current.size * dimensions[current.dim+1];
                     stack.emplace_back(start,len,current.dim+1);
                 }
@@ -418,12 +413,6 @@ struct column_major
                 {
                     size_t start = current.start + offsets[current.dim-1]*strides[current.dim-1];
                     //std::cout << "path2 current:" << current << "\n";
-                    //size_t len = 1;
-                    //for (size_t j = 0; j <= current.dim; ++j)
-                    //{
-                    //    len *= dimensions[j];
-                    //}
-                    //size_t len = current.size * dimensions[current.dim+1];
                     size_t len = current.size * dimensions[current.dim-1];
                     stack.emplace_back(start,len,current.dim-1);
                 }
@@ -552,6 +541,12 @@ struct init_helper
         dim[Array::dimension - Pos] = n;
         next::init(dim, a, args...);
     }
+
+    template <typename T, typename Allocator, typename... Args>
+    static Allocator get_allocator(size_t n, Args... args)
+    {
+        return next::get_allocator<T,Allocator>(args...);
+    }
 };
 
 template<>
@@ -566,6 +561,38 @@ struct init_helper<0>
     static void init(std::array<size_t, Array::dimension>& dim, Array& a, typename Array::const_reference val)
     {
         a.init(val);
+    }
+
+    template <typename Array>
+    static void init(std::array<size_t, Array::dimension>& dim, Array& a, const typename Array::allocator_type&)
+    {
+        a.init();
+    }
+    template <typename Array>
+    static void init(std::array<size_t, Array::dimension>& dim, Array& a, typename Array::const_reference val, const typename Array::allocator_type&)
+    {
+        a.init(val);
+    }
+
+    template <typename T, typename Allocator>
+    static Allocator get_allocator()
+    {
+        return Allocator();
+    }
+    template <typename T, typename Allocator>
+    static Allocator get_allocator(const Allocator& allocator)
+    {
+        return allocator;
+    }
+    template <typename T, typename Allocator>
+    static Allocator get_allocator(const T& val)
+    {
+        return Allocator();
+    }
+    template <typename T, typename Allocator>
+    static Allocator get_allocator(const T& val, const Allocator& allocator)
+    {
+        return allocator;
     }
 };
 
@@ -608,7 +635,7 @@ public:
 
     template <typename... Args>
     ndarray(size_t i, Args... args)
-        : super_type(allocator_type()) 
+        : super_type(init_helper<N>::get_allocator<T,Allocator>(i, args ...)) 
     {
         init_helper<N>::init(dim_, *this, i, args ...);
     }
@@ -783,32 +810,32 @@ public:
 
     iterator begin()
     {
-        return data_;
+        return to_plain_pointer(data_);
     }
 
     iterator end()
     {
-        return data_ + size_;
+        return to_plain_pointer(data_) + size_;
     }
 
     const_iterator begin() const
     {
-        return data_;
+        return to_plain_pointer(data_);
     }
 
     const_iterator end() const
     {
-        return data_ + size_;
+        return to_plain_pointer(data_) + size_;
     }
 
     const_iterator cbegin() const
     {
-        return data_;
+        return to_plain_pointer(data_);
     }
 
     const_iterator cend() const
     {
-        return data_ + size_;
+        return to_plain_pointer(data_) + size_;
     }
 
     void resize(const std::array<size_t,N>& dim, T value = T())

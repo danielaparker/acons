@@ -71,6 +71,50 @@ TEST_CASE("constructor 2b")
     }
 }
 
+TEST_CASE("constructor 2c")
+{
+    ndarray<double,3> a(1,2,3,std::allocator<double>());
+
+    double x = 0;
+    for (size_t i = 0; i < a.size(0); ++i)
+    {
+        for (size_t j = 0; j < a.size(1); ++j)
+        {
+            for (size_t k = 0; k < a.size(2); ++k)
+            {
+                a(i,j,k) = x++;
+            }
+        }
+    }
+
+    CHECK_FALSE(a.empty());
+    CHECK(a.size() == 6);
+    CHECK(a.size(0) == 1);
+    CHECK(a.size(1) == 2);
+    CHECK(a.size(2) == 3);
+
+    for (size_t i = 0; i < a.size(); ++i)
+    {
+        CHECK(a.data()[i] == i);
+    }
+}
+
+TEST_CASE("constructor 2d")
+{
+    ndarray<double,3> a(1,2,3,10.0,std::allocator<double>());
+
+    CHECK_FALSE(a.empty());
+    CHECK(a.size() == 6);
+    CHECK(a.size(0) == 1);
+    CHECK(a.size(1) == 2);
+    CHECK(a.size(2) == 3);
+
+    for (size_t i = 0; i < a.size(); ++i)
+    {
+        CHECK(a.data()[i] == 10);
+    }
+}
+
 TEST_CASE("constructor 3")
 {
     std::array<size_t,3> dim{ 1,2,3 };
