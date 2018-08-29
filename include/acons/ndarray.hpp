@@ -1566,7 +1566,7 @@ class ndarray_view : public const_ndarray_view<T, M, Order, Base, T*>
 {
     typedef const_ndarray_view<T, M, Order, Base, T*> super_type;
 public:
-    typedef slice_iterator<T,M,Order,true> iterator;
+    typedef slice_iterator<T,M,Order,false> iterator;
     using typename super_type::const_iterator;
     using typename super_type::slices_type;
     using typename super_type::value_type;
