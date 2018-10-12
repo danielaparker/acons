@@ -190,7 +190,7 @@ get_offset(const std::array<size_t,n>& strides,
            const std::array<size_t,n>& offsets, 
            size_t index) 
 {
-    return (Base::rebase_to_zero(index)+offsets[n-1])*strides[n-1];
+    return offsets[n-1] + Base::rebase_to_zero(index)*strides[n-1];
 }
 
 template <size_t n, typename Base, size_t m, typename... Indices>
@@ -200,7 +200,7 @@ get_offset(const std::array<size_t,n>& strides,
            size_t index, Indices... indices)
 {
     const size_t mplus1 = m + 1;
-    size_t i = (Base::rebase_to_zero(index)+offsets[m])*strides[m] + get_offset<n, Base, mplus1>(strides,offsets,indices...);
+    size_t i = offsets[m] + Base::rebase_to_zero(index)*strides[m] + get_offset<n, Base, mplus1>(strides,offsets,indices...);
 
     return i;
 }
@@ -214,7 +214,7 @@ get_offset(const std::array<size_t,N>& strides,
     size_t offset = 0;
     for (size_t i = 0; i < M; ++i)
     {
-        offset += (Base::rebase_to_zero(indices[i])+offsets[i])*strides[i];
+        offset += offsets[i] + Base::rebase_to_zero(indices[i])*strides[i];
     }
 
     return offset;
@@ -274,13 +274,25 @@ struct row_major
         }
     }
 
+    template <size_t N, typename Base>
+    static void update_offsets(const std::array<size_t,N>& strides, 
+                               const array_wrapper<slice,N>& slices, 
+                               std::array<size_t,N>& offsets)
+    {
+        offsets[N-1] += Base::rebase_to_zero(slices[N-1].start());
+        for (size_t i = 0; i+1 < N; ++i)
+        {
+            offsets[i] += Base::rebase_to_zero(slices[i].start()) * strides[i]; 
+        }
+    }
+
     template <size_t N>
     static void initialize_walk(std::vector<walk_snapshot>& stack,
                                 const std::array<size_t,N>& dimensions,
                                 const std::array<size_t,N>& strides,
                                 const std::array<size_t,N>& offsets)
     {
-        stack.emplace_back(offsets[0]*strides[0], dimensions[0], 0);
+        stack.emplace_back(offsets[0], dimensions[0], 0);
     }
 
     template <size_t N, typename Callable>
@@ -293,7 +305,7 @@ struct row_major
         while (!stack.empty())
         {
             walk_snapshot current = stack.back();
-            /*std::cout << "stack: ";
+            std::cout << "stack: ";
             for (size_t i = 0; i < stack.size(); ++i)
             {
                 if (i > 0)
@@ -302,33 +314,34 @@ struct row_major
                 }
                 std::cout << stack[i];
             }
-            std::cout << "\n";*/
+            std::cout << "\n";
             stack.pop_back();
 
             if (current.dim+1 < N)
             {
                 if (dimensions[current.dim+1]*strides[current.dim+1] != strides[current.dim])
                 {
+                    size_t offset = current.start + offsets[current.dim+1];
                     for (size_t j = dimensions[current.dim]; j-- > 0;)
                     {
-                        size_t start = current.start + offsets[current.dim+1]*strides[current.dim+1] + j*strides[current.dim];
+                        size_t start = offset + j*strides[current.dim];
                         size_t len = dimensions[current.dim+1];
 
-                        /* std::cout << "current: " 
+                        std::cout << "path 1 current: " 
                                   << current 
                                   << ", j: " 
                                   << j 
                                   << ", offsets[current.dim+1]: " 
                                   << offsets[current.dim+1] 
                                   << ", start: " 
-                                  << start << "\n"; */
+                                  << start << "\n"; 
                         stack.emplace_back(start,len,current.dim+1);
                     }
                 }
                 else
                 {
-                    size_t start = current.start + offsets[current.dim+1]*strides[current.dim+1];
-                    //std::cout << "path2 current:" << current << "\n";
+                    size_t start = current.start + offsets[current.dim+1];
+                    std::cout << "path2 current:" << current << "\n";
                     size_t len = current.size * dimensions[current.dim+1];
                     stack.emplace_back(start,len,current.dim+1);
                 }
@@ -337,7 +350,7 @@ struct row_major
             {
                 size_t stride = strides[N-1];
 
-                //std::cout << "current: " << current  << ", stride: " << stride << "\n";
+                std::cout << "N-1 current: " << current  << ", stride: " << stride << "\n";
                 callable(current.start, current.start + current.size*stride, stride);
                 break;
             }
@@ -358,13 +371,25 @@ struct column_major
         }
     }
 
+    template <size_t N, typename Base>
+    static void update_offsets(const std::array<size_t,N>& strides, 
+                               const array_wrapper<slice,N>& slices, 
+                               std::array<size_t,N>& offsets)
+    {
+        offsets[0] += Base::rebase_to_zero(slices[0].start());
+        for (size_t i = 1; i < N; ++i)
+        {
+            offsets[i] += Base::rebase_to_zero(slices[i].start()) * strides[i]; 
+        }
+    }
+
     template <size_t N>
     static void initialize_walk(std::vector<walk_snapshot>& stack,
                                 const std::array<size_t,N>& dimensions,
                                 const std::array<size_t,N>& strides,
                                 const std::array<size_t,N>& offsets)
     {
-        stack.emplace_back(offsets[N-1]*strides[N-1], dimensions[N-1], N-1);
+        stack.emplace_back(offsets[N-1], dimensions[N-1], N-1);
     }
 
     template <size_t N, typename Callable>
@@ -377,7 +402,7 @@ struct column_major
         while (!stack.empty())
         {
             walk_snapshot current = stack.back();
-            /*std::cout << "stack: ";
+            std::cout << "stack: ";
             for (size_t i = 0; i < stack.size(); ++i)
             {
                 if (i > 0)
@@ -386,33 +411,34 @@ struct column_major
                 }
                 std::cout << stack[i];
             }
-            std::cout << "\n";*/
+            std::cout << "\n";
             stack.pop_back();
 
             if (current.dim > 0)
             {
                 if (dimensions[current.dim-1]*strides[current.dim-1] != strides[current.dim])
                 {
+                    size_t offset = current.start + offsets[current.dim-1];
                     for (size_t j = dimensions[current.dim]; j-- > 0;)
                     {
-                        size_t start = current.start + offsets[current.dim-1]*strides[current.dim-1] + j*strides[current.dim];
+                        size_t start = offset + j*strides[current.dim];
                         size_t len = dimensions[current.dim-1];
 
-                        /*std::cout << "current: " 
+                        std::cout << "path1: current: " 
                                   << current 
                                   << ", j: " 
                                   << j 
                                   << ", offsets[current.dim-1]: " 
                                   << offsets[current.dim-1] 
                                   << ", start: " 
-                                  << start << "\n";*/
+                                  << start << "\n";
                         stack.emplace_back(start,len,current.dim-1);
                     }
                 }
                 else
                 {
-                    size_t start = current.start + offsets[current.dim-1]*strides[current.dim-1];
-                    //std::cout << "path2 current:" << current << "\n";
+                    size_t start = current.start + offsets[current.dim-1];
+                    std::cout << "path2 current:" << current << "\n";
                     size_t len = current.size * dimensions[current.dim-1];
                     stack.emplace_back(start,len,current.dim-1);
                 }
@@ -421,7 +447,7 @@ struct column_major
             {
                 size_t stride = strides[0];
 
-                //std::cout << "current: " << current  << ", stride: " << stride << "\n";
+                std::cout << "N-1: current: " << current  << ", stride: " << stride << "\n";
                 callable(current.start, current.start + current.size*stride, stride);
                 break;
             }
@@ -1194,6 +1220,7 @@ void print(std::basic_ostream<CharT>& os,
     else
     {
         const_ndarray_view<typename A::value_type, 1, typename A::order_type, typename A::base_type> v(a,indices);
+        std::cout << "print indices: " << indices << "\n";
 
         auto begin = v.begin();
         auto end = v.end();
@@ -1380,8 +1407,9 @@ public:
         {
             dim_[i] = (slices[i].stop() - slices[i].start()) /slices[i].stride();
             strides_[i] = a.strides()[i]*slices[i].stride();
-            offsets_[i] = Base::rebase_to_zero(slices[i].start()); 
         }
+        offsets_.fill(0);
+        Order::update_offsets<M,Base>(strides_, slices, offsets_);
     }
 
     template<size_t m = M, size_t N, size_t K, typename Allocator>
@@ -1420,21 +1448,21 @@ public:
         {
             dim_[i] = (slices[i].stop() - slices[i].start())/slices[i].stride();
             strides_[i] = a.strides()[(N-M)+i]*slices[i].stride();
-            offsets_[i] = Base::rebase_to_zero(slices[i].start());
         }
+        offsets_.fill(0);
+        Order::update_offsets<M,Base>(strides_, slices, offsets_);
     }
 
     template<typename OtherTPtr>
     const_ndarray_view(const_ndarray_view<T, M, Order, Base, OtherTPtr>& other)
-        : data_(other.data()), size_(other.size()), dim_(other.dimensions()), strides_(other.strides())          
+        : data_(other.data()), size_(other.size()), dim_(other.dimensions()), strides_(other.strides()), offsets_(other.offsets())          
     {
-        offsets_.fill(0);
     }
 
     template<size_t m = M, size_t N, typename OtherTPtr>
     const_ndarray_view(const_ndarray_view<T, N, Order, Base, OtherTPtr>& other, 
                        const slices_type& slices)
-        : data_(other.data()), size_(other.size())
+        : data_(other.data()), size_(other.size()), offsets_(other.offsets())
     {
         static_assert(m == N, "A view constructed from a list of index ranges on another view must have the same dimensionality as the other view");
 
@@ -1442,8 +1470,8 @@ public:
         {
             dim_[i] = (slices[i].stop() - slices[i].start())/slices[i].stride();
             strides_[i] = other.strides()[i]*slices[i].stride();
-            offsets_[i] = other.offsets()[i] + Base::rebase_to_zero(slices[i].start());
         }
+        Order::update_offsets<M,Base>(strides_, slices, offsets_);
     }
 
     template<size_t m = M, size_t N, size_t K, typename OtherTPtr>
@@ -1454,6 +1482,7 @@ public:
         static_assert(m == N-K, "View must have dimension N-K");
 
         size_t rel = get_offset<N,N-M,Base>(other.strides(),other.offsets(),origin);
+        std::cout << "This cons rel: " << rel << "\n\n";
 
         for (size_t i = 0; i < M; ++i)
         {
@@ -1477,8 +1506,9 @@ public:
         {
             dim_[i] = (slices[i].stop() - slices[i].start())/slices[i].stride();
             strides_[i] = other.strides()[(N-M)+i]*slices[i].stride();
-            offsets_[i] = rel + other.offsets()[(N-M)+i] + Base::rebase_to_zero(slices[i].start());
+            offsets_[i] = rel + other.offsets()[(N-M)+i];
         }
+        update_offsets<M,Base>(stride_, slices, offsets_);
     }
 
     template<typename OtherTPtr>
