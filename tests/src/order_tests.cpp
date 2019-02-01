@@ -68,7 +68,7 @@ TEST_CASE("row major tests")
     CHECK(v2(0) == 1);
     CHECK(v2(1) == 2);
 
-    ndarray_view<double,2,row_major> v3(a,{{0,1},{1,1}});
+    ndarray_view<double,2,row_major> v3(a,{{0,1},{1,2}});
     CHECK(v3(0,0) == 1);
 
     ndarray_view<double,2,row_major> v4(a,{{0,1},{1,2}});
@@ -79,7 +79,7 @@ TEST_CASE("row major tests")
     CHECK(v5(0,0) == 1);
     CHECK(v5(0,1) == 2);
 
-    ndarray_view<double,2,row_major> v6(a,{{1,1},{1,2}});
+    ndarray_view<double,2,row_major> v6(a,{{1,2},{1,2}});
     CHECK(v6(0,0) == 4);
     CHECK(v6(0,1) == 5);
 }
@@ -103,16 +103,23 @@ TEST_CASE("column major tests")
     CHECK(a.data()[4] == 2);
     CHECK(a.data()[5] == 5);
 
-    //ndarray_view<double,1,column_major> v1(a,{{0,2,3}});
-    //CHECK(v1(0) == 0);
-    //CHECK(v1(1) == 3);
+    ndarray_view<double,1,column_major> v(a,{0});
+    CHECK(v(0) == 0);
+    CHECK(v(1) == 1);
+    CHECK(v(2) == 2);
+
+    ndarray_view<double, 1, column_major> v1(a, { 1 });
+    CHECK(v1(0) == 3);
+    CHECK(v1(1) == 4);
+    CHECK(v1(2) == 5);
 
     ndarray_view<double,1,column_major> v2(a,{0},{{1,2}});
     CHECK(v2(0) == 1);
     CHECK(v2(1) == 2);
 
-    ndarray_view<double,2,column_major> v3(a,{{0,1},{1,1}});
-    CHECK(v3(0,0) == 1);
+    ndarray_view<double,2,column_major> v3(a,{{0,1},{1,2}});
+    std::cout << "size 0: " << v3.size(0) << ", size 1: " << v3.size(1) << "\n";
+    CHECK(v3(0,0) == 1); 
 
     ndarray_view<double,2,column_major> v4(a,{{0,1},{1,2}});
     CHECK(v4(0,0) == 1);
