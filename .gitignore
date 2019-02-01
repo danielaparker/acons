@@ -8,6 +8,9 @@
 **/x64/Release/
 **/*.vcxproj
 **/vs2015
+**/temp
+**/build
+**/.vs
 
 build/vs2015
 tests/build/vs2015
