@@ -16,8 +16,8 @@ TEST_CASE("print test")
     std::ostringstream os3;
 
     ndarray<double, 1, row_major> a = { 0,1,2,3 };
-    const_ndarray_view<double, 1, row_major> cv(a, {{1,3}});
-    ndarray_view<double, 1, row_major> v(a, {{1,3}});
+    const_ndarray_view<double, 1, row_major> cv(a, {slice(1,3)});
+    ndarray_view<double, 1, row_major> v(a, {slice(1,3)});
 
     print(os1, a);
     CHECK(os1.str() == expected1);
@@ -74,7 +74,7 @@ TEST_CASE("2x2x2 ostream test")
 TEST_CASE("1x2x2 ndarray_view ostream test")
 {
     ndarray<double, 3, row_major> a = { {{0,1,2,3},{4,5,6,7},{8,9,10,11}}, {{12,13,14,15},{16,17,18,19},{20,21,22,23}} };
-    ndarray_view<double, 3> v(a,{{1,2},{1,3},{0,4,2}});
+    ndarray_view<double, 3> v(a,{slice(1,2),slice(1,3),slice(0,4,2)});
 
     //std::cout << "a: " << a << "\n\n";
     //std::cout << "v: " << v << "\n\n";

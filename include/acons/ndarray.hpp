@@ -79,7 +79,7 @@ public:
         : start_(0), stop_(0), step_(0)
     {
     }
-    slice(size_t start, size_t stop, size_t step)
+    slice(size_t start, size_t stop, size_t step=1)
         : start_(start), stop_(stop), step_(step)
     {
     }
@@ -388,7 +388,7 @@ struct column_major
     static bool compare(const T* data1, const std::array<size_t,N>& dim1, const std::array<size_t,N>& strides1, const std::array<size_t,N>& offsets1, 
                         const T* data2, const std::array<size_t,N>& dim2, const std::array<size_t,N>& strides2, const std::array<size_t,N>& offsets2)
     {
-        for (size_t i = 0; i < N; ++i)
+for (size_t i = 0; i < N; ++i)
         {
             if (dim1[i] != dim2[i])
             {

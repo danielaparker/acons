@@ -15,7 +15,7 @@ void row_major_zero_based_example()
     // Construct a 3-dimensional 1 x 2 x 2 view on the array.
     // The second argument provides a list of index ranges 
     // on the three dimensions of the array.
-    ndarray_view<double,3> v(a, {{1,2},{1,3},{0,4,2}});
+    ndarray_view<double,3> v(a, {slice(1,2),slice(1,3),slice(0,4,2)});
 
     std::cout << "(2)\n" << v << "\n\n";
 
@@ -58,7 +58,7 @@ void column_major_one_based_example()
     // Construct a 3-dimensional 1 x 2 x 2 view on the array.
     // The second argument provides a list of index ranges 
     // on the three dimensions of the array.
-    ndarray_view<double, 3, column_major, one_based> v(a, {{2,3},{2,4},{1,5,2}});
+    ndarray_view<double, 3, column_major, one_based> v(a, {slice(2,3),slice(2,4),slice(1,5,2)});
 
     std::cout << "(2)\n" << v << "\n\n";
 

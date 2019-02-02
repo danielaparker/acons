@@ -64,22 +64,22 @@ TEST_CASE("row major tests")
     CHECK(a.data()[4] == 4);
     CHECK(a.data()[5] == 5);
 
-    ndarray_view<double,1,row_major> v2(a,{0},{{1,2}});
+    ndarray_view<double,1,row_major> v2(a,{0},{slice(1,2)});
     CHECK(v2(0) == 1);
     CHECK(v2(1) == 2);
 
-    ndarray_view<double,2,row_major> v3(a,{{0,1},{1,2}});
+    ndarray_view<double,2,row_major> v3(a,{slice(0,1),slice(1,2)});
     CHECK(v3(0,0) == 1);
 
-    ndarray_view<double,2,row_major> v4(a,{{0,1},{1,2}});
+    ndarray_view<double,2,row_major> v4(a,{slice(0,1),slice(1,2)});
     CHECK(v4(0,0) == 1);
     CHECK(v4(0,1) == 2);
 
-    ndarray_view<double,2,row_major> v5(a,{{0,1},{1,2}});
+    ndarray_view<double,2,row_major> v5(a,{slice(0,1),slice(1,2)});
     CHECK(v5(0,0) == 1);
     CHECK(v5(0,1) == 2);
 
-    ndarray_view<double,2,row_major> v6(a,{{1,2},{1,2}});
+    ndarray_view<double,2,row_major> v6(a,{slice(1,2),slice(1,2)});
     CHECK(v6(0,0) == 4);
     CHECK(v6(0,1) == 5);
 }
@@ -113,23 +113,23 @@ TEST_CASE("column major tests")
     CHECK(v1(1) == 4);
     CHECK(v1(2) == 5);
 
-    ndarray_view<double,1,column_major> v2(a,{0},{{1,2}});
+    ndarray_view<double,1,column_major> v2(a,{0},{slice(1,2)});
     CHECK(v2(0) == 1);
     CHECK(v2(1) == 2);
 
-    ndarray_view<double,2,column_major> v3(a,{{0,1},{1,2}});
+    ndarray_view<double,2,column_major> v3(a,{slice(0,1),slice(1,2)});
     std::cout << "size 0: " << v3.size(0) << ", size 1: " << v3.size(1) << "\n";
     CHECK(v3(0,0) == 1); 
 
-    ndarray_view<double,2,column_major> v4(a,{{0,1},{1,2}});
+    ndarray_view<double,2,column_major> v4(a,{slice(0,1),slice(1,2)});
     CHECK(v4(0,0) == 1);
     CHECK(v4(0,1) == 2);
 
-    ndarray_view<double,2,column_major> v5(a,{{0,1},{1,2}});
+    ndarray_view<double,2,column_major> v5(a,{slice(0,1),slice(1,2)});
     CHECK(v5(0,0) == 1);
     CHECK(v5(0,1) == 2);
 
-    ndarray_view<double,2,column_major> v6(a,{{1,1},{1,2}});
+    ndarray_view<double,2,column_major> v6(a,{slice(1,2),slice(1,2)});
     CHECK(v6(0,0) == 4);
     CHECK(v6(0,1) == 5);
 }

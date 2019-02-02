@@ -48,7 +48,7 @@ void acons_example()
     }
     std::cout << "\n\n";
 
-    ndarray_view<double,3> v(a,{{0,2},{1,3},{0,4,2}});
+    ndarray_view<double,3> v(a,{slice(0,2),slice(1,3),slice(0,4,2)});
 
     std::cout << "dimensions: ";
     for (size_t i = 0; i < v.dimensions().size(); ++i)
