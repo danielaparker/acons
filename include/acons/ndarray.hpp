@@ -36,39 +36,6 @@ typename std::pointer_traits<Pointer>::element_type* to_plain_pointer(Pointer pt
     return (std::addressof(*ptr));
 }
 
-template <typename T, size_t N>
-class array_wrapper
-{
-    std::array<T,N> a_;
-public:
-    array_wrapper() = default;
-
-    array_wrapper(const array_wrapper<T,N>& a) = default;
-
-    array_wrapper(std::initializer_list<T> list)
-    {
-        if (list.size() != N)
-        {
-            throw std::invalid_argument("N-dimensional array requires N items.");
-        }
-        size_t i = 0;
-        for (auto item : list)
-        {
-            a_[i++] = item;
-        }
-    }
-
-    size_t size() const
-    {
-        return N;
-    }
-
-    T operator[](size_t i) const
-    {
-        return a_[i];
-    }
-};
-
 class slice
 {
     size_t start_;
@@ -82,31 +49,14 @@ public:
     slice(size_t start, size_t stop, size_t step=1)
         : start_(start), stop_(stop), step_(step)
     {
-    }
-    slice(std::initializer_list<size_t> list)
-    {
-        if (list.size() <= 3)
-        {
-            if (list.size() < 2)
-            {
-                throw std::invalid_argument("Start and size are required");
-            }
-            auto it = list.begin();
-            start_ = *it++;
-            stop_ = *it++;
-            step_ = list.size() == 3 ? *it : 1;
-        }
-        else
-        {
-            throw std::invalid_argument("Too many arguments to slice");
-        }
-    }
-    slice(const slice& other)
-        : start_(other.start_), stop_(other.stop_), step_(other.step_)
-    {
+        assert(start < stop);
     }
 
+    slice(const slice& other) = default;
+    slice(slice&& other) = default;
+
     slice& operator=(const slice& other) = default;
+    slice& operator=(slice&& other) = default;
 
     size_t start() const
     {
@@ -286,7 +236,7 @@ struct row_major
 
     template <size_t N, typename Base>
     static void update_offsets(const std::array<size_t,N>& strides, 
-                               const array_wrapper<slice,N>& slices, 
+                               const std::array<slice,N>& slices, 
                                std::array<size_t,N>& offsets)
     {
         offsets[N-1] += Base::rebase_to_zero(slices[N-1].start());
@@ -295,6 +245,61 @@ struct row_major
             offsets[i] += Base::rebase_to_zero(slices[i].start()) /* * strides[i] */; 
         }
     }
+    template <typename T, size_t N>
+    static bool compare(const T* data1, const std::array<size_t,N>& dim1, const std::array<size_t,N>& strides1, const std::array<size_t,N>& offsets1, 
+                        const T* data2, const std::array<size_t,N>& dim2, const std::array<size_t,N>& strides2, const std::array<size_t,N>& offsets2)
+    {
+        for (size_t i = 0; i < N; ++i)
+        {
+            if (dim1[i] != dim2[i])
+            {
+                return false;
+            }
+        }
+
+        size_t stack_depth = 1;
+        for (size_t i = 0; i+1 < dim1.size(); ++i)
+        {
+            stack_depth *= dim1[i];
+        }
+        std::vector<snapshot<N>> stack(stack_depth);
+
+        size_t count = 1;
+        while (count != 0)
+        {
+            auto val = stack[count-1];
+            --count;
+
+            if (val.index+1 < N)
+            {
+                for (size_t i = dim1[val.index]; i-- > 0; )
+                {
+                    val.indices[val.index] = i; 
+                    stack[count].indices = val.indices;
+                    stack[count].index = val.index+1;
+                    count++;
+                }
+            }
+            else if (val.index+1 == N)
+            {
+                val.indices[val.index] = 0;
+                size_t offset1 = get_offset<N,N,zero_based>(strides1,offsets1,val.indices);
+                size_t offset2 = get_offset<N,N,zero_based>(strides2,offsets2,val.indices);
+                const T* p1 = data1 + offset1;
+                const T* p2 = data2 + offset2;
+                const T* end = p1 + dim1[val.index];
+                while (p1 != end)
+                {
+                    if (*p1++ != *p2++)
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+/*
     template <typename T, size_t N>
     static bool compare(const T* data1, const std::array<size_t,N>& dim1, const std::array<size_t,N>& strides1, const std::array<size_t,N>& offsets1, 
                         const T* data2, const std::array<size_t,N>& dim2, const std::array<size_t,N>& strides2, const std::array<size_t,N>& offsets2)
@@ -358,6 +363,7 @@ struct row_major
         }
         return true;
     }
+*/
 };
 
 struct column_major
@@ -375,7 +381,7 @@ struct column_major
 
     template <size_t N, typename Base>
     static void update_offsets(const std::array<size_t,N>& strides, 
-                               const array_wrapper<slice,N>& slices, 
+                               const std::array<slice,N>& slices, 
                                std::array<size_t,N>& offsets)
     {
         offsets[0] += Base::rebase_to_zero(slices[0].start());
@@ -385,66 +391,59 @@ struct column_major
         }
     }
     template <typename T, size_t N>
-    static bool compare(const T* data1, const std::array<size_t,N>& dim1, const std::array<size_t,N>& strides1, const std::array<size_t,N>& offsets1, 
-                        const T* data2, const std::array<size_t,N>& dim2, const std::array<size_t,N>& strides2, const std::array<size_t,N>& offsets2)
+    static bool compare(const T* data1, const std::array<size_t, N>& dim1, const std::array<size_t, N>& strides1, const std::array<size_t,N>& offsets1,
+                        const T* data2, const std::array<size_t, N>& dim2, const std::array<size_t, N>& strides2, const std::array<size_t,N>& offsets2)
     {
-for (size_t i = 0; i < N; ++i)
+        for (size_t i = 0; i < N; ++i)
         {
             if (dim1[i] != dim2[i])
             {
                 return false;
             }
         }
-
-        size_t stack_depth = 1;
-        for (size_t i = 0; i+1 < dim1.size(); ++i)
-        {
-            stack_depth *= dim1[i];
-        }
-        std::vector<snapshot<N>> stack(stack_depth);
-
-        size_t count = 1;
-        stack[0].index = N-1;
-        while (count != 0)
-        {
-            auto val = stack[count-1];
-            --count;
-
-            if (val.index > 0)
-            {
-                for (size_t i = dim1[val.index]; i-- > 0; )
-                {
-                    val.indices[val.index] = i; 
-                    stack[count].indices = val.indices;
-                    stack[count].index = val.index-1;
-                    count++;
-                }
-            }
-            else 
-            {
-                val.indices[val.index] = 0;
-                size_t offset1 = get_offset<N,N,zero_based>(strides1, offsets1, val.indices);
-                size_t offset2 = get_offset<N,N,zero_based>(strides2, offsets2, val.indices);
-                const T* p1 = data1 + offset1;
-                const T* p2 = data2 + offset2;
-                size_t stride1 = strides1[val.index]; 
-                size_t stride2 = strides2[val.index]; 
-                val.indices[val.index] = dim1[val.index] - 1;
-                size_t end_offset1 = get_offset<N,N,zero_based>(strides1, offsets1, val.indices);
-                const T* end = data1 + end_offset1;
-                while (p1 <= end)
-                {
-                    if (*p1 != *p2)
-                    {
-                        return false;
-                    }
-                    p1 += stride1;
-                    p2 += stride2;
-                }
-            }
-        }
-        return true;
+        std::array<size_t,N> indices;
+        bool result = compare(dim1, data1, strides1, offsets1, data2, strides2, offsets2, indices, N-1); 
+        return result;
     }
+
+    template <typename T, size_t N>
+    static bool compare(const std::array<size_t,N>& dim,
+                        const T* data1, const std::array<size_t,N>& strides1, const std::array<size_t,N>& offsets1, 
+                        const T* data2, const std::array<size_t,N>& strides2, const std::array<size_t,N>& offsets2, 
+                        std::array<size_t,N>& indices, size_t index)
+    {
+    if (index == 0)
+    {
+        for (size_t i = 0; i < dim[index]; ++i)
+        {
+            indices[index] = 0;
+            size_t offset1 = get_offset<N,N,zero_based>(strides1,offsets1,indices);
+            size_t offset2 = get_offset<N,N,zero_based>(strides2,offsets2,indices);
+            const T* p1 = data1 + offset1;
+            const T* p2 = data2 + offset2;
+            const T* end = p1 + dim[index];
+            while (p1 != end)
+            {
+                if (*p1++ != *p2++)
+                {
+                    return false;
+                }
+            }
+        }
+    }
+    else
+    {
+        for (size_t i = 0; i < dim[index]; ++i)
+        {
+            indices[index] = i;
+            if (!compare(dim,data1,strides1,offsets1,data2,strides2,offsets2,indices,index-1))
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
 };
 
 template <typename T, size_t N, typename Order=row_major, typename Base=zero_based, typename Allocator=std::allocator<T>>
@@ -1272,7 +1271,7 @@ public:
     typedef const T& const_reference;
     typedef Order order_type;
     typedef Base base_type;
-    typedef array_wrapper<slice,M> slices_type;
+    typedef std::array<slice,M> slices_type;
 protected:
     TPtr data_;
     size_t size_;

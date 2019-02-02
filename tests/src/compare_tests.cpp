@@ -136,7 +136,6 @@ TEST_CASE("compare row major ndarray")
     CHECK_FALSE(v != w);
 }
 
-#if 0
 TEST_CASE("compare column major ndarray")
 {
     ndarray<double,2,column_major> a = {{1.0,2.0,3.0,4.0},{5.0,6.0,7.0,8.0}};
@@ -163,5 +162,5 @@ TEST_CASE("compare column major ndarray")
     CHECK(v == w);
     CHECK_FALSE(v != w);
 }
-#endif
+
 
