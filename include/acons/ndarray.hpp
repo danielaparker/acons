@@ -140,8 +140,7 @@ get_offset(const std::array<size_t,n>& strides,
            const std::array<size_t,n>& offsets, 
            size_t index) 
 {
-    //return offsets[n-1] + Base::rebase_to_zero(index)*strides[n-1];
-    return  Base::rebase_to_zero(index+offsets[n-1])*strides[n-1];
+    return  Base::rebase_to_zero(index)*strides[n-1] + offsets[n-1]*strides[n-1];
 }
 
 template <size_t n, typename Base, size_t m, typename... Indices>
@@ -166,7 +165,6 @@ get_offset(const std::array<size_t,N>& strides,
     size_t offset = 0;
     for (size_t i = 0; i < M; ++i)
     {
-        //offset += offsets[i] + Base::rebase_to_zero(indices[i])*strides[i];
         offset += Base::rebase_to_zero(indices[i]+offsets[i])*strides[i];
     }
 
@@ -299,71 +297,6 @@ struct row_major
         }
         return true;
     }
-/*
-    template <typename T, size_t N>
-    static bool compare(const T* data1, const std::array<size_t,N>& dim1, const std::array<size_t,N>& strides1, const std::array<size_t,N>& offsets1, 
-                        const T* data2, const std::array<size_t,N>& dim2, const std::array<size_t,N>& strides2, const std::array<size_t,N>& offsets2)
-    {
-        for (size_t i = 0; i < N; ++i)
-        {
-            if (dim1[i] != dim2[i])
-            {
-                return false;
-            }
-        }
-
-        size_t stack_depth = 1;
-        for (size_t i = 0; i+1 < dim1.size(); ++i)
-        {
-            stack_depth *= dim1[i];
-        }
-        std::vector<snapshot<N>> stack(stack_depth);
-
-        size_t count = 1;
-        stack[0].index = 0;
-        while (count != 0)
-        {
-            auto val = stack[count-1];
-            --count;
-
-            if (val.index+1 < N)
-            {
-                for (size_t i = dim1[val.index]; i-- > 0; )
-                {
-                    val.indices[val.index] = i; 
-                    stack[count].indices = val.indices;
-                    stack[count].index = val.index+1;
-                    count++;
-                }
-            }
-            else if (val.index+1 == N)
-            {
-                val.indices[val.index] = 0;
-                size_t offset1 = get_offset<N,N,zero_based>(strides1, offsets1, val.indices);
-                size_t offset2 = get_offset<N,N,zero_based>(strides2, offsets2, val.indices);
-                const T* p1 = data1 + offset1;
-                const T* p2 = data2 + offset2;
-                size_t stride1 = strides1[N-1];
-                size_t stride2 = strides2[N-1];
-
-                val.indices[val.index] = dim1[val.index]-1;
-                size_t end_offset1 = get_offset<N,N,zero_based>(strides1, offsets1, val.indices);
-                const T* end = data1 + end_offset1;
-
-                while (p1 <= end)
-                {
-                    if (*p1 != *p2)
-                    {
-                        return false;
-                    }
-                    p1 += stride1;
-                    p2 += stride2;
-                }
-            }
-        }
-        return true;
-    }
-*/
 };
 
 struct column_major
@@ -1262,6 +1195,73 @@ std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os, ndarray<T, 
     return os;
 }
 
+template <typename T, size_t M, typename TPtr>
+class const_ndarray_view_iterator_one
+{
+    TPtr data_;
+    size_t stride_;
+    size_t offset_;
+    TPtr p_;
+public:
+    typedef T value_type;
+    typedef std::ptrdiff_t difference_type;
+    typedef TPtr pointer;
+    typedef const T& reference;
+    typedef std::input_iterator_tag iterator_category;
+
+    const_ndarray_view_iterator_one(TPtr data, size_t stride, size_t offset)
+        : data_(data), stride_(stride), offset_(offset)
+    {
+        p_ = data_ + offset_*stride_;
+    }
+
+    const_ndarray_view_iterator_one(const const_ndarray_view_iterator_one&) = default;
+    const_ndarray_view_iterator_one(const_ndarray_view_iterator_one&&) = default;
+    const_ndarray_view_iterator_one& operator=(const const_ndarray_view_iterator_one&) = default;
+    const_ndarray_view_iterator_one& operator=(const_ndarray_view_iterator_one&&) = default;
+
+    const_ndarray_view_iterator_one& operator++()
+    {
+        p_ += stride_;
+        return *this;
+    }
+
+    const_ndarray_view_iterator_one operator++(int) // postfix increment
+    {
+        const_ndarray_view_iterator_one temp(*this);
+        ++(*this);
+        return temp;
+    }
+
+    reference operator*() const
+    {
+        return *p_;
+    }
+
+    friend bool operator==(const const_ndarray_view_iterator_one& it1, const const_ndarray_view_iterator_one& it2)
+    {
+        return it1.p_ == it2.p_;
+    }
+    friend bool operator!=(const const_ndarray_view_iterator_one& it1, const const_ndarray_view_iterator_one& it2)
+    {
+        return !(it1 == it2);
+    }
+};
+
+
+template <typename T, size_t M, typename TPtr, typename Enable = void>
+struct const_ndarray_view_member_types
+{
+    typedef void iterator;
+};
+
+template <typename T, size_t M, typename TPtr>
+struct const_ndarray_view_member_types<T,M,TPtr,typename std::enable_if<M == 1>::type>
+{
+    typedef const_ndarray_view_iterator_one<T,M,TPtr> iterator;
+};
+
+
 template <typename T, size_t M, typename Order, typename Base, typename TPtr>
 class const_ndarray_view 
 {
@@ -1272,6 +1272,7 @@ public:
     typedef Order order_type;
     typedef Base base_type;
     typedef std::array<slice,M> slices_type;
+    typedef typename const_ndarray_view_member_types<T,M,TPtr>::iterator iterator;
 protected:
     TPtr data_;
     size_t size_;
@@ -1458,6 +1459,16 @@ public:
         assert(off < size());
         return data_[off];
     }
+
+    iterator begin()
+    {
+        return iterator(data_,strides_[0],offsets_[0]);
+    }
+
+    iterator end()
+    {
+        return iterator(data_,strides_[0],(offsets_[0]+size(0)));
+    }
 };
 
 template <typename CharT, typename T, size_t M, typename Order, typename Base, typename TPtr>
@@ -1555,6 +1566,8 @@ public:
     using super_type::dimensions;
     using super_type::strides;
     using super_type::offsets;
+    using super_type::begin;
+    using super_type::end;
     using super_type::operator();
 
     T* data()
