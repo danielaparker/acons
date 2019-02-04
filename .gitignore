@@ -11,9 +11,6 @@
 **/temp
 **/.vs
 
-build/vs2015
-tests/build/vs2015
-
 notes
 
 

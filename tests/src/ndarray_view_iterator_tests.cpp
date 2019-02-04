@@ -22,6 +22,7 @@ TEST_CASE("1-dim ndarray ndarray_view iterator tests")
         CHECK((*it++ == 2));
         CHECK((it == v.end()));
     }
+
     SECTION("const_ndarray_view slice(1,5,2)")
     {
         const_ndarray_view<double, 1, row_major> v(a, {slice(1,5,2)});
@@ -59,8 +60,21 @@ TEST_CASE("1-dim ndarray ndarray_view iterator tests")
         CHECK((*it++ == 4));
         CHECK((it == v.end()));
     }
-}
+    SECTION("ndarray_view slice(1,5,2) mutate")
+    {
+        ndarray_view<double, 1, row_major> v(a, {slice(1,5,2)});
+        REQUIRE(v.size(0) == 2);
+        CHECK(v(0) == 2);
+        CHECK(v(1) == 4);
 
+        auto it = v.begin();
+        *it = 8;
+        CHECK((*it++ == 8));
+        *it = 9;
+        CHECK((*it++ == 9));
+        CHECK((it == v.end()));
+    }
+}
 TEST_CASE("2-dim ndarray ndarray_view iterator tests")
 {
     ndarray<double,2> a = {{1.0,2.0,3.0,4.0},{5.0,6.0,7.0,8.0},{9.0,10.0,11.0,12.0}};

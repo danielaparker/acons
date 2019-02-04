@@ -13,7 +13,7 @@ TEST_CASE("compare 2 x 2 row major ndarray")
     ndarray_view<double,2,row_major> v(a);
     ndarray_view<double,2,row_major> w(b);
 
-    CHECK_FALSE(v == w);
+    CHECK_FALSE((v == w));
 }
 TEST_CASE("compare 2 x 2 column major ndarray")
 {
@@ -23,7 +23,7 @@ TEST_CASE("compare 2 x 2 column major ndarray")
     ndarray_view<double,2,column_major> v(a);
     ndarray_view<double,2,column_major> w(b);
 
-    CHECK_FALSE(v == w);
+    CHECK_FALSE((v == w));
 }
 
 TEST_CASE("compare 2 x 3 x 4 row major ndarray")
@@ -34,14 +34,14 @@ TEST_CASE("compare 2 x 3 x 4 row major ndarray")
     ndarray_view<double,3,row_major> v(a);
     ndarray_view<double,3,row_major> w(b);
 
-    CHECK(c == b);
-    CHECK(c == v);
-    CHECK(c == w);
+    CHECK((c == b));
+    CHECK((c == v));
+    CHECK((c == w));
 
     v(0,0,0) = 2;
     w(1,2,3) = 2;
-    CHECK_FALSE(c == v);
-    CHECK_FALSE(c == w);
+    CHECK_FALSE((c == v));
+    CHECK_FALSE((c == w));
 }
 
 TEST_CASE("compare 2 x 2 ndarray_view on 2 x 3 row major")
@@ -57,7 +57,7 @@ TEST_CASE("compare 2 x 2 ndarray_view on 2 x 3 row major")
     b(0,2) = 8;
     b(1,2) = 9;
 
-    CHECK(v == w);
+    CHECK((v == w));
 }
 
 TEST_CASE("compare 2 x 2 ndarray_view on 4 x 4 row major")
@@ -88,7 +88,7 @@ TEST_CASE("compare 2 x 2 ndarray_view on 4 x 4 row major")
     //std::cout << "v: " << v << "\n";
     //std::cout << "w: " << w << "\n";
 
-    CHECK(v == w);
+    CHECK((v == w));
 }
 
 TEST_CASE("compare 2 x 3 x 4 column major ndarray")
@@ -99,14 +99,14 @@ TEST_CASE("compare 2 x 3 x 4 column major ndarray")
     ndarray_view<double,3,column_major> v(a);
     ndarray_view<double,3,column_major> w(b);
 
-    CHECK(c == b);
-    CHECK(c == v);
-    CHECK(c == w);
+    CHECK((c == b));
+    CHECK((c == v));
+    CHECK((c == w));
 
     v(0,0,0) = 2;
     w(1,2,3) = 2;
-    CHECK_FALSE(c == v);
-    CHECK_FALSE(c == w);
+    CHECK_FALSE((c == v));
+    CHECK_FALSE((c == w));
 }
 
 TEST_CASE("compare row major ndarray")
@@ -116,24 +116,24 @@ TEST_CASE("compare row major ndarray")
     ndarray<double,2,row_major> c = {{1.0,4.0,2.0,3.0},{5.0,8.0,6.0,7.0}};
     ndarray<double,2,row_major> d = {{1.0,2.0,3.0,0.0},{5.0,6.0,7.0,8.0}};
 
-    CHECK(a == b);
-    CHECK_FALSE(a != b);
+    CHECK((a == b));
+    CHECK_FALSE((a != b));
 
-    CHECK_FALSE(a == c);
+    CHECK_FALSE((a == c));
     CHECK(a != c);
 
-    CHECK_FALSE(a == d);
-    CHECK(a != d);
+    CHECK_FALSE((a == d));
+    CHECK((a != d));
 
     ndarray_view<double, 1, row_major> u(a, { 1 }, {slice(0,2)});
     ndarray_view<double, 1, row_major> v(c, { 1 }, {slice(0,2)});
     ndarray_view<double, 1, row_major> w(c, { 1 }, {slice(0,2)});
 
-    CHECK_FALSE(u == v);
-    CHECK(u != v);
+    CHECK_FALSE((u == v));
+    CHECK((u != v));
 
-    CHECK(v == w);
-    CHECK_FALSE(v != w);
+    CHECK((v == w));
+    CHECK_FALSE((v != w));
 }
 
 TEST_CASE("compare column major ndarray")
@@ -144,23 +144,23 @@ TEST_CASE("compare column major ndarray")
     ndarray<double,2,column_major> d = {{1.0,2.0,3.0,0.0},{5.0,6.0,7.0,8.0}};
 
     CHECK((a == b));
-    CHECK_FALSE(a != b);
+    CHECK_FALSE((a != b));
 
-    CHECK_FALSE(a == c);
-    CHECK(a != c);
+    CHECK_FALSE((a == c));
+    CHECK((a != c));
 
-    CHECK_FALSE(a == d);
-    CHECK(a != d);
+    CHECK_FALSE((a == d));
+    CHECK((a != d));
 
     ndarray_view<double,1,column_major> u(a,{1},{slice(0,2)});
     ndarray_view<double,1,column_major> v(c,{1},{slice(0,2)});
     ndarray_view<double,1,column_major> w(c,{1},{slice(0,2)});
 
-    CHECK_FALSE(u == v);
-    CHECK(u != v);
+    CHECK_FALSE((u == v));
+    CHECK((u != v));
 
-    CHECK(v == w);
-    CHECK_FALSE(v != w);
+    CHECK((v == w));
+    CHECK_FALSE((v != w));
 }
 
 

@@ -1238,7 +1238,7 @@ public:
     typedef T value_type;
     typedef std::ptrdiff_t difference_type;
     typedef TPtr pointer;
-    typedef const T& reference;
+    typedef typename std::conditional<std::is_const<typename std::remove_pointer<TPtr>::type>::value,const T&,T&>::type reference;
     typedef std::input_iterator_tag iterator_category;
 
     ndarray_view_iterator_one(TPtr data, size_t stride, size_t offset)
@@ -1292,7 +1292,7 @@ public:
     typedef std::array<slice,M> slices_type;
     typedef typename member_types::value_type value_type;
     typedef typename member_types::const_reference const_reference;
-    typedef typename member_types::iterator iterator;
+    typedef typename member_types::iterator const_iterator;
 protected:
     TPtr data_;
     size_t size_;
@@ -1480,14 +1480,23 @@ public:
         return data_[off];
     }
 
-    iterator begin()
+    const_iterator begin() const
     {
-        return iterator(data_,strides_[0],offsets_[0]);
+        return const_iterator(data_,strides_[0],offsets_[0]);
     }
 
-    iterator end()
+    const_iterator end() const
     {
-        return iterator(data_,strides_[0],(offsets_[0]+size(0)));
+        return const_iterator(data_,strides_[0],(offsets_[0]+size(0)));
+    }
+    const_iterator cbegin() const
+    {
+        return const_iterator(data_,strides_[0],offsets_[0]);
+    }
+
+    const_iterator cend() const
+    {
+        return const_iterator(data_,strides_[0],(offsets_[0]+size(0)));
     }
 };
 
@@ -1515,7 +1524,9 @@ public:
     using typename super_type::order_type;
     using typename super_type::base_type;
     using typename super_type::const_reference;
+    using typename super_type::const_iterator;
     typedef typename member_types::reference reference;
+    typedef typename member_types::iterator iterator;
 public:
     ndarray_view()
         : super_type()
@@ -1582,16 +1593,14 @@ public:
         : super_type(data, dim)
     {
     }
-
     using super_type::data; 
     using super_type::size;
     using super_type::empty;
     using super_type::dimensions;
     using super_type::strides;
     using super_type::offsets;
-    using super_type::begin;
-    using super_type::end;
-    using super_type::operator();
+    using super_type::cbegin;
+    using super_type::cend;
 
     T* data()
     {
@@ -1611,6 +1620,41 @@ public:
         size_t off = get_offset<M, M, Base>(this->strides_, this->offsets_, indices);
         assert(off < size());
         return this->data_[off];
+    }
+
+    template <typename... Indices>
+    const T& operator()(size_t index, Indices... indices) const
+    {
+        size_t off = get_offset<M, Base, 0>(this->strides_, this->offsets_, index, indices...);
+        assert(off < size());
+        return this->data_[off];
+    }
+
+    const T& operator()(const std::array<size_t, M>& indices) const
+    {
+        size_t off = get_offset<M, M, Base>(this->strides_, this->offsets_, indices);
+        assert(off < size());
+        return this->data_[off];
+    }
+
+    iterator begin()
+    {
+        return iterator(this->data_,this->strides_[0],this->offsets_[0]);
+    }
+
+    iterator end() 
+    {
+        return iterator(this->data_,this->strides_[0],(this->offsets_[0]+size(0)));
+    }
+
+    const_iterator begin() const
+    {
+        return super_type::begin();
+    }
+
+    const_iterator end() const
+    {
+        return super_type::end();
     }
 };
 
