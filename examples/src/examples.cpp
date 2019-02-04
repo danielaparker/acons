@@ -24,22 +24,6 @@ void row_major_zero_based_example()
 
     std::cout << "(3)\n" << s << "\n\n";
 
-    // Iterate over the 2-dimensional view
-    auto begin = s.begin();
-    auto end = s.end();
-
-    std::cout << "(4)\n";
-
-    for (auto it = begin; it != end; ++it)
-    {
-        if (it != begin)
-        {
-            std::cout << ",";
-        }
-        std::cout << *it;
-    }
-    std::cout << "\n\n";
-
     // Change one of the view's elements
     s(1,0) = 99;
 
@@ -66,22 +50,6 @@ void column_major_one_based_example()
     ndarray_view<double, 2, column_major, one_based> s(a,{2});
 
     std::cout << "(3)\n" << s << "\n\n";
-
-    // Iterate over the 2-dimensional view
-    auto begin = s.begin();
-    auto end = s.end();
-
-    std::cout << "(4)\n";
-
-    for (auto it = begin; it != end; ++it)
-    {
-        if (it != begin)
-        {
-            std::cout << ",";
-        }
-        std::cout << *it;
-    }
-    std::cout << "\n\n";
 
     // Change one of the view's elements
     s(2,1) = 99;
