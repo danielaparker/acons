@@ -151,6 +151,117 @@ void boost_example()
         }
     }
 
+    // subarray
+    //typedef boost::multi_array_types::index_range range;
+    std::cout << "subarray\n";
+    array_type::subarray<2>::type s = a[0];
+    for (array_type::index i = 0; i < s.shape()[0]; ++i)
+    {
+        for (array_type::index j = 0; j < s.shape()[1]; ++j)
+        {
+            if (j > 0)
+            {
+                std::cout << ",";
+            }
+            std::cout << s[i][j];
+        }
+        std::cout << "\n";
+    }
+    std::cout << "\n";
+/*
+    for (array_type::index i = 0; i != 2; ++i)
+    {
+        for (array_type::index j = 0; j != 2; ++j)
+        {
+            for (array_type::index k = 0; k != 2; ++k) 
+            {
+                assert(v[i][j][k] == a[i][j+1][k*2]);
+            }
+        }
+    }
+*/
+    for (array_type::index i = 0; i != 2; ++i)
+    {
+        for (array_type::index j = 0; j != 2; ++j)
+        {
+            for (array_type::index k = 0; k != 2; ++k) 
+            {
+                if (k > 0)
+                {
+                    std::cout << ",";
+                }
+                std::cout << v[i][j][k];
+            }
+            std::cout << "\n";
+        }
+        std::cout << "\n";
+    }
+}
+
+void boost_example_fortran()
+{
+    // Create a 3D array that is 2 x 3 x 4
+    typedef boost::multi_array<double, 3> array_type;
+    typedef array_type::index index;
+    array_type a(boost::extents[2][3][4],boost::fortran_storage_order());
+
+    // Assign values to the elements
+    int values = 0;
+    for(index i = 0; i != 2; ++i) 
+        for(index j = 0; j != 3; ++j)
+            for(index k = 0; k != 4; ++k)
+                a[i][j][k] = values++;
+
+    // Verify values
+    int verify = 0;
+    for(index i = 0; i != 2; ++i) 
+    {
+        for(index j = 0; j != 3; ++j)
+        {
+            for(index k = 0; k != 4; ++k)
+            {
+                if (k > 0)
+                {
+                    std::cout << ",";
+                }
+                std::cout << a[i][j][k];
+            }
+            std::cout << "\n";
+        }
+        std::cout << "\n";
+    }
+
+    typedef boost::multi_array_types::index_range range;
+    array_type::array_view<3>::type v = a[ boost::indices[range(0,2)][range(1,3)][range(0,4,2)]];
+
+    for (array_type::index i = 0; i != 2; ++i)
+    {
+        for (array_type::index j = 0; j != 2; ++j)
+        {
+            for (array_type::index k = 0; k != 2; ++k) 
+            {
+                assert(v[i][j][k] == a[i][j+1][k*2]);
+            }
+        }
+    }
+
+    // subarray
+    //typedef boost::multi_array_types::index_range range;
+    std::cout << "subarray\n";
+    array_type::subarray<2>::type s = a[0];
+    for (array_type::index i = 0; i < s.shape()[0]; ++i)
+    {
+        for (array_type::index j = 0; j < s.shape()[1]; ++j)
+        {
+            if (j > 0)
+            {
+                std::cout << ",";
+            }
+            std::cout << s[i][j];
+        }
+        std::cout << "\n";
+    }
+    std::cout << "\n";
     for (array_type::index i = 0; i != 2; ++i)
     {
         for (array_type::index j = 0; j != 2; ++j)
@@ -209,6 +320,8 @@ int main()
     acons_example();
     std::cout << "\n\nboost" << "\n\n";
     boost_example();
+    std::cout << "\n\nboost 2" << "\n\n";
+    boost_example_fortran();
     std::cout << "\n\nboost 2" << "\n\n";
     boost_example2();
 }
