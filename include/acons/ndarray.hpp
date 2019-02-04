@@ -515,12 +515,6 @@ struct init_helper
         dim[Array::dimension - Pos] = n;
         next::init(dim, a, args...);
     }
-
-    template <typename T, typename Allocator, typename... Args>
-    static Allocator get_allocator(size_t n, Args... args)
-    {
-        return next:: template get_allocator<T,Allocator>(args...);
-    }
 };
 
 template<>
@@ -546,27 +540,6 @@ struct init_helper<0>
     static void init(std::array<size_t, Array::dimension>& dim, Array& a, typename Array::const_reference val, const typename Array::allocator_type&)
     {
         a.init(val);
-    }
-
-    template <typename T, typename Allocator>
-    static Allocator get_allocator()
-    {
-        return Allocator();
-    }
-    template <typename T, typename Allocator>
-    static Allocator get_allocator(const Allocator& allocator)
-    {
-        return allocator;
-    }
-    template <typename T, typename Allocator>
-    static Allocator get_allocator(const T& val)
-    {
-        return Allocator();
-    }
-    template <typename T, typename Allocator>
-    static Allocator get_allocator(const T& val, const Allocator& allocator)
-    {
-        return allocator;
     }
 };
 
@@ -621,7 +594,7 @@ public:
 
     template <typename... Args>
     ndarray(size_t i, Args... args)
-        : super_type(init_helper<N>::template get_allocator<T,Allocator>(i, args ...)) 
+        : super_type(allocator_type()) 
     {
         init_helper<N>::init(dim_, *this, i, args ...);
     }
