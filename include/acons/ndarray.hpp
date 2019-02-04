@@ -561,6 +561,18 @@ public:
     typedef const T* const_iterator;
     typedef Order order_type;
     typedef Base base_type;
+
+    template <size_t M>
+    struct array_view
+    {
+        typedef ndarray_view<T,M,Order,Base> type;
+    };
+
+    template <size_t M>
+    struct const_array_view
+    {
+        typedef const_ndarray_view<T,M,Order,Base> type;
+    };
 private:
     friend struct init_helper<0>;
     friend class ndarray_view<T, N, Order, Base>;
