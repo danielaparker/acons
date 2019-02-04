@@ -378,7 +378,6 @@ struct column_major
     return true;
 }
 };
-
 template <typename T, size_t N, typename Order=row_major, typename Base=zero_based, typename Allocator=std::allocator<T>>
 class ndarray;
 
@@ -387,6 +386,27 @@ class const_ndarray_view;
 
 template <typename T, size_t M, typename Order=row_major, typename Base=zero_based>
 class ndarray_view;  
+
+template <typename T, size_t M, typename TPtr>
+class ndarray_view_iterator_one;
+
+template <typename T, size_t M, typename Order, typename Base, typename TPtr, typename Enable = void>
+struct ndarray_view_member_types
+{
+    typedef ndarray<T,M-1,Order,Base> value_type;
+    typedef ndarray_view<T,M-1,Order,Base> reference;
+    typedef const_ndarray_view<T,M-1,Order,Base,TPtr> const_reference;
+    typedef void iterator;
+};
+
+template <typename T, size_t M, typename Order, typename Base, typename TPtr>
+struct ndarray_view_member_types<T,M,Order,Base,TPtr,typename std::enable_if<M == 1>::type>
+{
+    typedef T value_type;
+    typedef T& reference;
+    typedef const T& const_reference;
+    typedef ndarray_view_iterator_one<T,M,TPtr> iterator;
+};
 
 // ndarray
 
@@ -553,7 +573,7 @@ class ndarray : public ndarray_base<Allocator>
 public:
     using typename super_type::allocator_type;
     using typename super_type::pointer;
-    typedef T value_type;
+    typedef T element_type;
     typedef T& reference;
     typedef const T& const_reference;
     static const size_t dimension = N;
@@ -563,13 +583,13 @@ public:
     typedef Base base_type;
 
     template <size_t M>
-    struct array_view
+    struct view
     {
         typedef ndarray_view<T,M,Order,Base> type;
     };
 
     template <size_t M>
-    struct const_array_view
+    struct const_view
     {
         typedef const_ndarray_view<T,M,Order,Base> type;
     };
@@ -1179,7 +1199,7 @@ void print(std::basic_ostream<CharT>& os,
     }
     else
     {
-        const_ndarray_view<typename A::value_type, 1, typename A::order_type, typename A::base_type> v(a,indices);
+        const_ndarray_view<typename A::element_type, 1, typename A::order_type, typename A::base_type> v(a,indices);
 
         auto begin = v.begin();
         auto end = v.end();
@@ -1208,7 +1228,7 @@ std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os, ndarray<T, 
 }
 
 template <typename T, size_t M, typename TPtr>
-class const_ndarray_view_iterator_one
+class ndarray_view_iterator_one
 {
     TPtr data_;
     size_t stride_;
@@ -1221,26 +1241,26 @@ public:
     typedef const T& reference;
     typedef std::input_iterator_tag iterator_category;
 
-    const_ndarray_view_iterator_one(TPtr data, size_t stride, size_t offset)
+    ndarray_view_iterator_one(TPtr data, size_t stride, size_t offset)
         : data_(data), stride_(stride), offset_(offset)
     {
         p_ = data_ + offset_*stride_;
     }
 
-    const_ndarray_view_iterator_one(const const_ndarray_view_iterator_one&) = default;
-    const_ndarray_view_iterator_one(const_ndarray_view_iterator_one&&) = default;
-    const_ndarray_view_iterator_one& operator=(const const_ndarray_view_iterator_one&) = default;
-    const_ndarray_view_iterator_one& operator=(const_ndarray_view_iterator_one&&) = default;
+    ndarray_view_iterator_one(const ndarray_view_iterator_one&) = default;
+    ndarray_view_iterator_one(ndarray_view_iterator_one&&) = default;
+    ndarray_view_iterator_one& operator=(const ndarray_view_iterator_one&) = default;
+    ndarray_view_iterator_one& operator=(ndarray_view_iterator_one&&) = default;
 
-    const_ndarray_view_iterator_one& operator++()
+    ndarray_view_iterator_one& operator++()
     {
         p_ += stride_;
         return *this;
     }
 
-    const_ndarray_view_iterator_one operator++(int) // postfix increment
+    ndarray_view_iterator_one operator++(int) // postfix increment
     {
-        const_ndarray_view_iterator_one temp(*this);
+        ndarray_view_iterator_one temp(*this);
         ++(*this);
         return temp;
     }
@@ -1250,41 +1270,29 @@ public:
         return *p_;
     }
 
-    friend bool operator==(const const_ndarray_view_iterator_one& it1, const const_ndarray_view_iterator_one& it2)
+    friend bool operator==(const ndarray_view_iterator_one& it1, const ndarray_view_iterator_one& it2)
     {
         return it1.p_ == it2.p_;
     }
-    friend bool operator!=(const const_ndarray_view_iterator_one& it1, const const_ndarray_view_iterator_one& it2)
+    friend bool operator!=(const ndarray_view_iterator_one& it1, const ndarray_view_iterator_one& it2)
     {
         return !(it1 == it2);
     }
 };
 
-
-template <typename T, size_t M, typename TPtr, typename Enable = void>
-struct const_ndarray_view_member_types
-{
-    typedef void iterator;
-};
-
-template <typename T, size_t M, typename TPtr>
-struct const_ndarray_view_member_types<T,M,TPtr,typename std::enable_if<M == 1>::type>
-{
-    typedef const_ndarray_view_iterator_one<T,M,TPtr> iterator;
-};
-
-
 template <typename T, size_t M, typename Order, typename Base, typename TPtr>
 class const_ndarray_view 
 {
+    typedef ndarray_view_member_types<T,M,Order,Base,TPtr> member_types;
 public:
     static const size_t dimension = M;
-    typedef T value_type;
-    typedef const T& const_reference;
+    typedef T element_type;
     typedef Order order_type;
     typedef Base base_type;
     typedef std::array<slice,M> slices_type;
-    typedef typename const_ndarray_view_member_types<T,M,TPtr>::iterator iterator;
+    typedef typename member_types::value_type value_type;
+    typedef typename member_types::const_reference const_reference;
+    typedef typename member_types::iterator iterator;
 protected:
     TPtr data_;
     size_t size_;
@@ -1499,12 +1507,15 @@ std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os,
 template <typename T, size_t M, typename Order, typename Base>
 class ndarray_view : public const_ndarray_view<T, M, Order, Base, T*>
 {
+    typedef ndarray_view_member_types<T,M,Order,Base,T*> member_types;
     typedef const_ndarray_view<T, M, Order, Base, T*> super_type;
 public:
     using typename super_type::slices_type;
-    using typename super_type::value_type;
+    using typename super_type::element_type;
     using typename super_type::order_type;
     using typename super_type::base_type;
+    using typename super_type::const_reference;
+    typedef typename member_types::reference reference;
 public:
     ndarray_view()
         : super_type()

@@ -12,7 +12,7 @@ TEST_CASE("1-dim row_major ndarray ndarray_view size tests")
 
     SECTION("size tests")
     {
-        an_array::array_view<1>::type v(a, {slice(1,3)});
+        an_array::view<1>::type v(a, {slice(1,3)});
 
         REQUIRE(v.size(0) == 2); 
         CHECK(v(0) == 1);
@@ -20,7 +20,7 @@ TEST_CASE("1-dim row_major ndarray ndarray_view size tests")
     }
     SECTION("const_array_view<1>")
     {
-        an_array::const_array_view<1>::type v(a.data()+1, {2});
+        an_array::const_view<1>::type v(a.data()+1, {2});
 
         REQUIRE(v.size(0) == 2); 
         CHECK(v(0) == 1);
@@ -28,7 +28,7 @@ TEST_CASE("1-dim row_major ndarray ndarray_view size tests")
     }
     SECTION("array_view<1>")
     {
-        an_array::array_view<1>::type v(a.data()+1, {2});
+        an_array::view<1>::type v(a.data()+1, {2});
 
         REQUIRE(v.size(0) == 2); 
         CHECK(v(0) == 1);
@@ -43,7 +43,7 @@ TEST_CASE("2-dim row_major ndarray ndarray_view size tests")
 
     SECTION("size tests")
     {
-        an_array::array_view<1>::type v(a, {0}, {slice(2,4)});
+        an_array::view<1>::type v(a, {0}, {slice(2,4)});
 
         REQUIRE(v.size(0) == 2); 
         CHECK(v(0) == 3.0);
