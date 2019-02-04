@@ -140,7 +140,9 @@ get_offset(const std::array<size_t,n>& strides,
            const std::array<size_t,n>& offsets, 
            size_t index) 
 {
-    return  Base::rebase_to_zero(index)*strides[n-1] + offsets[n-1]*strides[n-1];
+    size_t i = Base::rebase_to_zero(index)*strides[m] + offsets[m] /**strides[n-1]*/;
+    //std::cout << "m: " << m  << ", index: " << index << ", stride " << strides[m] << ", offset " << offsets[m] << ", i: " << i << "\n";
+    return i;
 }
 
 template <size_t n, typename Base, size_t m, typename... Indices>
@@ -151,7 +153,9 @@ get_offset(const std::array<size_t,n>& strides,
 {
     const size_t mplus1 = m + 1;
     //size_t i = offsets[m] + Base::rebase_to_zero(index)*strides[m] + get_offset<n, Base, mplus1>(strides,offsets,indices...);
-    size_t i = Base::rebase_to_zero(index+offsets[m])*strides[m] + get_offset<n, Base, mplus1>(strides,offsets,indices...);
+    size_t i = offsets[m] + Base::rebase_to_zero(index/*+offsets[m]*/)*strides[m] + get_offset<n, Base, mplus1>(strides,offsets,indices...);
+
+    //std::cout << "m: " << m << ", index: " << index << ", stride " << strides[m] << ", offset " << offsets[m] << ", rest: " << get_offset<n, Base, mplus1>(strides,offsets,indices...) << ", i: " << i << "\n";
 
     return i;
 }
@@ -237,10 +241,10 @@ struct row_major
                                const std::array<slice,N>& slices, 
                                std::array<size_t,N>& offsets)
     {
-        offsets[N-1] += Base::rebase_to_zero(slices[N-1].start());
+        offsets[N-1] += Base::rebase_to_zero(slices[N-1].start()) * strides[N-1];
         for (size_t i = 0; i+1 < N; ++i)
         {
-            offsets[i] += Base::rebase_to_zero(slices[i].start()) /* * strides[i] */; 
+            offsets[i] += Base::rebase_to_zero(slices[i].start()) * strides[i]; 
         }
     }
     template <typename T, size_t N>
@@ -317,10 +321,10 @@ struct column_major
                                const std::array<slice,N>& slices, 
                                std::array<size_t,N>& offsets)
     {
-        offsets[0] += Base::rebase_to_zero(slices[0].start());
+        offsets[0] += Base::rebase_to_zero(slices[0].start()) * strides[0];
         for (size_t i = 1; i < N; ++i)
         {
-            offsets[i] += Base::rebase_to_zero(slices[i].start()) /* *strides[i] */; 
+            offsets[i] += Base::rebase_to_zero(slices[i].start()) * strides[i]; 
         }
     }
     template <typename T, size_t N>
@@ -1244,7 +1248,7 @@ public:
     ndarray_view_iterator_one(TPtr data, size_t stride, size_t offset)
         : data_(data), stride_(stride), offset_(offset)
     {
-        p_ = data_ + offset_*stride_;
+        p_ = data_ + offset_;
     }
 
     ndarray_view_iterator_one(const ndarray_view_iterator_one&) = default;
@@ -1324,10 +1328,14 @@ public:
         for (size_t i = 0; i < M; ++i)
         {
             dim_[i] = (slices[i].stop() - slices[i].start()) /slices[i].stride();
-            strides_[i] = a.strides()[i]*slices[i].stride();
+            strides_[i] = a.strides()[i];
         }
         offsets_.fill(0);
         Order::update_offsets<M,Base>(strides_, slices, offsets_);
+        for (size_t i = 0; i < M; ++i)
+        {
+            strides_[i] *= slices[i].stride();
+        }
     }
 
     template<size_t m = M, size_t N, size_t K, typename Allocator>
@@ -1365,10 +1373,14 @@ public:
         for (size_t i = 0; i < M; ++i)
         {
             dim_[i] = (slices[i].stop() - slices[i].start())/slices[i].stride();
-            strides_[i] = a.strides()[(N-M)+i]*slices[i].stride();
+            strides_[i] = a.strides()[(N-M)+i];
         }
         offsets_.fill(0);
         Order::update_offsets<M,Base>(strides_, slices, offsets_);
+        for (size_t i = 0; i < M; ++i)
+        {
+            strides_[i] *= slices[i].stride();
+        }
     }
 
     template<typename OtherTPtr>
@@ -1387,10 +1399,14 @@ public:
         for (size_t i = 0; i < M; ++i)
         {
             dim_[i] = (slices[i].stop() - slices[i].start())/slices[i].stride();
-            strides_[i] = other.strides()[i]*slices[i].stride();
+            strides_[i] = other.strides()[i];
         }
         offsets_.fill(0);
         Order::update_offsets<M,Base>(strides_, slices, offsets_);
+        for (size_t i = 0; i < M; ++i)
+        {
+            strides_[i] *= slices[i].stride();
+        }
     }
 
     template<size_t m = M, size_t N, size_t K, typename OtherTPtr>
@@ -1423,10 +1439,13 @@ public:
         for (size_t i = 0; i < M; ++i)
         {
             dim_[i] = (slices[i].stop() - slices[i].start())/slices[i].stride();
-            strides_[i] = other.strides()[(N-M)+i]*slices[i].stride();
-            offsets_[i] = rel + other.offsets()[(N-M)+i];
+            strides_[i] = other.strides()[(N-M)+i];
         }
         Order::update_offsets<M,Base>(strides_, slices, offsets_);
+        for (size_t i = 0; i < M; ++i)
+        {
+            strides_[i] *= slices[i].stride();
+        }
     }
 
     template<typename OtherTPtr>
@@ -1487,7 +1506,7 @@ public:
 
     const_iterator end() const
     {
-        return const_iterator(data_,strides_[0],(offsets_[0]+size(0)));
+        return const_iterator(data_,strides_[0],(offsets_[0]+size(0)*strides_[0]));
     }
     const_iterator cbegin() const
     {
@@ -1496,7 +1515,7 @@ public:
 
     const_iterator cend() const
     {
-        return const_iterator(data_,strides_[0],(offsets_[0]+size(0)));
+        return const_iterator(data_,strides_[0],(offsets_[0]+size(0)*strides_[0]));
     }
 };
 
@@ -1644,7 +1663,7 @@ public:
 
     iterator end() 
     {
-        return iterator(this->data_,this->strides_[0],(this->offsets_[0]+size(0)));
+        return iterator(this->data_,this->strides_[0],(this->offsets_[0]+size(0)*this->strides_[0]));
     }
 
     const_iterator begin() const
