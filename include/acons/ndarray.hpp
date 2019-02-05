@@ -43,14 +43,14 @@ public:
 private:
     index_type start_;
     index_type stop_;
-    index_type step_;
+    index_type stride_;
 public:
     slice()
-        : start_(0), stop_(0), step_(0)
+        : start_(0), stop_(0), stride_(0)
     {
     }
     slice(index_type start, index_type stop, index_type step=1)
-        : start_(start), stop_(stop), step_(step)
+        : start_(start), stop_(stop), stride_(step)
     {
         assert(start < stop);
     }
@@ -71,7 +71,7 @@ public:
     }
     index_type stride() const
     {
-        return step_;
+        return stride_;
     }
 };
 
