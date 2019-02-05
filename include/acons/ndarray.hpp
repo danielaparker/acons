@@ -523,23 +523,12 @@ template<>
 struct init_helper<0>
 {
     template <typename Array>
-    static void init(std::array<size_t, Array::dimension>& dim, Array& a)
+    static void init(std::array<size_t, Array::dimension>&, Array& a)
     {
         a.init();
     }
     template <typename Array>
-    static void init(std::array<size_t, Array::dimension>& dim, Array& a, typename Array::const_reference val)
-    {
-        a.init(val);
-    }
-
-    template <typename Array>
-    static void init(std::array<size_t, Array::dimension>& dim, Array& a, const typename Array::allocator_type&)
-    {
-        a.init();
-    }
-    template <typename Array>
-    static void init(std::array<size_t, Array::dimension>& dim, Array& a, typename Array::const_reference val, const typename Array::allocator_type&)
+    static void init(std::array<size_t, Array::dimension>&, Array& a, typename Array::const_reference val)
     {
         a.init(val);
     }
@@ -1023,7 +1012,7 @@ private:
         // allocator is stateless, no need to swap it
     }
 
-    void swap_allocator(ndarray<T,N,Order,Base,Allocator>& other, std::false_type, std::false_type) noexcept
+    void swap_allocator(ndarray<T,N,Order,Base,Allocator>&, std::false_type, std::false_type) noexcept
     {
         // Undefined behavior
     }

@@ -71,7 +71,7 @@ TEST_CASE("constructor 2b")
     }
 }
 
-TEST_CASE("constructor 2c")
+/*TEST_CASE("constructor 2c")
 {
     ndarray<double,3> a(1,2,3,std::allocator<double>());
 
@@ -97,9 +97,9 @@ TEST_CASE("constructor 2c")
     {
         CHECK(a.data()[i] == i);
     }
-}
+}*/
 
-TEST_CASE("constructor 2d")
+/* TEST_CASE("constructor 2d")
 {
     ndarray<double,3> a(1,2,3,10.0,std::allocator<double>());
 
@@ -113,7 +113,7 @@ TEST_CASE("constructor 2d")
     {
         CHECK(a.data()[i] == 10);
     }
-}
+}*/
 
 TEST_CASE("constructor 3")
 {
