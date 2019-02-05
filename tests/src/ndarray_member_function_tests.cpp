@@ -17,7 +17,7 @@ TEST_CASE("constructor 1")
     CHECK(a.size(0) == 0);
     CHECK(a.size(1) == 0);
     CHECK(a.size(2) == 0);
-    for (auto i : a.dimensions())
+    for (auto i : a.shape())
     {
         CHECK(i == 0);
     }

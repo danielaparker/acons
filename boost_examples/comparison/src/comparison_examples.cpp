@@ -27,13 +27,13 @@ void acons_example()
     std::cout << a << std::endl;
 
     std::cout << "dimensions: ";
-    for (size_t i = 0; i < a.dimensions().size(); ++i)
+    for (size_t i = 0; i < a.shape().size(); ++i)
     {
         if (i > 0)
         {
             std::cout << ",";
         }
-        std::cout << a.dimensions()[i];
+        std::cout << a.shape()[i];
     }
     std::cout << "\n\n";
 
@@ -51,13 +51,13 @@ void acons_example()
     ndarray_view<double,3> v(a,{slice(0,2),slice(1,3),slice(0,4,2)});
 
     std::cout << "dimensions: ";
-    for (size_t i = 0; i < v.dimensions().size(); ++i)
+    for (size_t i = 0; i < v.shape().size(); ++i)
     {
         if (i > 0)
         {
             std::cout << ",";
         }
-        std::cout << v.dimensions()[i];
+        std::cout << v.shape()[i];
     }
     std::cout << "\n\n";
 
