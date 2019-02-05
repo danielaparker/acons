@@ -4,7 +4,7 @@
 #include <sstream>
 
 using namespace acons;
-#if 0
+
 TEST_CASE("print test")
 {
     std::string expected1 = "[0,1,2,3]";
@@ -19,12 +19,14 @@ TEST_CASE("print test")
     const_ndarray_view<double, 1, row_major> cv(a, {slice(1,3)});
     ndarray_view<double, 1, row_major> v(a, {slice(1,3)});
 
-    print(os1, a);
-    CHECK(os1.str() == expected1);
+    //print(os1, a);
+    //CHECK(os1.str() == expected1);
     print(os2, cv);
+    std::cout << "output: " << os2.str() << "\n";
+
     CHECK(os2.str() == expected2);
-    print(os3, v);
-    CHECK(os3.str() == expected3);
+    //print(os3, v);
+    //CHECK(os3.str() == expected3);
 }
 
 TEST_CASE("simple ostream test")
@@ -70,6 +72,7 @@ TEST_CASE("2x2x2 ostream test")
     os << a;
     CHECK(os.str() == std::string("[[[0,1],[2,3]],[[4,5],[6,7]]]"));
 }
+
 TEST_CASE("1x2x2 ndarray_view ostream test")
 {
     ndarray<double, 3, row_major> a = { {{0,1,2,3},{4,5,6,7},{8,9,10,11}}, {{12,13,14,15},{16,17,18,19},{20,21,22,23}} };
@@ -85,6 +88,7 @@ TEST_CASE("1x2x2 ndarray_view ostream test")
     os << v;
     CHECK(os.str() == std::string("[[[16,18],[20,22]]]"));
 }
+
 TEST_CASE("ostream test")
 {
     ndarray<double,1,row_major> a0 = {1.0,2.0};
@@ -116,4 +120,4 @@ TEST_CASE("ostream test")
     os3 << a3;
     CHECK(os3.str() == std::string("[[[1,2],[3,4]],[[5,6],[7,8]]]"));
 }
-#endif
+

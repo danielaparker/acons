@@ -89,3 +89,50 @@ TEST_CASE("2-dim column_major ndarray ndarray_view size tests")
         CHECK(v(1,1) == 11.0);
     }
 }
+
+TEST_CASE("3-dim 2x3x4 ndarray ndarray_view tests")
+{
+    typedef ndarray<double,3,row_major> an_array;
+    an_array a = { {{0,1,2,3},{4,5,6,7},{8,9,10,11}}, {{12,13,14,15},{16,17,18,19},{20,21,22,23}} };
+    REQUIRE(a.size(0) == 2);
+    REQUIRE(a.size(1) == 3);
+    REQUIRE(a.size(2) == 4);
+
+    SECTION("size tests")
+    {
+        an_array::const_view<3>::type v3(a,{slice(1,2),slice(1,3),slice(0,4,2)});
+
+        REQUIRE(v3.size(0) == 1); 
+        REQUIRE(v3.size(1) == 2); 
+        REQUIRE(v3.size(2) == 2); 
+
+        CHECK(v3(0,0,0) == 16);
+        CHECK(v3(0,0,1) == 18);
+        CHECK(v3(0,1,0) == 20);
+        CHECK(v3(0,1,1) == 22);
+
+        //std::cout << "Here\n";
+        an_array::const_view<2>::type v2(v3,{0});
+        //std::cout << "After\n";
+        REQUIRE(v2.size(0) == 2);
+        REQUIRE(v2.size(1) == 2);
+        CHECK(v2(0,0) == 16);
+        //CHECK(v2(0,1) == 18);
+        //CHECK(v2(1,0) == 20);
+        //CHECK(v2(1,1) == 22);
+    }
+
+/*
+    SECTION("2-dim ndarray_view")
+    {
+        an_array::view<2>::type v(a, {slice(1,3), slice(0,4,2)});
+
+        REQUIRE(v.size(0) == 2); 
+        REQUIRE(v.size(1) == 2); 
+        CHECK(v(0,0) == 5.0);
+        CHECK(v(1,0) == 9.0);
+        CHECK(v(0,1) == 7.0);
+        CHECK(v(1,1) == 11.0);
+    }
+*/
+}

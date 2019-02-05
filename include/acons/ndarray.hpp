@@ -140,8 +140,8 @@ get_offset(const std::array<size_t,n>& strides,
            const std::array<size_t,n>& offsets, 
            size_t index) 
 {
-    size_t i = Base::rebase_to_zero(index)*strides[m] + offsets[m] /**strides[n-1]*/;
-    //std::cout << "m: " << m  << ", index: " << index << ", stride " << strides[m] << ", offset " << offsets[m] << ", i: " << i << "\n";
+    size_t i = Base::rebase_to_zero(index)*strides[m] + offsets[m];
+    //std::cout << "get_offset m: " << m  << ", index: " << index << ", stride " << strides[m] << ", offset " << offsets[m] << ", i: " << i << "\n";
     return i;
 }
 
@@ -152,10 +152,9 @@ get_offset(const std::array<size_t,n>& strides,
            size_t index, Indices... indices)
 {
     const size_t mplus1 = m + 1;
-    //size_t i = offsets[m] + Base::rebase_to_zero(index)*strides[m] + get_offset<n, Base, mplus1>(strides,offsets,indices...);
-    size_t i = offsets[m] + Base::rebase_to_zero(index/*+offsets[m]*/)*strides[m] + get_offset<n, Base, mplus1>(strides,offsets,indices...);
+    size_t i = offsets[m] + Base::rebase_to_zero(index)*strides[m] + get_offset<n, Base, mplus1>(strides,offsets,indices...);
 
-    //std::cout << "m: " << m << ", index: " << index << ", stride " << strides[m] << ", offset " << offsets[m] << ", rest: " << get_offset<n, Base, mplus1>(strides,offsets,indices...) << ", i: " << i << "\n";
+    //std::cout << "get_offset m: " << m << ", index: " << index << ", stride " << strides[m] << ", offset " << offsets[m] << ", rest: " << get_offset<n, Base, mplus1>(strides,offsets,indices...) << ", i: " << i << "\n";
 
     return i;
 }
@@ -169,7 +168,7 @@ get_offset(const std::array<size_t,N>& strides,
     size_t offset = 0;
     for (size_t i = 0; i < M; ++i)
     {
-        offset += Base::rebase_to_zero(indices[i]+offsets[i])*strides[i];
+        offset += (offsets[i] + Base::rebase_to_zero(indices[i])*strides[i]);
     }
 
     return offset;
@@ -1103,104 +1102,89 @@ private:
     }
 };
 
-
-
-template <typename CharT, size_t N, typename Getter>
-void print(std::basic_ostream<CharT>& os, const std::array<size_t,N>& dimensions, Getter getter)
+template <typename CharT, typename T, size_t M, typename Order, typename Base, typename TPtr>
+typename std::enable_if<(M>1),void>::type
+print(std::basic_ostream<CharT>& os, const_ndarray_view<T,M,Order,Base,TPtr>& v)
 {
-    std::vector<snapshot<N>> stack;
-    stack.emplace_back(0);
-    while (!stack.empty())
+    //std::cout << "const_ndarray_view<T,M,Order,Base,TPtr> M > 1\n";
+    os << '[';
+    for (size_t i = 0; i < v.size(0); ++i)
     {
-        auto val = stack.back();
-        stack.pop_back();
-
-        if (val.index+1 < N)
-        {
-            os << '[';
-            stack.push_back(snapshot<N>(snapshot<N>::close_bracket)); 
-            for (size_t i = dimensions[val.index]; i-- > 0; )
-            {
-                val.indices[val.index] = i; 
-                stack.push_back(snapshot<N>(val.indices,val.index+1)); 
-                if (i > 0)
-                {
-                    stack.push_back(snapshot<N>(snapshot<N>::insert_comma)); 
-                }
-            }
-        }
-        else if (val.index+1 == N)
-        {
-            os << '[';
-            for (size_t i = 0; i < dimensions[val.index]; ++i)
-            {
-                val.indices[val.index] = i; 
-                if (i > 0)
-                {
-                    os << ',';
-                }
-                os << getter(val.indices);
-            }
-            os << ']';
-        }
-        else if (val.index == snapshot<N>::close_bracket)
-        {
-            os << ']';
-        }
-        else if (val.index == snapshot<N>::insert_comma)
+        if (i > 0)
         {
             os << ',';
         }
+        std::array<size_t,1> a = {i};
+        const_ndarray_view<T,M-1,Order,Base,const T*> w(v,a);
+        print(os,w);
     }
+    os << ']';
 }
-
-template <typename CharT, typename A>
-void print(std::basic_ostream<CharT>& os, 
-           A& a, 
-           std::array<size_t,A::dimension-1>& indices, 
-           size_t i)
+template <typename CharT, typename T, size_t M, typename Order, typename Base, typename TPtr>
+typename std::enable_if<M == 1,void>::type
+print(std::basic_ostream<CharT>& os, const_ndarray_view<T,M,Order,Base,TPtr>& v)
 {
-    if (i+1 < A::dimension)
+    //std::cout << "const_ndarray_view<T,M,Order,Base,TPtr> M == 1\n";
+    //std::cout << "size: " << v.size() << "\n";
+    os << '[';
+    bool begin = true;
+    for (auto element : v)
     {
-        for (size_t j = 0; j < a.size(i); ++j)
+        if (!begin)
         {
-            if (j > 0)
-            {
-                os << ',';
-            }
-            os << '[';
-            indices[i] = j;
-            print(os, a, indices, i+1);
-            os << ']';
+            os << ',';
         }
+        else
+        {
+            begin = false;
+        }
+        os << element;
     }
-    else
-    {
-        const_ndarray_view<typename A::element_type, 1, typename A::order_type, typename A::base_type> v(a,indices);
-
-        auto begin = v.begin();
-        auto end = v.end();
-        for (auto it = begin; it != end; ++it)
-        {
-            if (it != begin)
-            {
-                os << ',';
-            }
-            os << *it;
-        }
-    }   
+    os << ']';
 }
- 
+
+template <typename CharT, typename T, size_t M, typename Order, typename Base, typename Allocator>
+typename std::enable_if<(M>1),void>::type
+print(std::basic_ostream<CharT>& os, ndarray<T,M,Order,Base,Allocator>& v)
+{
+    os << '[';
+    for (size_t i = 0; i < v.size(0); ++i)
+    {
+        if (i > 0)
+        {
+            os << ',';
+        }
+        std::array<size_t,1> a = {i};
+        const_ndarray_view<T,M-1,Order,Base> w(v,a);
+        print(os,w);
+    }
+    os << ']';
+}
+template <typename CharT, typename T, size_t M, typename Order, typename Base, typename Allocator>
+typename std::enable_if<M == 1,void>::type
+print(std::basic_ostream<CharT>& os, ndarray<T,M,Order,Base,Allocator>& v)
+{
+    os << '[';
+    bool begin = true;
+    for (auto element : v)
+    {
+        if (!begin)
+        {
+            os << ',';
+        }
+        else
+        {
+            begin = false;
+        }
+        os << element;
+    }
+    os << ']';
+}
 
 template <typename T, size_t N, typename Order, typename Base, typename Allocator, typename CharT>
 std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os, ndarray<T, N, Order, Base, Allocator>& a)
 {
-    auto f = [&](const std::array<size_t,N>& indices) 
-    { 
-        size_t off = get_offset<N, N, zero_based>(a.strides(),indices);
-        return a.data()[off];
-    };
-    print(os, a.dimensions(), f);
+    print(os,a);
     return os;
 }
 
@@ -1266,7 +1250,6 @@ public:
     typedef T element_type;
     typedef Order order_type;
     typedef Base base_type;
-    typedef std::array<slice,M> slices_type;
     typedef typename member_types::value_type value_type;
     typedef typename member_types::const_reference const_reference;
     typedef typename member_types::iterator const_iterator;
@@ -1291,13 +1274,11 @@ public:
     {
         offsets_.fill(0);
     }
-
-    template<size_t m = M, size_t N, typename Allocator>
-    const_ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
-                       const slices_type& slices)
+    template<typename Allocator>
+    const_ndarray_view(ndarray<T, M, Order, Base, Allocator>& a, 
+                       const std::array<slice,M>& slices)
         : data_(a.data()), size_(a.size())
     {
-        static_assert(m == N, "A view constructed from a list of index ranges on an array must have the same dimensionality as the array");
         for (size_t i = 0; i < M; ++i)
         {
             dim_[i] = (slices[i].stop() - slices[i].start()) /slices[i].stride();
@@ -1311,13 +1292,14 @@ public:
         }
     }
 
-    template<size_t m = M, size_t N, size_t K, typename Allocator>
+    template<size_t m = M, size_t N, typename Allocator>
     const_ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
-                       const std::array<size_t,K>& origin)
+                       const std::array<size_t,N-m>& origin)
         : data_(nullptr), size_(0)
     {
-        static_assert(m == N-K, "View must have dimension N-K");
         size_t offset = get_offset<N,N-M,Base>(a.strides(),origin);
+
+        //std::cout << "offset: " << offset << "\n";
 
         data_ = a.data() + offset;
         size_ = a.size() - offset;
@@ -1326,18 +1308,18 @@ public:
         {
             dim_[i] = a.dimensions()[(N-M)+i];
             strides_[i] = a.strides()[(N-M)+i];
+
+            //std::cout << "dim " << i << ", size: " << dim_[i] << ", stride: " << strides_[i] << "\n";
         }
         offsets_.fill(0);
     }
 
-    template<size_t m = M, size_t N, size_t K, typename Allocator>
+    template<size_t m = M, size_t N, typename Allocator>
     const_ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
-                       const std::array<size_t,K>& origin,
-                       const slices_type& slices)
+                       const std::array<size_t,N-m>& origin,
+                       const std::array<slice,M>& slices)
         : data_(nullptr), size_(0)
     {
-        static_assert(m == N-K, "View must have dimension N-K");
-
         size_t offset = get_offset<N,N-M,Base>(a.strides(),origin);
 
         data_ = a.data() + offset;
@@ -1357,18 +1339,16 @@ public:
     }
 
     template<typename OtherTPtr>
-    const_ndarray_view(const_ndarray_view<T, M, Order, Base, OtherTPtr>& other)
-        : data_(other.data()), size_(other.size()), dim_(other.dimensions()), strides_(other.strides()), offsets_(other.offsets())          
+    const_ndarray_view(const const_ndarray_view<T, M, Order, Base, OtherTPtr>& other)
+        : data_(other.data_), size_(other.size()), dim_(other.dimensions()), strides_(other.strides()), offsets_(other.offsets())          
     {
     }
 
-    template<size_t m = M, size_t N, typename OtherTPtr>
-    const_ndarray_view(const_ndarray_view<T, N, Order, Base, OtherTPtr>& other, 
-                       const slices_type& slices)
-        : data_(other.data()), size_(other.size()), offsets_(other.offsets())
+    template<typename OtherTPtr>
+    const_ndarray_view(const const_ndarray_view<T, M, Order, Base, OtherTPtr>& other, 
+                       const std::array<slice,M>& slices)
+        : data_(other.data_), size_(other.size()), offsets_(other.offsets())
     {
-        static_assert(m == N, "A view constructed from a list of index ranges on another view must have the same dimensionality as the other view");
-
         for (size_t i = 0; i < M; ++i)
         {
             dim_[i] = (slices[i].stop() - slices[i].start())/slices[i].stride();
@@ -1382,32 +1362,36 @@ public:
         }
     }
 
-    template<size_t m = M, size_t N, size_t K, typename OtherTPtr>
-    const_ndarray_view(const_ndarray_view<T, N, Order, Base, OtherTPtr>& other, 
-                       const std::array<size_t,K>& origin)
+    template<size_t m = M, size_t N, typename OtherTPtr>
+    const_ndarray_view(const const_ndarray_view<T, N, Order, Base, OtherTPtr>& other, 
+                       const std::array<size_t,N-m>& origin)
         : data_(other.data()), size_(other.size())
     {
-        static_assert(m == N-K, "View must have dimension N-K");
-
+        //std::cout << "const_ndarray_view strides: " << other.strides() << ", offsets: " << other.offsets() << ", origin: " << origin << ", data[0] " << data_[0] << ", size: " << size() << "\n";
+ 
         size_t rel = get_offset<N,N-M,Base>(other.strides(),other.offsets(),origin);
+        //std::cout << "rel: " << rel << "\n";
+        data_ = other.data() + rel;
+        size_ = other.size() - rel;
 
         for (size_t i = 0; i < M; ++i)
         {
             dim_[i] = other.dimensions()[(N-M)+i];
             strides_[i] = other.strides()[(N-M)+i];
-            offsets_[i] = rel + other.offsets()[(N-M)+i];
+            offsets_[i] = /*rel + */ other.offsets()[(N-M)+i];
+            //std::cout << "dim " << i << ", size: " << dim_[i] << ", stride: " << strides_[i] << ", offset: " << offsets_[i] << "\n";
         }
     }
 
-    template<size_t m = M, size_t N, size_t K, typename OtherTPtr>
-    const_ndarray_view(const_ndarray_view<T, N, Order, Base, OtherTPtr>& other, 
-                       const std::array<size_t,K>& origin,
-                       const slices_type& slices)
-        : data_(other.data()), size_(other.size())
+    template<size_t m = M, size_t N, typename OtherTPtr>
+    const_ndarray_view(const const_ndarray_view<T, N, Order, Base, OtherTPtr>& other, 
+                       const std::array<size_t,N-m>& origin,
+                       const std::array<slice,M>& slices)
+        : data_(other.data_), size_(other.size())
     {
-        static_assert(m == N-K, "View must have dimension N-K");
-
         size_t rel = get_offset<N,N-M,Base>(other.strides(),other.offsets(),origin);
+        data_ = other.data() + rel;
+        size_ = other.size() - rel;
 
         for (size_t i = 0; i < M; ++i)
         {
@@ -1461,6 +1445,10 @@ public:
     const T& operator()(size_t index, Indices... indices) const
     {
         size_t off = get_offset<M, Base, 0>(strides_, offsets_, index, indices...);
+
+        //std::cout << "operator() strides: " << strides_ << ", offsets: " << offsets_ << ", index: " << index << "\n";
+        //std::cout << "off: " << off << ", size: " << size() << "\n";
+
         assert(off < size());
         return data_[off];
     }
@@ -1496,12 +1484,7 @@ template <typename CharT, typename T, size_t M, typename Order, typename Base, t
 std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os, 
                                       const_ndarray_view<T, M, Order, Base, TPtr>& v)
 {
-    auto f = [&](const std::array<size_t,M>& indices) 
-    { 
-        size_t off = get_offset<M, M, zero_based>(v.strides(), v.offsets(), indices);
-        return v.data()[off];
-    };
-    print(os, v.dimensions(), f);
+    print(os,v);
     return os;
 }
 
@@ -1511,7 +1494,6 @@ class ndarray_view : public const_ndarray_view<T, M, Order, Base, T*>
     typedef ndarray_view_member_types<T,M,Order,Base,T*> member_types;
     typedef const_ndarray_view<T, M, Order, Base, T*> super_type;
 public:
-    using typename super_type::slices_type;
     using typename super_type::element_type;
     using typename super_type::order_type;
     using typename super_type::base_type;
@@ -1533,7 +1515,7 @@ public:
 
     template<size_t N, typename Allocator>
     ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
-                 const slices_type& slices)
+                       const std::array<slice,M>& slices)
         : super_type(a, slices)
     {
     }
@@ -1548,7 +1530,7 @@ public:
     template<size_t N, typename Allocator>
     ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
                  const std::array<size_t,N-M>& origin,
-                 const slices_type& slices)
+                 const std::array<slice,M>& slices)
         : super_type(a, origin, slices)
     {
     }
@@ -1561,7 +1543,7 @@ public:
 
     template<size_t N, typename OtherTPtr>
     ndarray_view(const const_ndarray_view<T, N, Order, Base, OtherTPtr>& a, 
-                 const slices_type& slices)
+                 const std::array<slice,M>& slices)
         : super_type(a, slices)
     {
     }
@@ -1576,7 +1558,7 @@ public:
     template<size_t N, typename OtherTPtr>
     ndarray_view(const const_ndarray_view<T, N, Order, Base, OtherTPtr>& a, 
                  const std::array<size_t,N-M>& origin,
-                 const slices_type& slices)
+                 const std::array<slice,M>& slices)
         : super_type(a, origin, slices)
     {
     }
