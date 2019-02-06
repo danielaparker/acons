@@ -91,7 +91,7 @@ Exceptions:
 
     bool empty() const noexcept;
 
-    size_t size() const noexcept;
+    size_t num_elements() const noexcept;
 
 ##### Element access
 

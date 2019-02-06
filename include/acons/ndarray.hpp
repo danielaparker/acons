@@ -568,7 +568,7 @@ private:
     friend class const_ndarray_view<T, N, Order, Base, const T*>;
 
     pointer data_;
-    size_t size_;
+    size_t num_elements_;
     size_t capacity_;
     std::array<size_t,N> shape_;
     std::array<size_t,N> strides_;
@@ -577,7 +577,7 @@ public:
 
     ndarray()
         : super_type(allocator_type()),
-          data_(nullptr), size_(0), capacity_(0)
+          data_(nullptr), num_elements_(0), capacity_(0)
     {
         shape_.fill(0);
         strides_.fill(0);
@@ -594,41 +594,41 @@ public:
         : super_type(allocator_type()), 
           data_(nullptr), shape_(dim)
     {
-        Order::calculate_strides(shape_, strides_, size_);
-        capacity_ = size_;
+        Order::calculate_strides(shape_, strides_, num_elements_);
+        capacity_ = num_elements_;
         data_ = create(capacity_, get_allocator());
-        std::fill(data_, data_+size_, T());
+        std::fill(data_, data_+num_elements_, T());
     }
 
     ndarray(const std::array<size_t,N>& dim, const Allocator& alloc)
         : super_type(alloc), 
           data_(nullptr), shape_(dim)
     {
-        Order::calculate_strides(shape_, strides_, size_);
-        capacity_ = size_;
+        Order::calculate_strides(shape_, strides_, num_elements_);
+        capacity_ = num_elements_;
         data_ = create(capacity_, get_allocator());
-        std::fill(data_, data_+size_, T());
+        std::fill(data_, data_+num_elements_, T());
     }
 
     ndarray(const std::array<size_t,N>& dim, T val)
         : super_type(allocator_type()), 
           data_(nullptr), shape_(dim)
     {
-        Order::calculate_strides(shape_, strides_, size_);
-        capacity_ = size_;
+        Order::calculate_strides(shape_, strides_, num_elements_);
+        capacity_ = num_elements_;
         data_ = create(capacity_, get_allocator());
-        std::fill(data_, data_+size_,val);
+        std::fill(data_, data_+num_elements_,val);
     }
 
     ndarray(const std::array<size_t,N>& dim, T val, const Allocator& alloc)
         : super_type(alloc), 
           data_(nullptr), shape_(dim)
     {
-        Order::calculate_strides(shape_, strides_, size_);
+        Order::calculate_strides(shape_, strides_, num_elements_);
 
-        capacity_ = size_;
+        capacity_ = num_elements_;
         data_ = create(capacity_, get_allocator());
-        std::fill(data_, data_+size_, val);
+        std::fill(data_, data_+num_elements_, val);
     }
 
     ndarray(std::initializer_list<array_item<T>> list) 
@@ -636,8 +636,8 @@ public:
     {
         dim_from_initializer_list(list, 0);
 
-        Order::calculate_strides(shape_, strides_, size_);
-        capacity_ = size_;
+        Order::calculate_strides(shape_, strides_, num_elements_);
+        capacity_ = num_elements_;
         data_ = create(capacity_, get_allocator());
         std::array<size_t,N> indices;
         data_from_initializer_list(list,indices,0);
@@ -649,8 +649,8 @@ public:
         dim_from_initializer_list(list, 0);
 
         // Initialize multipliers and size
-        Order::calculate_strides(shape_, strides_, size_);
-        capacity_ = size_;
+        Order::calculate_strides(shape_, strides_, num_elements_);
+        capacity_ = num_elements_;
         data_ = create(capacity_, get_allocator());
         std::array<size_t,N> indices;
         data_from_initializer_list(list,indices,0);
@@ -658,38 +658,38 @@ public:
 
     ndarray(const ndarray& other)
         : super_type(std::allocator_traits<allocator_type>::select_on_container_copy_construction(other.get_allocator())), 
-          data_(nullptr), size_(other.size()), capacity_(0), shape_(other.shape_), strides_(other.strides_)          
+          data_(nullptr), num_elements_(other.num_elements()), capacity_(0), shape_(other.shape_), strides_(other.strides_)          
     {
-        capacity_ = size_;
+        capacity_ = num_elements_;
         data_ = create(capacity_, get_allocator());
 
 #if defined(_MSC_VER)
-        std::copy(other.data_, other.data_+other.size_,stdext::make_checked_array_iterator(data_,size_));
+        std::copy(other.data_, other.data_+other.num_elements_,stdext::make_checked_array_iterator(data_,num_elements_));
 #else 
-        std::copy(other.data_,other.data_+other.size_,data_);
+        std::copy(other.data_,other.data_+other.num_elements_,data_);
 #endif
     }
 
     ndarray(const ndarray& other, const Allocator& alloc)
         : super_type(alloc), 
-          data_(nullptr), size_(other.size()), shape_(other.shape_), strides_(other.strides_)          
+          data_(nullptr), num_elements_(other.num_elements()), shape_(other.shape_), strides_(other.strides_)          
     {
-        capacity_ = size_;
+        capacity_ = num_elements_;
         data_ = create(capacity_, get_allocator());
 
 #if defined(_MSC_VER)
-        std::copy(other.data_, other.data_+other.size_,stdext::make_checked_array_iterator(data_,size_));
+        std::copy(other.data_, other.data_+other.num_elements_,stdext::make_checked_array_iterator(data_,num_elements_));
 #else 
-        std::copy(other.data_,other.data_+other.size_,data_);
+        std::copy(other.data_,other.data_+other.num_elements_,data_);
 #endif
     }
 
     ndarray(ndarray&& other)
         : super_type(other.get_allocator()), 
-          data_(other.data_), size_(other.size_), capacity_(other.capacity_), shape_(other.shape_), strides_(other.strides_)          
+          data_(other.data_), num_elements_(other.num_elements_), capacity_(other.capacity_), shape_(other.shape_), strides_(other.strides_)          
     {
         other.data_ = nullptr;
-        other.size_ = 0;
+        other.num_elements_ = 0;
         other.capacity_ = 0;
         other.shape_.fill(0);
         other.strides_.fill(0);
@@ -697,25 +697,25 @@ public:
 
     ndarray(ndarray&& other, const Allocator& alloc)
         : super_type(alloc), 
-          data_(nullptr), size_(other.size()), capacity_(other.capacity_), shape_(other.shape_), strides_(other.strides_)          
+          data_(nullptr), num_elements_(other.num_elements()), capacity_(other.capacity_), shape_(other.shape_), strides_(other.strides_)          
     {
         if (alloc == other.get_allocator())
         {
             data_ = other.data_;
             other.data_ = nullptr;
-            other.size_ = 0;
+            other.num_elements_ = 0;
             other.capacity_ = 0;
             other.shape_.fill(0);
             other.strides_.fill(0);
         }
         else
         {
-            capacity_ = size_;
+            capacity_ = num_elements_;
             data_ = create(capacity_, get_allocator());
 #if defined(_MSC_VER)
-            std::copy(other.data_, other.data_+other.size_,stdext::make_checked_array_iterator(data_,size_));
+            std::copy(other.data_, other.data_+other.num_elements_,stdext::make_checked_array_iterator(data_,num_elements_));
 #else 
-            std::copy(other.data_,other.data_+other.size_,data_);
+            std::copy(other.data_,other.data_+other.num_elements_,data_);
 #endif
         }
     }
@@ -723,16 +723,16 @@ public:
     template <typename TPtr>
     ndarray(const const_ndarray_view<T,N,Order,Base,TPtr>& av)
         : super_type(allocator_type()), 
-          data_(nullptr), size_(0), capacity_(0), shape_(av.shape()), strides_(av.strides())          
+          data_(nullptr), num_elements_(0), capacity_(0), shape_(av.shape()), strides_(av.strides())          
     {
-        size_ = av.size();
-        capacity_ = size_;
+        num_elements_ = av.num_elements();
+        capacity_ = num_elements_;
         data_ = create(capacity_, get_allocator());
 
 #if defined(_MSC_VER)
-        std::copy(av.data(), av.data()+av.size(),stdext::make_checked_array_iterator(data_,size_));
+        std::copy(av.data(), av.data()+av.num_elements(),stdext::make_checked_array_iterator(data_,num_elements_));
 #else 
-        std::copy(av.data(),av.data()+av.size(),data_);
+        std::copy(av.data(),av.data()+av.num_elements(),data_);
 #endif
     }
 
@@ -740,22 +740,34 @@ public:
     ndarray(const const_ndarray_view<T,N,Order,Base,TPtr>& av, 
             const Allocator& alloc)
         : super_type(alloc), 
-          data_(nullptr), size_(0), capacity_(0), shape_(av.shape_), strides_(av.strides_)          
+          data_(nullptr), num_elements_(0), capacity_(0), shape_(av.shape_), strides_(av.strides_)          
     {
-        size_ = av.size();
-        capacity_ = size_;
+        num_elements_ = av.num_elements();
+        capacity_ = num_elements_;
         data_ = create(capacity_, get_allocator());
 
 #if defined(_MSC_VER)
-        std::copy(av.data(), av.data()+av.size(),stdext::make_checked_array_iterator(data_,size_));
+        std::copy(av.data(), av.data()+av.num_elements(),stdext::make_checked_array_iterator(data_,num_elements_));
 #else 
-        std::copy(av.data(),av.data()+av.size(),data_);
+        std::copy(av.data(),av.data()+av.num_elements(),data_);
 #endif
     }
 
     ~ndarray()
     {
         get_allocator().deallocate(to_plain_pointer(data_), capacity_);
+    }
+
+    template <size_t K>
+    ndarray_view<T,N-K,Order,Base> subarray(const std::array<size_t,K>& origin)
+    {
+        return ndarray_view<T,N-K,Order,Base>(*this, origin);
+    }
+
+    template <size_t K>
+    const_ndarray_view<T,N-K,Order,Base> subarray(const std::array<size_t,K>& origin) const
+    {
+        return const_ndarray_view<T,N-K,Order,Base>(*this, origin);
     }
 
     iterator begin()
@@ -765,7 +777,7 @@ public:
 
     iterator end()
     {
-        return to_plain_pointer(data_) + size_;
+        return to_plain_pointer(data_) + num_elements_;
     }
 
     const_iterator begin() const
@@ -775,7 +787,7 @@ public:
 
     const_iterator end() const
     {
-        return to_plain_pointer(data_) + size_;
+        return to_plain_pointer(data_) + num_elements_;
     }
 
     const_iterator cbegin() const
@@ -785,36 +797,36 @@ public:
 
     const_iterator cend() const
     {
-        return to_plain_pointer(data_) + size_;
+        return to_plain_pointer(data_) + num_elements_;
     }
 
     void resize(const std::array<size_t,N>& dim, T value = T())
     {
         T* old_data = data();
-        size_t old_size = size();
+        size_t old_size = num_elements();
 
         shape_ = dim;
-        Order::calculate_strides(shape_, strides_, size_);
+        Order::calculate_strides(shape_, strides_, num_elements_);
 
-        if (size_ > capacity_)
+        if (num_elements_ > capacity_)
         {
-            capacity_ = size_;
+            capacity_ = num_elements_;
             data_ = create(capacity_, get_allocator());
         }
 
-        size_t len = (std::min)(old_size,size_);
+        size_t len = (std::min)(old_size,num_elements_);
 
 #if defined(_MSC_VER)
-        std::copy(old_data, old_data+len,stdext::make_checked_array_iterator(data_,size_));
+        std::copy(old_data, old_data+len,stdext::make_checked_array_iterator(data_,num_elements_));
 #else 
         std::copy(old_data, old_data+len,data_);
 #endif
-        if (len < size_)
+        if (len < num_elements_)
         {
-            std::fill(data_ + len, data_+size_, value);
+            std::fill(data_ + len, data_+num_elements_, value);
         }
 
-        if (size_ > old_size)
+        if (num_elements_ > old_size)
         {
             get_allocator().deallocate(to_plain_pointer(old_data), old_size);
         }
@@ -845,8 +857,8 @@ public:
         get_allocator().deallocate(to_plain_pointer(data_),capacity_);
         dim_from_initializer_list(list, 0);
 
-        Order::calculate_strides(shape_, strides_, size_);
-        capacity_ = size_;
+        Order::calculate_strides(shape_, strides_, num_elements_);
+        capacity_ = num_elements_;
         data_ = create(capacity_, get_allocator());
         std::array<size_t,N> indices;
         data_from_initializer_list(list,indices,0);
@@ -858,7 +870,7 @@ public:
         swap_allocator(other, is_stateless<Allocator>(), 
                        typename std::allocator_traits<allocator_type>::propagate_on_container_swap());
         std::swap(data_,other.data_);
-        std::swap(size_,other.size_);
+        std::swap(num_elements_,other.num_elements_);
         std::swap(capacity_,other.capacity_);
         std::swap(shape_,other.shape_);
         std::swap(strides_,other.strides_);
@@ -867,12 +879,12 @@ public:
 
     bool empty() const noexcept
     {
-        return size_ == 0;
+        return num_elements_ == 0;
     }
 
-    size_t size() const noexcept
+    size_t num_elements() const noexcept
     {
-        return size_;
+        return num_elements_;
     }
 
     size_t capacity() const noexcept
@@ -904,7 +916,7 @@ public:
     T& operator()(size_t index, Indices... indices) 
     {
         size_t off = get_offset<N, Base, 0>(strides_, index, indices...);
-        assert(off < size());
+        assert(off < num_elements());
         return data_[off];
     }
 
@@ -912,7 +924,7 @@ public:
     const T& operator()(size_t index, Indices... indices) const
     {
         size_t off = get_offset<N, Base, 0>(strides_, index, indices...);
-        assert(off < size());
+        assert(off < num_elements());
         return data_[off];
     }
 
@@ -920,14 +932,14 @@ public:
     {
         size_t off = get_offset<N, N, Base>(strides_,indices);
 
-        assert(off < size());
+        assert(off < num_elements());
         return data_[off];
     }
 
     const T& operator()(const std::array<size_t,N>& indices) const 
     {
         size_t off = get_offset<N, N, Base>(strides_,indices);
-        assert(off < size());
+        assert(off < num_elements());
         return data_[off];
     }
 private:
@@ -946,19 +958,19 @@ private:
 
     void assign_move(ndarray<T,N,Order,Base,Allocator>&& other, std::false_type) noexcept
     {
-        if (size() != other.size())
+        if (num_elements() != other.num_elements())
         {
             get_allocator().deallocate(to_plain_pointer(data_),capacity_);
-            size_ = other.size();
-            capacity_ = size_;
+            num_elements_ = other.num_elements();
+            capacity_ = num_elements_;
             data_ = create(capacity_, get_allocator());
         }
         shape_ = other.shape();
         strides_ = other.strides();
 #if defined(_MSC_VER)
-        std::copy(other.data_, other.data_+other.size_,stdext::make_checked_array_iterator(data_,size_));
+        std::copy(other.data_, other.data_+other.num_elements_,stdext::make_checked_array_iterator(data_,num_elements_));
 #else 
-        std::copy(other.data_,other.data_+other.size_,data_);
+        std::copy(other.data_,other.data_+other.num_elements_,data_);
 #endif
     }
 
@@ -966,33 +978,33 @@ private:
     {
         this->allocator_ = other.get_allocator();
         get_allocator().deallocate(to_plain_pointer(data_),capacity_);
-        size_ = other.size();
-        capacity_ = size_;
+        num_elements_ = other.num_elements();
+        capacity_ = num_elements_;
         data_ = create(capacity_, get_allocator());
         shape_ = other.shape();
         strides_ = other.strides();
 #if defined(_MSC_VER)
-        std::copy(other.data_, other.data_+other.size_,stdext::make_checked_array_iterator(data_,size_));
+        std::copy(other.data_, other.data_+other.num_elements_,stdext::make_checked_array_iterator(data_,num_elements_));
 #else 
-        std::copy(other.data_,other.data_+other.size_,data_);
+        std::copy(other.data_,other.data_+other.num_elements_,data_);
 #endif
     }
 
     void assign_copy(const ndarray<T,N,Order,Base,Allocator>& other, std::false_type)
     {
-        if (size() != other.size())
+        if (num_elements() != other.num_elements())
         {
             get_allocator().deallocate(to_plain_pointer(data_),capacity_);
-            size_ = other.size();
-            capacity_ = size_;
+            num_elements_ = other.num_elements();
+            capacity_ = num_elements_;
             data_ = create(capacity_, get_allocator());
         }
         shape_ = other.shape();
         strides_ = other.strides();
 #if defined(_MSC_VER)
-        std::copy(other.data_, other.data_+other.size_,stdext::make_checked_array_iterator(data_,size_));
+        std::copy(other.data_, other.data_+other.num_elements_,stdext::make_checked_array_iterator(data_,num_elements_));
 #else 
-        std::copy(other.data_,other.data_+other.size_,data_);
+        std::copy(other.data_,other.data_+other.num_elements_,data_);
 #endif
     }
 
@@ -1019,17 +1031,17 @@ private:
 
     void init()
     {
-        Order::calculate_strides(shape_, strides_, size_);
-        capacity_ = size_;
+        Order::calculate_strides(shape_, strides_, num_elements_);
+        capacity_ = num_elements_;
         data_ = create(capacity_, get_allocator());
     }
 
     void init(const T& val)
     {
-        Order::calculate_strides(shape_, strides_, size_);
-        capacity_ = size_;
+        Order::calculate_strides(shape_, strides_, num_elements_);
+        capacity_ = num_elements_;
         data_ = create(capacity_, get_allocator());
-        std::fill(data_, data_+size_,val);
+        std::fill(data_, data_+num_elements_,val);
     }
 
     void dim_from_initializer_list(const array_item<T>& init, size_t dim)
@@ -1084,7 +1096,7 @@ private:
             else 
             {
                 size_t offset = get_offset<N,N,zero_based>(strides_,indices);
-                if (offset < size())
+                if (offset < num_elements())
                 {
                     data_[offset] = item.value();
                 }
@@ -1247,29 +1259,22 @@ public:
     typedef typename member_types::iterator const_iterator;
 protected:
     TPtr data_;
-    size_t size_;
+    size_t num_elements_;
     std::array<size_t,M> shape_;
     std::array<size_t,M> strides_;
     std::array<size_t,M> offsets_;
 public:
-    const_ndarray_view()
-        : data_(nullptr), size_(0)
+    template <typename Allocator>
+    const_ndarray_view(ndarray<T, M, Order, Base, Allocator>& a)
+        : data_(a.data()), num_elements_(a.num_elements()), shape_(a.shape()), strides_(a.strides())          
     {
-        shape_.fill(0);
-        strides_.fill(0);
         offsets_.fill(0);
     }
 
-    template <typename Allocator>
-    const_ndarray_view(ndarray<T, M, Order, Base, Allocator>& a)
-        : data_(a.data()), size_(a.size()), shape_(a.shape()), strides_(a.strides())          
-    {
-        offsets_.fill(0);
-    }
     template<typename Allocator>
     const_ndarray_view(ndarray<T, M, Order, Base, Allocator>& a, 
                        const std::array<slice,M>& slices)
-        : data_(a.data()), size_(a.size())
+        : data_(a.data()), num_elements_(a.num_elements())
     {
         for (size_t i = 0; i < M; ++i)
         {
@@ -1287,14 +1292,14 @@ public:
     template<size_t m = M, size_t N, typename Allocator>
     const_ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
                        const std::array<size_t,N-m>& origin)
-        : data_(nullptr), size_(0)
+        : data_(nullptr), num_elements_(0)
     {
         size_t offset = get_offset<N,N-M,Base>(a.strides(),origin);
 
         //std::cout << "offset: " << offset << "\n";
 
         data_ = a.data() + offset;
-        size_ = a.size() - offset;
+        num_elements_ = a.num_elements() - offset;
 
         for (size_t i = 0; i < M; ++i)
         {
@@ -1310,12 +1315,12 @@ public:
     const_ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
                        const std::array<size_t,N-m>& origin,
                        const std::array<slice,M>& slices)
-        : data_(nullptr), size_(0)
+        : data_(nullptr), num_elements_(0)
     {
         size_t offset = get_offset<N,N-M,Base>(a.strides(),origin);
 
         data_ = a.data() + offset;
-        size_ = a.size() - offset;
+        num_elements_ = a.num_elements() - offset;
 
         for (size_t i = 0; i < M; ++i)
         {
@@ -1332,14 +1337,14 @@ public:
 
     template<typename OtherTPtr>
     const_ndarray_view(const const_ndarray_view<T, M, Order, Base, OtherTPtr>& other)
-        : data_(other.data_), size_(other.size()), shape_(other.shape()), strides_(other.strides()), offsets_(other.offsets())          
+        : data_(other.data_), num_elements_(other.num_elements()), shape_(other.shape()), strides_(other.strides()), offsets_(other.offsets())          
     {
     }
 
     template<typename OtherTPtr>
     const_ndarray_view(const const_ndarray_view<T, M, Order, Base, OtherTPtr>& other, 
                        const std::array<slice,M>& slices)
-        : data_(other.data_), size_(other.size()), offsets_(other.offsets())
+        : data_(other.data_), num_elements_(other.num_elements()), offsets_(other.offsets())
     {
         for (size_t i = 0; i < M; ++i)
         {
@@ -1357,14 +1362,14 @@ public:
     template<size_t m = M, size_t N, typename OtherTPtr>
     const_ndarray_view(const const_ndarray_view<T, N, Order, Base, OtherTPtr>& other, 
                        const std::array<size_t,N-m>& origin)
-        : data_(other.data()), size_(other.size())
+        : data_(other.data()), num_elements_(other.num_elements())
     {
-        //std::cout << "const_ndarray_view strides: " << other.strides() << ", offsets: " << other.offsets() << ", origin: " << origin << ", data[0] " << data_[0] << ", size: " << size() << "\n";
+        //std::cout << "const_ndarray_view strides: " << other.strides() << ", offsets: " << other.offsets() << ", origin: " << origin << ", data[0] " << data_[0] << ", size: " << num_elements() << "\n";
  
         size_t rel = get_offset<N,N-M,Base>(other.strides(),other.offsets(),origin);
         //std::cout << "rel: " << rel << "\n";
         data_ = other.data() + rel;
-        size_ = other.size() - rel;
+        num_elements_ = other.num_elements() - rel;
 
         for (size_t i = 0; i < M; ++i)
         {
@@ -1379,11 +1384,11 @@ public:
     const_ndarray_view(const const_ndarray_view<T, N, Order, Base, OtherTPtr>& other, 
                        const std::array<size_t,N-m>& origin,
                        const std::array<slice,M>& slices)
-        : data_(other.data_), size_(other.size())
+        : data_(other.data_), num_elements_(other.num_elements())
     {
         size_t rel = get_offset<N,N-M,Base>(other.strides(),other.offsets(),origin);
         data_ = other.data() + rel;
-        size_ = other.size() - rel;
+        num_elements_ = other.num_elements() - rel;
 
         for (size_t i = 0; i < M; ++i)
         {
@@ -1403,17 +1408,17 @@ public:
         : data_(data), shape_(dim)
     {
         offsets_.fill(0);
-        Order::calculate_strides(shape_, strides_, size_);
+        Order::calculate_strides(shape_, strides_, num_elements_);
     }
 
-    size_t size() const noexcept
+    size_t num_elements() const noexcept
     {
-        return size_;
+        return num_elements_;
     }
 
     bool empty() const noexcept
     {
-        return size_ == 0;
+        return num_elements_ == 0;
     }
 
     const std::array<size_t,M>& shape() const {return shape_;}
@@ -1441,14 +1446,14 @@ public:
         //std::cout << "operator() strides: " << strides_ << ", offsets: " << offsets_ << ", index: " << index << "\n";
         //std::cout << "off: " << off << ", size: " << size() << "\n";
 
-        assert(off < size());
+        assert(off < num_elements());
         return data_[off];
     }
 
     const T& operator()(const std::array<size_t,M>& indices) const 
     {
         size_t off = get_offset<M, M, Base>(strides_, offsets_, indices);
-        assert(off < size());
+        assert(off < num_elements());
         return data_[off];
     }
 
@@ -1494,11 +1499,6 @@ public:
     typedef typename member_types::reference reference;
     typedef typename member_types::iterator iterator;
 public:
-    ndarray_view()
-        : super_type()
-    {
-    }
-
     template <typename Allocator>
     ndarray_view(ndarray<T, M, Order, Base, Allocator>& a)
         : super_type(a)          
@@ -1535,15 +1535,15 @@ public:
 
     template<size_t N, typename OtherTPtr>
     ndarray_view(const const_ndarray_view<T, N, Order, Base, OtherTPtr>& a, 
-                 const std::array<slice,M>& slices)
-        : super_type(a, slices)
+                 const std::array<size_t,N-M>& origin)
+        : super_type(a, origin)
     {
     }
 
     template<size_t N, typename OtherTPtr>
     ndarray_view(const const_ndarray_view<T, N, Order, Base, OtherTPtr>& a, 
-                 const std::array<size_t,N-M>& origin)
-        : super_type(a, origin)
+                 const std::array<slice,M>& slices)
+        : super_type(a, slices)
     {
     }
 
@@ -1560,6 +1560,7 @@ public:
     {
     }
     using super_type::data; 
+    using super_type::num_elements;
     using super_type::size;
     using super_type::empty;
     using super_type::shape;
@@ -1577,14 +1578,14 @@ public:
     T& operator()(size_t index, Indices... indices) 
     {
         size_t off = get_offset<M, Base, 0>(this->strides_, this->offsets_, index, indices...);
-        assert(off < size());
+        assert(off < num_elements());
         return this->data_[off];
     }
 
     T& operator()(const std::array<size_t,M>& indices) 
     {
         size_t off = get_offset<M, M, Base>(this->strides_, this->offsets_, indices);
-        assert(off < size());
+        assert(off < num_elements());
         return this->data_[off];
     }
 
@@ -1592,14 +1593,14 @@ public:
     const T& operator()(size_t index, Indices... indices) const
     {
         size_t off = get_offset<M, Base, 0>(this->strides_, this->offsets_, index, indices...);
-        assert(off < size());
+        assert(off < num_elements());
         return this->data_[off];
     }
 
     const T& operator()(const std::array<size_t, M>& indices) const
     {
         size_t off = get_offset<M, M, Base>(this->strides_, this->offsets_, indices);
-        assert(off < size());
+        assert(off < num_elements());
         return this->data_[off];
     }
 
