@@ -16,6 +16,12 @@
   
 namespace acons {
 
+template <typename TPtr, typename Enable = void>
+struct is_pointer_to_const : std::false_type {};
+
+template <typename TPtr>
+struct is_pointer_to_const<TPtr, typename std::enable_if<std::is_const<typename std::remove_pointer<TPtr>::type>::value>::type> : std::true_type {};
+
 template <typename T, size_t N>
 std::ostream& operator<<(std::ostream& os, const std::array<T,N>& a)
 {
@@ -393,15 +399,15 @@ class const_ndarray_view;
 template <typename T, size_t M, typename Order=row_major, typename Base=zero_based>
 class ndarray_view;  
 
-template <typename T, size_t M, typename TPtr>
+template <typename T, typename TPtr>
 class ndarray_view_iterator_one;
 
 template <typename T, size_t M, typename Order, typename Base, typename TPtr, typename Enable = void>
 struct ndarray_view_member_types
 {
-    typedef ndarray<T,M-1,Order,Base> value_type;
-    typedef ndarray_view<T,M-1,Order,Base> reference;
-    typedef const_ndarray_view<T,M-1,Order,Base,TPtr> const_reference;
+    typedef T value_type;
+    typedef typename std::conditional<std::is_const<typename std::remove_pointer<TPtr>::type>::value,const T&,T&>::type reference;
+    typedef const T& const_reference;
     typedef void iterator;
 };
 
@@ -409,9 +415,9 @@ template <typename T, size_t M, typename Order, typename Base, typename TPtr>
 struct ndarray_view_member_types<T,M,Order,Base,TPtr,typename std::enable_if<M == 1>::type>
 {
     typedef T value_type;
-    typedef T& reference;
+    typedef typename std::conditional<std::is_const<typename std::remove_pointer<TPtr>::type>::value,const T&,T&>::type reference;
     typedef const T& const_reference;
-    typedef ndarray_view_iterator_one<T,M,TPtr> iterator;
+    typedef ndarray_view_iterator_one<T,TPtr> iterator;
 };
 
 // ndarray
@@ -541,7 +547,7 @@ class ndarray : public ndarray_base<Allocator>
 public:
     using typename super_type::allocator_type;
     using typename super_type::pointer;
-    typedef T element_type;
+    typedef T value_type;
     typedef T& reference;
     typedef const T& const_reference;
     static const size_t dimension = N;
@@ -1192,7 +1198,7 @@ std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os, ndarray<T, 
     return os;
 }
 
-template <typename T, size_t M, typename TPtr>
+template <typename T, typename TPtr>
 class ndarray_view_iterator_one
 {
     TPtr data_;
@@ -1247,24 +1253,23 @@ public:
 
 // const_ndarray_view
 
-template <typename TPtr, typename Enable = void>
-struct is_pointer_to_const : std::false_type {};
-
-template <typename TPtr>
-struct is_pointer_to_const<TPtr, typename std::enable_if<std::is_const<typename std::remove_pointer<TPtr>::type>::value>::type> : std::true_type {};
-
 template <typename T, size_t M, typename Order, typename Base, typename TPtr>
 class const_ndarray_view 
 {
     typedef ndarray_view_member_types<T,M,Order,Base,TPtr> member_types;
 public:
     static const size_t dimension = M;
-    typedef T element_type;
     typedef Order order_type;
     typedef Base base_type;
     typedef typename member_types::value_type value_type;
     typedef typename member_types::const_reference const_reference;
     typedef typename member_types::iterator const_iterator;
+
+    template <size_t K>
+    struct const_view
+    {
+        typedef const_ndarray_view<T,K,Order,Base> type;
+    };
 protected:
     TPtr data_;
     size_t num_elements_;
@@ -1352,7 +1357,7 @@ public:
     template<typename OtherTPtr>
     const_ndarray_view(const const_ndarray_view<T, M, Order, Base, OtherTPtr>& other, 
                        const std::array<slice,M>& slices)
-        : data_(other.data_), num_elements_(other.num_elements()), offsets_(other.offsets())
+        : data_(other.data()), num_elements_(other.num_elements()), offsets_(other.offsets())
     {
         for (size_t i = 0; i < M; ++i)
         {
@@ -1558,6 +1563,77 @@ protected:
             strides_[i] *= slices[i].stride();
         }
     }
+
+    template<typename OtherTPtr, typename TPtr2=TPtr>
+    const_ndarray_view(const_ndarray_view<T, M, Order, Base, OtherTPtr>& other,
+                       typename std::enable_if<!is_pointer_to_const<TPtr2>::value>::type* = 0)
+        : data_(other.data_), num_elements_(other.num_elements()), shape_(other.shape()), strides_(other.strides()), offsets_(other.offsets())          
+    {
+    }
+
+    template<typename OtherTPtr, typename TPtr2=TPtr>
+    const_ndarray_view(const_ndarray_view<T, M, Order, Base, OtherTPtr>& other, 
+                       const std::array<slice,M>& slices,
+                       typename std::enable_if<!is_pointer_to_const<TPtr2>::value>::type* = 0)
+        : data_(other.data_), num_elements_(other.num_elements()), offsets_(other.offsets())
+    {
+        for (size_t i = 0; i < M; ++i)
+        {
+            shape_[i] = (slices[i].stop() - slices[i].start())/slices[i].stride();
+            strides_[i] = other.strides()[i];
+        }
+        offsets_.fill(0);
+        Order::update_offsets<M,Base>(strides_, slices, offsets_);
+        for (size_t i = 0; i < M; ++i)
+        {
+            strides_[i] *= slices[i].stride();
+        }
+    }
+
+    template<size_t m = M, size_t N, typename OtherTPtr, typename TPtr2=TPtr>
+    const_ndarray_view(const_ndarray_view<T, N, Order, Base, OtherTPtr>& other, 
+                       const std::array<size_t,N-m>& origin,
+                       typename std::enable_if<!is_pointer_to_const<TPtr2>::value>::type* = 0)
+        : data_(other.data_), num_elements_(other.num_elements())
+    {
+        //std::cout << "const_ndarray_view strides: " << other.strides() << ", offsets: " << other.offsets() << ", origin: " << origin << ", data[0] " << data_[0] << ", size: " << num_elements() << "\n";
+
+        size_t rel = get_offset<N,N-M,Base>(other.strides(),other.offsets(),origin);
+        //std::cout << "rel: " << rel << "\n";
+        data_ = other.data() + rel;
+        num_elements_ = other.num_elements() - rel;
+
+        for (size_t i = 0; i < M; ++i)
+        {
+            shape_[i] = other.shape()[(N-M)+i];
+            strides_[i] = other.strides()[(N-M)+i];
+            offsets_[i] = /*rel + */ other.offsets()[(N-M)+i];
+            //std::cout << "dim " << i << ", size: " << shape_[i] << ", stride: " << strides_[i] << ", offset: " << offsets_[i] << "\n";
+        }
+    }
+
+    template<size_t m = M, size_t N, typename OtherTPtr, typename TPtr2=TPtr>
+    const_ndarray_view(const_ndarray_view<T, N, Order, Base, OtherTPtr>& other, 
+                       const std::array<size_t,N-m>& origin,
+                       const std::array<slice,M>& slices,
+                       typename std::enable_if<!is_pointer_to_const<TPtr2>::value>::type* = 0)
+        : data_(other.data_), num_elements_(other.num_elements())
+    {
+        size_t rel = get_offset<N,N-M,Base>(other.strides(),other.offsets(),origin);
+        data_ = other.data() + rel;
+        num_elements_ = other.num_elements() - rel;
+
+        for (size_t i = 0; i < M; ++i)
+        {
+            shape_[i] = (slices[i].stop() - slices[i].start())/slices[i].stride();
+            strides_[i] = other.strides()[(N-M)+i];
+        }
+        Order::update_offsets<M,Base>(strides_, slices, offsets_);
+        for (size_t i = 0; i < M; ++i)
+        {
+            strides_[i] *= slices[i].stride();
+        }
+    }
 };
 
 template <typename CharT, typename T, size_t M, typename Order, typename Base, typename TPtr>
@@ -1574,14 +1650,26 @@ class ndarray_view : public const_ndarray_view<T, M, Order, Base, T*>
     typedef ndarray_view_member_types<T,M,Order,Base,T*> member_types;
     typedef const_ndarray_view<T, M, Order, Base, T*> super_type;
 public:
-    using typename super_type::element_type;
+    using typename super_type::value_type;
     using typename super_type::order_type;
     using typename super_type::base_type;
     using typename super_type::const_reference;
     using typename super_type::const_iterator;
     typedef typename member_types::reference reference;
     typedef typename member_types::iterator iterator;
-public:
+
+    template <size_t K>
+    struct view
+    {
+        typedef ndarray_view<T,K,Order,Base> type;
+    };
+
+    template <size_t K>
+    struct const_view
+    {
+        typedef const_ndarray_view<T,K,Order,Base> type;
+    };
+
     template <typename Allocator>
     ndarray_view(ndarray<T, M, Order, Base, Allocator>& a)
         : super_type(a)          
@@ -1610,28 +1698,27 @@ public:
     {
     }
 
-    template <typename OtherTPtr>
-    ndarray_view(const const_ndarray_view<T, M, Order, Base, OtherTPtr>& a)
+    ndarray_view(ndarray_view<T, M, Order, Base>& a)
         : super_type(a)          
     {
     }
 
-    template<size_t N, typename OtherTPtr>
-    ndarray_view(const const_ndarray_view<T, N, Order, Base, OtherTPtr>& a, 
+    template<size_t N>
+    ndarray_view(ndarray_view<T, N, Order, Base>& a, 
                  const std::array<size_t,N-M>& origin)
         : super_type(a, origin)
     {
     }
 
-    template<size_t N, typename OtherTPtr>
-    ndarray_view(const const_ndarray_view<T, N, Order, Base, OtherTPtr>& a, 
+    template<size_t N>
+    ndarray_view(ndarray_view<T, N, Order, Base>& a, 
                  const std::array<slice,M>& slices)
         : super_type(a, slices)
     {
     }
 
-    template<size_t N, typename OtherTPtr>
-    ndarray_view(const const_ndarray_view<T, N, Order, Base, OtherTPtr>& a, 
+    template<size_t N>
+    ndarray_view(ndarray_view<T, N, Order, Base>& a, 
                  const std::array<size_t,N-M>& origin,
                  const std::array<slice,M>& slices)
         : super_type(a, origin, slices)

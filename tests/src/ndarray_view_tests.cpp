@@ -5,6 +5,45 @@
 
 using namespace acons;
 
+TEST_CASE("1-dim ndarray_view constructor tests")
+{
+    typedef ndarray<double,1> an_array;
+    typedef an_array::view<1>::type a_view;
+    typedef an_array::const_view<1>::type a_const_view;
+
+    an_array a = {0,1,2,3,4,5,6,7};
+
+    SECTION("test 1")
+    {
+        a_const_view v(a, {slice(1,7)});
+        REQUIRE(v.size(0) == 6); 
+        CHECK(v(0) == 1);
+        CHECK(v(1) == 2);
+        CHECK(v(2) == 3);
+        CHECK(v(3) == 4);
+        CHECK(v(4) == 5);
+        CHECK(v(5) == 6);
+
+        a_const_view u(v, {slice(1,3)});
+    }
+
+    SECTION("test 2")
+    {
+        a_view v(a, {slice(1,7)});
+        REQUIRE(v.size(0) == 6); 
+        CHECK(v(0) == 1);
+        CHECK(v(1) == 2);
+        CHECK(v(2) == 3);
+        CHECK(v(3) == 4);
+        CHECK(v(4) == 5);
+        CHECK(v(5) == 6);
+
+        a_const_view u(v, {slice(1,3)});
+        a_view w(v, {slice(1,3)});
+
+    }
+}
+
 TEST_CASE("1-dim row_major ndarray ndarray_view size tests")
 {
     typedef ndarray<double,1> an_array;
