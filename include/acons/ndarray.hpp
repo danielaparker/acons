@@ -1676,8 +1676,8 @@ public:
     {
     }
 
-    template<size_t N, typename Allocator>
-    ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
+    template<typename Allocator>
+    ndarray_view(ndarray<T, M, Order, Base, Allocator>& a, 
                  const std::array<slice,M>& slices)
         : super_type(a, slices)
     {
