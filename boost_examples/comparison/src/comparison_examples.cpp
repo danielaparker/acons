@@ -96,7 +96,7 @@ void acons_example()
     // Write to stdout
     std::cout << v << std::endl;
 
-    // array_view dims: [base,bound) (dimension striding default = 1)
+    // array_view dims: [base,bound) (ndim striding default = 1)
     // dim 0: [0,2) 
     // dim 1: [1,3) 
     // dim 2: [0,4) (strided by 2), 

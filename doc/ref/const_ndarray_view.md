@@ -25,7 +25,7 @@ Member type                         |Definition|Notes
 
 Member type                         |Definition
 ------------------------------------|------------------------------
-`dimension`|The number of dimensions of the array view
+`ndim`|The number of dimensions of the array view
 `value_type`|T
 `const_reference`|const T&
 `order_type`|T

@@ -25,7 +25,7 @@ Member type                         |Definition|Notes
 
 Member type                         |Definition
 ------------------------------------|------------------------------
-`dimension`|The number of dimensions of the array
+`ndim`|The number of dimensions of the array
 `allocator_type`|Allocator
 `pointer`|std::allocator_traits<allocator_type>::pointer
 `value_type`|T
