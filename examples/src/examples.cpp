@@ -83,7 +83,7 @@ void enlarge_array_example()
 int main()
 {
     row_major_zero_based_example();
-    //column_major_one_based_example();
-    //shrink_array_example();
-    //enlarge_array_example();
+    column_major_one_based_example();
+    shrink_array_example();
+    enlarge_array_example();
 }

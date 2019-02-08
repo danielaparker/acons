@@ -44,18 +44,13 @@ typename std::pointer_traits<Pointer>::element_type* to_plain_pointer(Pointer pt
 
 class slice
 {
+    static constexpr size_t npos = size_t(-1);
+
+    size_t start_;
+    size_t stop_;
+    size_t stride_;
 public:
-    typedef std::ptrdiff_t index_type;
-private:
-    index_type start_;
-    index_type stop_;
-    index_type stride_;
-public:
-    slice()
-        : start_(0), stop_(0), stride_(0)
-    {
-    }
-    slice(index_type start, index_type stop, index_type step=1)
+    explicit slice(size_t start = 0, size_t stop = npos, size_t step=1)
         : start_(start), stop_(stop), stride_(step)
     {
         assert(start < stop);
@@ -67,15 +62,15 @@ public:
     slice& operator=(const slice& other) = default;
     slice& operator=(slice&& other) = default;
 
-    index_type start() const
+    size_t start() const
     {
         return start_;
     }
-    index_type stop() const
+    size_t stop(size_t n) const
     {
-        return stop_;
+        return stop_ == npos ? n : stop_;
     }
-    index_type stride() const
+    size_t stride() const
     {
         return stride_;
     }
@@ -556,17 +551,8 @@ public:
     typedef Order order_type;
     typedef Base base_type;
 
-    template <size_t M>
-    struct view
-    {
-        typedef ndarray_view<T,M,Order,Base> type;
-    };
-
-    template <size_t M>
-    struct const_view
-    {
-        typedef const_ndarray_view<T,M,Order,Base> type;
-    };
+    template <size_t M> using view = ndarray_view<T,M,Order,Base>;
+    template <size_t M> using const_view = const_ndarray_view<T,M,Order,Base>;
 private:
     friend struct init_helper<0>;
     friend class ndarray_view<T, N, Order, Base>;
@@ -762,18 +748,6 @@ public:
     ~ndarray()
     {
         get_allocator().deallocate(to_plain_pointer(data_), capacity_);
-    }
-
-    template <size_t K>
-    ndarray_view<T,N-K,Order,Base> subarray(const std::array<size_t,K>& origin)
-    {
-        return ndarray_view<T,N-K,Order,Base>(*this, origin);
-    }
-
-    template <size_t K>
-    const_ndarray_view<T,N-K,Order,Base> subarray(const std::array<size_t,K>& origin) const
-    {
-        return const_ndarray_view<T,N-K,Order,Base>(*this, origin);
     }
 
     iterator begin()
@@ -1265,11 +1239,8 @@ public:
     typedef typename member_types::const_reference const_reference;
     typedef typename member_types::iterator const_iterator;
 
-    template <size_t K>
-    struct const_view
-    {
-        typedef const_ndarray_view<T,K,Order,Base> type;
-    };
+    template <size_t K> using const_view = const_ndarray_view<T,K,Order,Base>;
+    
 protected:
     TPtr data_;
     size_t num_elements_;
@@ -1291,7 +1262,7 @@ public:
     {
         for (size_t i = 0; i < M; ++i)
         {
-            shape_[i] = (slices[i].stop() - slices[i].start()) /slices[i].stride();
+            shape_[i] = (slices[i].stop(a.size(i)) - slices[i].start()) /slices[i].stride();
             strides_[i] = a.strides()[i];
         }
         offsets_.fill(0);
@@ -1330,15 +1301,16 @@ public:
                        const std::array<slice,M>& slices)
         : data_(nullptr), num_elements_(0)
     {
-        size_t offset = get_offset<N,N-M,Base>(a.strides(),origin);
+        constexpr size_t K = N-M;
+        size_t offset = get_offset<N,K,Base>(a.strides(),origin);
 
         data_ = a.data() + offset;
         num_elements_ = a.num_elements() - offset;
 
         for (size_t i = 0; i < M; ++i)
         {
-            shape_[i] = (slices[i].stop() - slices[i].start())/slices[i].stride();
-            strides_[i] = a.strides()[(N-M)+i];
+            shape_[i] = (slices[i].stop(a.size(K+i)) - slices[i].start())/slices[i].stride();
+            strides_[i] = a.strides()[K+i];
         }
         offsets_.fill(0);
         Order::update_offsets<M,Base>(strides_, slices, offsets_);
@@ -1361,7 +1333,7 @@ public:
     {
         for (size_t i = 0; i < M; ++i)
         {
-            shape_[i] = (slices[i].stop() - slices[i].start())/slices[i].stride();
+            shape_[i] = (slices[i].stop(other.size(i)) - slices[i].start())/slices[i].stride();
             strides_[i] = other.strides()[i];
         }
         offsets_.fill(0);
@@ -1379,16 +1351,17 @@ public:
     {
         //std::cout << "const_ndarray_view strides: " << other.strides() << ", offsets: " << other.offsets() << ", origin: " << origin << ", data[0] " << data_[0] << ", size: " << num_elements() << "\n";
  
-        size_t rel = get_offset<N,N-M,Base>(other.strides(),other.offsets(),origin);
+        constexpr size_t K = N-M;
+        size_t rel = get_offset<N,K,Base>(other.strides(),other.offsets(),origin);
         //std::cout << "rel: " << rel << "\n";
         data_ = other.data() + rel;
         num_elements_ = other.num_elements() - rel;
 
         for (size_t i = 0; i < M; ++i)
         {
-            shape_[i] = other.shape()[(N-M)+i];
-            strides_[i] = other.strides()[(N-M)+i];
-            offsets_[i] = /*rel + */ other.offsets()[(N-M)+i];
+            shape_[i] = other.shape()[K+i];
+            strides_[i] = other.strides()[K+i];
+            offsets_[i] = /*rel + */ other.offsets()[K+i];
             //std::cout << "dim " << i << ", size: " << shape_[i] << ", stride: " << strides_[i] << ", offset: " << offsets_[i] << "\n";
         }
     }
@@ -1399,14 +1372,15 @@ public:
                        const std::array<slice,M>& slices)
         : data_(other.data_), num_elements_(other.num_elements())
     {
-        size_t rel = get_offset<N,N-M,Base>(other.strides(),other.offsets(),origin);
+        constexpr size_t K = N-M;
+        size_t rel = get_offset<N,K,Base>(other.strides(),other.offsets(),origin);
         data_ = other.data() + rel;
         num_elements_ = other.num_elements() - rel;
 
         for (size_t i = 0; i < M; ++i)
         {
-            shape_[i] = (slices[i].stop() - slices[i].start())/slices[i].stride();
-            strides_[i] = other.strides()[(N-M)+i];
+            shape_[i] = (slices[i].stop(other.size(K+i)) - slices[i].start())/slices[i].stride();
+            strides_[i] = other.strides()[K+i];
         }
         Order::update_offsets<M,Base>(strides_, slices, offsets_);
         for (size_t i = 0; i < M; ++i)
@@ -1505,7 +1479,7 @@ protected:
     {
         for (size_t i = 0; i < M; ++i)
         {
-            shape_[i] = (slices[i].stop() - slices[i].start()) /slices[i].stride();
+            shape_[i] = (slices[i].stop(a.size(i)) - slices[i].start()) /slices[i].stride();
             strides_[i] = a.strides()[i];
         }
         offsets_.fill(0);
@@ -1522,7 +1496,8 @@ protected:
                        typename std::enable_if<!is_pointer_to_const<TPtr2>::value>::type* = 0)
         : data_(nullptr), num_elements_(0)
     {
-        size_t offset = get_offset<N,N-M,Base>(a.strides(),origin);
+        constexpr size_t K = N-M;
+        size_t offset = get_offset<N,K,Base>(a.strides(),origin);
 
         //std::cout << "offset: " << offset << "\n";
 
@@ -1531,8 +1506,8 @@ protected:
 
         for (size_t i = 0; i < M; ++i)
         {
-            shape_[i] = a.shape()[(N-M)+i];
-            strides_[i] = a.strides()[(N-M)+i];
+            shape_[i] = a.shape()[K+i];
+            strides_[i] = a.strides()[K+i];
 
             //std::cout << "dim " << i << ", size: " << shape_[i] << ", stride: " << strides_[i] << "\n";
         }
@@ -1546,15 +1521,16 @@ protected:
                        typename std::enable_if<!is_pointer_to_const<TPtr2>::value>::type* = 0)
         : data_(nullptr), num_elements_(0)
     {
-        size_t offset = get_offset<N,N-M,Base>(a.strides(),origin);
+        constexpr size_t K = N-M;
+        size_t offset = get_offset<N,K,Base>(a.strides(),origin);
 
         data_ = a.data() + offset;
         num_elements_ = a.num_elements() - offset;
 
         for (size_t i = 0; i < M; ++i)
         {
-            shape_[i] = (slices[i].stop() - slices[i].start())/slices[i].stride();
-            strides_[i] = a.strides()[(N-M)+i];
+            shape_[i] = (slices[i].stop(a.size(K+i)) - slices[i].start())/slices[i].stride();
+            strides_[i] = a.strides()[K+i];
         }
         offsets_.fill(0);
         Order::update_offsets<M,Base>(strides_, slices, offsets_);
@@ -1579,7 +1555,7 @@ protected:
     {
         for (size_t i = 0; i < M; ++i)
         {
-            shape_[i] = (slices[i].stop() - slices[i].start())/slices[i].stride();
+            shape_[i] = (slices[i].stop(other.size(i)) - slices[i].start())/slices[i].stride();
             strides_[i] = other.strides()[i];
         }
         offsets_.fill(0);
@@ -1598,16 +1574,17 @@ protected:
     {
         //std::cout << "const_ndarray_view strides: " << other.strides() << ", offsets: " << other.offsets() << ", origin: " << origin << ", data[0] " << data_[0] << ", size: " << num_elements() << "\n";
 
-        size_t rel = get_offset<N,N-M,Base>(other.strides(),other.offsets(),origin);
+        constexpr size_t K = N-M;
+        size_t rel = get_offset<N,K,Base>(other.strides(),other.offsets(),origin);
         //std::cout << "rel: " << rel << "\n";
         data_ = other.data() + rel;
         num_elements_ = other.num_elements() - rel;
 
         for (size_t i = 0; i < M; ++i)
         {
-            shape_[i] = other.shape()[(N-M)+i];
-            strides_[i] = other.strides()[(N-M)+i];
-            offsets_[i] = /*rel + */ other.offsets()[(N-M)+i];
+            shape_[i] = other.shape()[K+i];
+            strides_[i] = other.strides()[K+i];
+            offsets_[i] = /*rel + */ other.offsets()[K+i];
             //std::cout << "dim " << i << ", size: " << shape_[i] << ", stride: " << strides_[i] << ", offset: " << offsets_[i] << "\n";
         }
     }
@@ -1619,14 +1596,15 @@ protected:
                        typename std::enable_if<!is_pointer_to_const<TPtr2>::value>::type* = 0)
         : data_(other.data_), num_elements_(other.num_elements())
     {
-        size_t rel = get_offset<N,N-M,Base>(other.strides(),other.offsets(),origin);
+        constexpr size_t K = N-M;
+        size_t rel = get_offset<N,K,Base>(other.strides(),other.offsets(),origin);
         data_ = other.data() + rel;
         num_elements_ = other.num_elements() - rel;
 
         for (size_t i = 0; i < M; ++i)
         {
-            shape_[i] = (slices[i].stop() - slices[i].start())/slices[i].stride();
-            strides_[i] = other.strides()[(N-M)+i];
+            shape_[i] = (slices[i].stop(other.size(K+i)) - slices[i].start())/slices[i].stride();
+            strides_[i] = other.strides()[K+i];
         }
         Order::update_offsets<M,Base>(strides_, slices, offsets_);
         for (size_t i = 0; i < M; ++i)
@@ -1658,17 +1636,9 @@ public:
     typedef typename member_types::reference reference;
     typedef typename member_types::iterator iterator;
 
-    template <size_t K>
-    struct view
-    {
-        typedef ndarray_view<T,K,Order,Base> type;
-    };
+    template <size_t K> using view = ndarray_view<T,K,Order,Base>;
 
-    template <size_t K>
-    struct const_view
-    {
-        typedef const_ndarray_view<T,K,Order,Base> type;
-    };
+    template <size_t K> using const_view = const_ndarray_view<T,K,Order,Base>;
 
     template <typename Allocator>
     ndarray_view(ndarray<T, M, Order, Base, Allocator>& a)
