@@ -1341,7 +1341,7 @@ public:
 
     template<typename OtherTPtr>
     const_ndarray_view(const const_ndarray_view<T, M, Order, Base, OtherTPtr>& other)
-        : data_(other.data_), num_elements_(other.num_elements()), shape_(other.shape()), strides_(other.strides()), offsets_(other.offsets())          
+        : data_(other.data()), num_elements_(other.num_elements()), shape_(other.shape()), strides_(other.strides()), offsets_(other.offsets())          
     {
     }
 
@@ -1389,7 +1389,7 @@ public:
     const_ndarray_view(const const_ndarray_view<T, N, Order, Base, OtherTPtr>& other, 
                        const std::array<size_t,N-m>& origin,
                        const std::array<slice,M>& slices)
-        : data_(other.data_), num_elements_(other.num_elements())
+        : data_(other.data()), num_elements_(other.num_elements())
     {
         constexpr size_t K = N-M;
         size_t rel = get_offset<N,K,Base>(other.strides(),other.offsets(),origin);
@@ -1434,6 +1434,13 @@ public:
     const std::array<size_t,M>& offsets() const {return offsets_;}
 
     const T* data() const 
+    {
+        return data_;
+    }
+
+    template <typename TPtr2=TPtr>
+    typename std::enable_if<!is_pointer_to_const<TPtr2>::value,T*>::type
+    data()
     {
         return data_;
     }
@@ -1562,7 +1569,7 @@ protected:
     template<typename OtherTPtr, typename TPtr2=TPtr>
     const_ndarray_view(const_ndarray_view<T, M, Order, Base, OtherTPtr>& other,
                        typename std::enable_if<!is_pointer_to_const<TPtr2>::value>::type* = 0)
-        : data_(other.data_), num_elements_(other.num_elements()), shape_(other.shape()), strides_(other.strides()), offsets_(other.offsets())          
+        : data_(other.data()), num_elements_(other.num_elements()), shape_(other.shape()), strides_(other.strides()), offsets_(other.offsets())          
     {
     }
 
@@ -1570,7 +1577,7 @@ protected:
     const_ndarray_view(const_ndarray_view<T, M, Order, Base, OtherTPtr>& other, 
                        const std::array<slice,M>& slices,
                        typename std::enable_if<!is_pointer_to_const<TPtr2>::value>::type* = 0)
-        : data_(other.data_), num_elements_(other.num_elements()), offsets_(other.offsets())
+        : data_(other.data()), num_elements_(other.num_elements()), offsets_(other.offsets())
     {
         for (size_t i = 0; i < M; ++i)
         {
@@ -1589,7 +1596,7 @@ protected:
     const_ndarray_view(const_ndarray_view<T, N, Order, Base, OtherTPtr>& other, 
                        const std::array<size_t,N-m>& origin,
                        typename std::enable_if<!is_pointer_to_const<TPtr2>::value>::type* = 0)
-        : data_(other.data_), num_elements_(other.num_elements())
+        : data_(other.data()), num_elements_(other.num_elements())
     {
         //std::cout << "const_ndarray_view strides: " << other.strides() << ", offsets: " << other.offsets() << ", origin: " << origin << ", data[0] " << data_[0] << ", size: " << num_elements() << "\n";
 
@@ -1613,7 +1620,7 @@ protected:
                        const std::array<size_t,N-m>& origin,
                        const std::array<slice,M>& slices,
                        typename std::enable_if<!is_pointer_to_const<TPtr2>::value>::type* = 0)
-        : data_(other.data_), num_elements_(other.num_elements())
+        : data_(other.data()), num_elements_(other.num_elements())
     {
         constexpr size_t K = N-M;
         size_t rel = get_offset<N,K,Base>(other.strides(),other.offsets(),origin);
