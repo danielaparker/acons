@@ -1,8 +1,74 @@
-#include <acons/ndarray.hpp>
 #include <iostream>
+#include <acons/ndarray.hpp>
 #include <cassert>
 
 using namespace acons;
+
+void example1()
+{
+    // Construct a 2-dimensional 2 x 2 array 
+    ndarray<double,1> a = {0,1,2,3,4,5,6,7,8,9};
+
+    ndarray_view<double, 1> v(a, { slice(2,7,2) });
+    std::cout << v << "\n\n";
+
+    // [2,4,6]
+}
+
+void example2()
+{
+    // Construct a 2-dimensional 2 x 2 array 
+    ndarray<double,1> a = {0,1,2,3,4,5,6,7,8,9};
+
+    std::cout << a(5) << "\n\n";
+
+    // 5
+}
+
+void example3()
+{
+    // Construct a 2-dimensional 2 x 2 array 
+    ndarray<double,1> a = {0,1,2,3,4,5,6,7,8,9};
+
+    ndarray_view<double, 1> v(a, { slice(2) });
+    std::cout << v << "\n\n";
+
+    // [2,3,4,5,6,7,8,9]
+}
+
+void example4()
+{
+    // Construct a 2-dimensional 2 x 2 array 
+    ndarray<double,1> a = {0,1,2,3,4,5,6,7,8,9};
+
+    ndarray_view<double, 1> v(a, { slice(2,5) });
+    std::cout << v << "\n\n";
+
+    // [2,3,4]
+}
+
+void example5()
+{
+    // Construct a 2-dimensional 3 x 3 array 
+    ndarray<double,2> a = {{1,2,3},{3,4,5},{4,5,6}};
+
+    ndarray_view<double, 2> v(a, { slice(1) });
+    std::cout << v << "\n\n";
+
+    // [[3,4,5],[4,5,6]]
+}
+
+void example6()
+{
+    // Construct a 2-dimensional 3 x 3 array 
+    ndarray<double,2> a = {{1,2,3},{3,4,5},{4,5,6}};
+
+    // Slice all items from the second row
+    ndarray_view<double, 1> v(a, {1});
+    std::cout << v << "\n\n";
+
+    // [3 4 5]
+}
 
 void row_major_zero_based_example()
 {
@@ -82,6 +148,13 @@ void enlarge_array_example()
 
 int main()
 {
+    example1();
+    example2();
+    example3();
+    example4();
+    example5();
+    example6();
+
     row_major_zero_based_example();
     column_major_one_based_example();
     shrink_array_example();

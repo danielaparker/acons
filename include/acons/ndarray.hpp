@@ -53,7 +53,6 @@ public:
     constexpr explicit slice(size_t start = npos, size_t stop = npos, size_t step=1)
         : start_(start), stop_(stop), stride_(step)
     {
-        assert(start < stop);
     }
 
     slice(const slice& other) = default;
@@ -62,17 +61,28 @@ public:
     slice& operator=(const slice& other) = default;
     slice& operator=(slice&& other) = default;
 
-    size_t start(size_t n) const
+    size_t start(size_t origin) const
     {
-        return start_ == npos ? n : start_;
+        return start_ == npos ? origin : start_;
     }
-    size_t stop(size_t n) const
+
+    size_t stop(size_t origin, size_t n) const
     {
-        return stop_ == npos ? n : stop_;
+        return stop_ == npos ? (origin+n) : stop_;
     }
     size_t stride() const
     {
         return stride_;
+    }
+
+    size_t length(size_t origin, size_t n) const
+    {
+        size_t y = stop(origin, n);
+        size_t x = start(origin);
+
+        assert(y >= x);
+        size_t w = y - x;
+        return w/stride_ + (w % stride_ != 0);
     }
 };
 
@@ -1271,7 +1281,7 @@ public:
     {
         for (size_t i = 0; i < M; ++i)
         {
-            shape_[i] = (slices[i].stop(Base::origin+a.size(i)) - slices[i].start(Base::origin)) /slices[i].stride();
+            shape_[i] = slices[i].length(Base::origin, a.size(i));
             strides_[i] = a.strides()[i];
         }
         offsets_.fill(0);
@@ -1318,7 +1328,7 @@ public:
 
         for (size_t i = 0; i < M; ++i)
         {
-            shape_[i] = (slices[i].stop(Base::origin+a.size(K+i)) - slices[i].start(Base::origin))/slices[i].stride();
+            shape_[i] = slices[i].length(Base::origin, a.size(K+i));
             strides_[i] = a.strides()[K+i];
         }
         offsets_.fill(0);
@@ -1342,7 +1352,7 @@ public:
     {
         for (size_t i = 0; i < M; ++i)
         {
-            shape_[i] = (slices[i].stop(Base::origin+other.size(i)) - slices[i].start(Base::origin))/slices[i].stride();
+            shape_[i] = slices[i].length(Base::origin, other.size(i));
             strides_[i] = other.strides()[i];
         }
         offsets_.fill(0);
@@ -1388,7 +1398,7 @@ public:
 
         for (size_t i = 0; i < M; ++i)
         {
-            shape_[i] = (slices[i].stop(Base::origin+other.size(K+i)) - slices[i].start(Base::origin))/slices[i].stride();
+            shape_[i] = slices[i].length(Base::origin, other.size(K+i));
             strides_[i] = other.strides()[K+i];
         }
         Order::update_offsets<M,Base>(strides_, slices, offsets_);
@@ -1488,7 +1498,7 @@ protected:
     {
         for (size_t i = 0; i < M; ++i)
         {
-            shape_[i] = (slices[i].stop(Base::origin+a.size(i)) - slices[i].start(Base::origin)) /slices[i].stride();
+            shape_[i] = slices[i].length(Base::origin, a.size(i));
             strides_[i] = a.strides()[i];
         }
         offsets_.fill(0);
@@ -1538,7 +1548,7 @@ protected:
 
         for (size_t i = 0; i < M; ++i)
         {
-            shape_[i] = (slices[i].stop(Base::origin+a.size(K+i)) - slices[i].start(Base::origin))/slices[i].stride();
+            shape_[i] = slices[i].length(Base::origin, a.size(K+i));
             strides_[i] = a.strides()[K+i];
         }
         offsets_.fill(0);
@@ -1564,7 +1574,7 @@ protected:
     {
         for (size_t i = 0; i < M; ++i)
         {
-            shape_[i] = (slices[i].stop(Base::origin+other.size(i)) - slices[i].start(Base::origin))/slices[i].stride();
+            shape_[i] = slices[i].length(Base::origin, other.size(i));
             strides_[i] = other.strides()[i];
         }
         offsets_.fill(0);
@@ -1612,7 +1622,7 @@ protected:
 
         for (size_t i = 0; i < M; ++i)
         {
-            shape_[i] = (slices[i].stop(Base::origin+other.size(K+i)) - slices[i].start(Base::origin))/slices[i].stride();
+            shape_[i] = slices[i].length(Base::origin, other.size(K+i));
             strides_[i] = other.strides()[K+i];
         }
         Order::update_offsets<M,Base>(strides_, slices, offsets_);
