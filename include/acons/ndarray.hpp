@@ -1109,7 +1109,6 @@ template <typename CharT, typename T, size_t M, typename Order, typename Base, t
 typename std::enable_if<(M>1),void>::type
 print(std::basic_ostream<CharT>& os, const_ndarray_view<T,M,Order,Base,TPtr>& v)
 {
-    //std::cout << "const_ndarray_view<T,M,Order,Base,TPtr> M > 1\n";
     os << '[';
     for (size_t i = 0; i < v.size(0); ++i)
     {
@@ -1127,8 +1126,6 @@ template <typename CharT, typename T, size_t M, typename Order, typename Base, t
 typename std::enable_if<M == 1,void>::type
 print(std::basic_ostream<CharT>& os, const_ndarray_view<T,M,Order,Base,TPtr>& v)
 {
-    //std::cout << "const_ndarray_view<T,M,Order,Base,TPtr> M == 1\n";
-    //std::cout << "size: " << v.size() << "\n";
     os << '[';
     bool begin = true;
     for (auto element : v)
