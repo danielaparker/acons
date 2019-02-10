@@ -1735,11 +1735,6 @@ public:
     using super_type::cbegin;
     using super_type::cend;
 
-    T* data()
-    {
-        return this->data_;
-    }
-
     template <typename... Indices>
     T& operator()(size_t index, Indices... indices) 
     {
