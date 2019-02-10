@@ -1282,7 +1282,7 @@ public:
             strides_[i] = a.strides()[i];
         }
         offsets_.fill(0);
-        Order::update_offsets<M,Base>(strides_, slices, offsets_);
+        Order::template update_offsets<M,Base>(strides_, slices, offsets_);
         for (size_t i = 0; i < M; ++i)
         {
             strides_[i] *= slices[i].stride();
@@ -1329,7 +1329,7 @@ public:
             strides_[i] = a.strides()[K+i];
         }
         offsets_.fill(0);
-        Order::update_offsets<M,Base>(strides_, slices, offsets_);
+        Order::template update_offsets<M,Base>(strides_, slices, offsets_);
         for (size_t i = 0; i < M; ++i)
         {
             strides_[i] *= slices[i].stride();
@@ -1353,7 +1353,7 @@ public:
             strides_[i] = other.strides()[i];
         }
         offsets_.fill(0);
-        Order::update_offsets<M,Base>(strides_, slices, offsets_);
+        Order::template update_offsets<M,Base>(strides_, slices, offsets_);
         for (size_t i = 0; i < M; ++i)
         {
             strides_[i] *= slices[i].stride();
@@ -1398,7 +1398,7 @@ public:
             shape_[i] = slices[i].length(Base::origin, other.size(K+i));
             strides_[i] = other.strides()[K+i];
         }
-        Order::update_offsets<M,Base>(strides_, slices, offsets_);
+        Order::template update_offsets<M,Base>(strides_, slices, offsets_);
         for (size_t i = 0; i < M; ++i)
         {
             strides_[i] *= slices[i].stride();
@@ -1506,7 +1506,7 @@ protected:
             strides_[i] = a.strides()[i];
         }
         offsets_.fill(0);
-        Order::update_offsets<M,Base>(strides_, slices, offsets_);
+        Order::template update_offsets<M,Base>(strides_, slices, offsets_);
         for (size_t i = 0; i < M; ++i)
         {
             strides_[i] *= slices[i].stride();
@@ -1556,7 +1556,7 @@ protected:
             strides_[i] = a.strides()[K+i];
         }
         offsets_.fill(0);
-        Order::update_offsets<M,Base>(strides_, slices, offsets_);
+        Order::template update_offsets<M,Base>(strides_, slices, offsets_);
         for (size_t i = 0; i < M; ++i)
         {
             strides_[i] *= slices[i].stride();
@@ -1582,7 +1582,7 @@ protected:
             strides_[i] = other.strides()[i];
         }
         offsets_.fill(0);
-        Order::update_offsets<M,Base>(strides_, slices, offsets_);
+        Order::template update_offsets<M,Base>(strides_, slices, offsets_);
         for (size_t i = 0; i < M; ++i)
         {
             strides_[i] *= slices[i].stride();
@@ -1629,7 +1629,7 @@ protected:
             shape_[i] = slices[i].length(Base::origin, other.size(K+i));
             strides_[i] = other.strides()[K+i];
         }
-        Order::update_offsets<M,Base>(strides_, slices, offsets_);
+        Order::template update_offsets<M,Base>(strides_, slices, offsets_);
         for (size_t i = 0; i < M; ++i)
         {
             strides_[i] *= slices[i].stride();
