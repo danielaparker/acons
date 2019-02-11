@@ -13,7 +13,7 @@ TEST_CASE("constructor 1")
 
     CHECK(a.data() == nullptr);
     CHECK(a.empty());
-    CHECK(a.num_elements() == 0);
+    CHECK(a.size() == 0);
     CHECK(a.size(0) == 0);
     CHECK(a.size(1) == 0);
     CHECK(a.size(2) == 0);
@@ -44,12 +44,12 @@ TEST_CASE("constructor 2a")
     }
 
     CHECK_FALSE(a.empty());
-    CHECK(a.num_elements() == 6);
+    CHECK(a.size() == 6);
     CHECK(a.size(0) == 1);
     CHECK(a.size(1) == 2);
     CHECK(a.size(2) == 3);
 
-    for (size_t i = 0; i < a.num_elements(); ++i)
+    for (size_t i = 0; i < a.size(); ++i)
     {
         CHECK(a.data()[i] == i);
     }
@@ -60,12 +60,12 @@ TEST_CASE("constructor 2b")
     ndarray<double,3> a(1,2,3,10.0);
 
     CHECK_FALSE(a.empty());
-    CHECK(a.num_elements() == 6);
+    CHECK(a.size() == 6);
     CHECK(a.size(0) == 1);
     CHECK(a.size(1) == 2);
     CHECK(a.size(2) == 3);
 
-    for (size_t i = 0; i < a.num_elements(); ++i)
+    for (size_t i = 0; i < a.size(); ++i)
     {
         CHECK(a.data()[i] == 10.0);
     }
@@ -88,12 +88,12 @@ TEST_CASE("constructor 2b")
     }
 
     CHECK_FALSE(a.empty());
-    CHECK(a.num_elements() == 6);
+    CHECK(a.size() == 6);
     CHECK(a.size(0) == 1);
     CHECK(a.size(1) == 2);
     CHECK(a.size(2) == 3);
 
-    for (size_t i = 0; i < a.num_elements(); ++i)
+    for (size_t i = 0; i < a.size(); ++i)
     {
         CHECK(a.data()[i] == i);
     }
@@ -104,12 +104,12 @@ TEST_CASE("constructor 2b")
     ndarray<double,3> a(1,2,3,10.0,std::allocator<double>());
 
     CHECK_FALSE(a.empty());
-    CHECK(a.num_elements() == 6);
+    CHECK(a.size() == 6);
     CHECK(a.size(0) == 1);
     CHECK(a.size(1) == 2);
     CHECK(a.size(2) == 3);
 
-    for (size_t i = 0; i < a.num_elements(); ++i)
+    for (size_t i = 0; i < a.size(); ++i)
     {
         CHECK(a.data()[i] == 10);
     }
@@ -133,12 +133,12 @@ TEST_CASE("constructor 3")
     }
 
     CHECK_FALSE(a.empty());
-    CHECK(a.num_elements() == 6);
+    CHECK(a.size() == 6);
     CHECK(a.size(0) == 1);
     CHECK(a.size(1) == 2);
     CHECK(a.size(2) == 3);
 
-    for (size_t i = 0; i < a.num_elements(); ++i)
+    for (size_t i = 0; i < a.size(); ++i)
     {
         CHECK(a.data()[i] == i);
     }
@@ -163,12 +163,12 @@ TEST_CASE("constructor 4")
     }
 
     CHECK_FALSE(a.empty());
-    CHECK(a.num_elements() == 6);
+    CHECK(a.size() == 6);
     CHECK(a.size(0) == 1);
     CHECK(a.size(1) == 2);
     CHECK(a.size(2) == 3);
 
-    for (size_t i = 0; i < a.num_elements(); ++i)
+    for (size_t i = 0; i < a.size(); ++i)
     {
         CHECK(a.data()[i] == i);
     }
@@ -180,12 +180,12 @@ TEST_CASE("constructor 5")
     ndarray<double, 3> a(dim, 10.0);
 
     CHECK_FALSE(a.empty());
-    CHECK(a.num_elements() == 6);
+    CHECK(a.size() == 6);
     CHECK(a.size(0) == 1);
     CHECK(a.size(1) == 2);
     CHECK(a.size(2) == 3);
 
-    for (size_t i = 0; i < a.num_elements(); ++i)
+    for (size_t i = 0; i < a.size(); ++i)
     {
         CHECK(a.data()[i] == 10.0);
     }
@@ -197,12 +197,12 @@ TEST_CASE("constructor 6")
     ndarray<double, 3> a(dim, 10.0, std::allocator<double>());
 
     CHECK_FALSE(a.empty());
-    CHECK(a.num_elements() == 6);
+    CHECK(a.size() == 6);
     CHECK(a.size(0) == 1);
     CHECK(a.size(1) == 2);
     CHECK(a.size(2) == 3);
 
-    for (size_t i = 0; i < a.num_elements(); ++i)
+    for (size_t i = 0; i < a.size(); ++i)
     {
         CHECK(a.data()[i] == 10.0);
     }
@@ -213,12 +213,12 @@ TEST_CASE("constructor 7")
     ndarray<double, 3> a= {{{0,1,2},{3,4,5}}};
 
     CHECK_FALSE(a.empty());
-    CHECK(a.num_elements() == 6);
+    CHECK(a.size() == 6);
     CHECK(a.size(0) == 1);
     CHECK(a.size(1) == 2);
     CHECK(a.size(2) == 3);
 
-    for (size_t i = 0; i < a.num_elements(); ++i)
+    for (size_t i = 0; i < a.size(); ++i)
     {
         CHECK(a.data()[i] == i);
     }
@@ -229,12 +229,12 @@ TEST_CASE("constructor 8")
     ndarray<double, 3> a({{{0,1,2},{3,4,5}}}, std::allocator<double>());
 
     CHECK_FALSE(a.empty());
-    CHECK(a.num_elements() == 6);
+    CHECK(a.size() == 6);
     CHECK(a.size(0) == 1);
     CHECK(a.size(1) == 2);
     CHECK(a.size(2) == 3);
 
-    for (size_t i = 0; i < a.num_elements(); ++i)
+    for (size_t i = 0; i < a.size(); ++i)
     {
         CHECK(a.data()[i] == i);
     }
@@ -246,12 +246,12 @@ TEST_CASE("constructor 9")
 
     ndarray<double, 3> b(a);
 
-    CHECK(a.num_elements() == b.num_elements());
+    CHECK(a.size() == b.size());
     for (size_t i = 0; i < 3; ++i)
     {
         CHECK(a.size(i) == b.size(i));
     }
-    for (size_t i = 0; i < a.num_elements(); ++i)
+    for (size_t i = 0; i < a.size(); ++i)
     {
         CHECK(a.data()[i] == b.data()[i]);
     }
@@ -263,7 +263,7 @@ TEST_CASE("constructor 11")
     ndarray<double, 3> a = {{{0,1,2},{3,4,5}}};
 
     CHECK_FALSE(a.empty());
-    CHECK(a.num_elements() == 6);
+    CHECK(a.size() == 6);
     CHECK(a.size(0) == 1);
     CHECK(a.size(1) == 2);
     CHECK(a.size(2) == 3);
@@ -271,18 +271,18 @@ TEST_CASE("constructor 11")
     ndarray<double, 3> b(std::move(a));
 
     CHECK_FALSE(b.empty());
-    CHECK(b.num_elements() == 6);
+    CHECK(b.size() == 6);
     CHECK(b.size(0) == 1);
     CHECK(b.size(1) == 2);
     CHECK(b.size(2) == 3);
 
-    for (size_t i = 0; i < b.num_elements(); ++i)
+    for (size_t i = 0; i < b.size(); ++i)
     {
         CHECK(b.data()[i] == i);
     }
 
     CHECK(a.empty());
-    CHECK(a.num_elements() == 0);
+    CHECK(a.size() == 0);
     CHECK(a.size(0) == 0);
     CHECK(a.size(1) == 0);
     CHECK(a.size(2) == 0);
@@ -295,18 +295,18 @@ TEST_CASE("constructor 12")
     ndarray<double, 3> b(std::move(a), std::allocator<double>());
 
     CHECK_FALSE(b.empty());
-    CHECK(b.num_elements() == 6);
+    CHECK(b.size() == 6);
     CHECK(b.size(0) == 1);
     CHECK(b.size(1) == 2);
     CHECK(b.size(2) == 3);
 
-    for (size_t i = 0; i < b.num_elements(); ++i)
+    for (size_t i = 0; i < b.size(); ++i)
     {
         CHECK(b.data()[i] == i);
     }
 
     CHECK(a.empty());
-    CHECK(a.num_elements() == 0);
+    CHECK(a.size() == 0);
     CHECK(a.size(0) == 0);
     CHECK(a.size(1) == 0);
     CHECK(a.size(2) == 0);
