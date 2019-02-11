@@ -1652,7 +1652,7 @@ protected:
             indices[i+M] = origin[i];
         }
 
-        size_t offset = get_offset<N,N,Base>(a.strides(),indices);
+        size_t offset = get_offset<N,N,Base>(a.strides(),a.offsets(),indices);
 
         data_ = a.data() + offset;
         num_elements_ = a.size() - offset;
@@ -1686,7 +1686,7 @@ protected:
             indices[i+M] = origin[i];
         }
 
-        size_t offset = get_offset<N,N,Base>(a.strides(),indices);
+        size_t offset = get_offset<N,N,Base>(a.strides(),a.offsets(),indices);
 
         data_ = a.data() + offset;
         num_elements_ = a.size() - offset;
