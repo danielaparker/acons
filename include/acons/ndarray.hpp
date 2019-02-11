@@ -1950,7 +1950,23 @@ public:
     {
     }
 
+    template<size_t N, typename Allocator>
+    const_ndarray_view(const ndarray<T, N, Order, Base, Allocator>& a, 
+                       const std::array<size_t,N-M>& origin,
+                       const std::array<slice,M>& slices)
+        : super_type(a, origin, slices)
+    {
+    }
+
     // slices, origin
+
+    template<size_t N, typename Allocator>
+    const_ndarray_view(const ndarray<T, N, Order, Base, Allocator>& a,
+                       const std::array<slice,M>& slices, 
+                       const std::array<size_t,N-M>& origin)
+        : super_type(a, slices, origin)
+    {
+    }
 
     template<size_t N, typename OtherTPtr>
     const_ndarray_view(const ndarray_view_base<T, N, Order, Base, OtherTPtr>& other,
