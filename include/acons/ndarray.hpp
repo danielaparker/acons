@@ -16,22 +16,6 @@
   
 namespace acons {
 
-template <typename T, size_t M, typename Order=row_major, typename Base=zero_based, typename TPtr=const T*>
-class ndarray_view_base;  
-
-template <typename T, size_t N, typename Order=row_major, typename Base=zero_based, typename Allocator=std::allocator<T>>
-class ndarray;
-
-template <typename T, size_t M, typename Order=row_major, typename Base=zero_based>
-class const_ndarray_view;  
-
-template <typename T, size_t M, typename Order=row_major, typename Base=zero_based>
-class ndarray_view;  
-
-template <typename T, typename TPtr>
-class ndarray_view_iterator_one;
-
-
 template <typename TPtr, typename Enable = void>
 struct is_pointer_to_const : std::false_type {};
 
@@ -380,6 +364,8 @@ struct ndarray_view_member_types
     typedef void iterator;
 };
 
+// Forward declarations
+
 template <typename T, size_t M, typename Order, typename Base, typename TPtr>
 struct ndarray_view_member_types<T,M,Order,Base,TPtr,typename std::enable_if<M == 1>::type>
 {
@@ -388,6 +374,21 @@ struct ndarray_view_member_types<T,M,Order,Base,TPtr,typename std::enable_if<M =
     typedef const T& const_reference;
     typedef ndarray_view_iterator_one<T,TPtr> iterator;
 };
+
+template <typename T, size_t M, typename Order=row_major, typename Base=zero_based, typename TPtr=const T*>
+class ndarray_view_base;  
+
+template <typename T, size_t N, typename Order=row_major, typename Base=zero_based, typename Allocator=std::allocator<T>>
+class ndarray;
+
+template <typename T, size_t M, typename Order=row_major, typename Base=zero_based>
+class const_ndarray_view;  
+
+template <typename T, size_t M, typename Order=row_major, typename Base=zero_based>
+class ndarray_view;  
+
+template <typename T, typename TPtr>
+class ndarray_view_iterator_one;
 
 // ndarray
 
