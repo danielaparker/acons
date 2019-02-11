@@ -1120,7 +1120,7 @@ print(std::basic_ostream<CharT>& os, ndarray_view_base<T,M,Order,Base,TPtr>& v)
             os << ',';
         }
         std::array<size_t,1> a = {i};
-        ndarray_view_base<T,M-1,Order,Base,const T*> w(v,a);
+        const_ndarray_view<T,M-1,Order,Base> w(v,a);
         print(os,w);
     }
     os << ']';
@@ -1158,7 +1158,7 @@ print(std::basic_ostream<CharT>& os, ndarray<T,M,Order,Base,Allocator>& v)
             os << ',';
         }
         std::array<size_t,1> a = {i};
-        ndarray_view_base<T,M-1,Order,Base> w(v,a);
+        const_ndarray_view<T,M-1,Order,Base> w(v,a);
         print(os,w);
     }
     os << ']';
@@ -1267,6 +1267,78 @@ protected:
     std::array<size_t,M> strides_;
     std::array<size_t,M> offsets_;
 public:
+    size_t num_elements() const noexcept
+    {
+        return num_elements_;
+    }
+
+    bool empty() const noexcept
+    {
+        return num_elements_ == 0;
+    }
+
+    const std::array<size_t,M>& shape() const {return shape_;}
+
+    const std::array<size_t,M>& strides() const {return strides_;}
+
+    const std::array<size_t,M>& offsets() const {return offsets_;}
+
+    const T* data() const 
+    {
+        return data_;
+    }
+
+    template <typename TPtr2=TPtr>
+    typename std::enable_if<!is_pointer_to_const<TPtr2>::value,T*>::type
+    data()
+    {
+        return data_;
+    }
+
+    size_t size(size_t i) const
+    {
+        assert(i < shape_.size());
+        return shape_[i];
+    }
+
+    template <typename... Indices>
+    const T& operator()(size_t index, Indices... indices) const
+    {
+        size_t off = get_offset<M, Base, 0>(strides_, offsets_, index, indices...);
+
+        //std::cout << "operator() strides: " << strides_ << ", offsets: " << offsets_ << ", index: " << index << "\n";
+        //std::cout << "off: " << off << ", size: " << size() << "\n";
+
+        assert(off < num_elements());
+        return data_[off];
+    }
+
+    const T& operator()(const std::array<size_t,M>& indices) const 
+    {
+        size_t off = get_offset<M, M, Base>(strides_, offsets_, indices);
+        assert(off < num_elements());
+        return data_[off];
+    }
+
+    const_iterator begin() const
+    {
+        return const_iterator(data_,strides_[0],offsets_[0]);
+    }
+
+    const_iterator end() const
+    {
+        return const_iterator(data_,strides_[0],(offsets_[0]+size(0)*strides_[0]));
+    }
+    const_iterator cbegin() const
+    {
+        return const_iterator(data_,strides_[0],offsets_[0]);
+    }
+
+    const_iterator cend() const
+    {
+        return const_iterator(data_,strides_[0],(offsets_[0]+size(0)*strides_[0]));
+    }
+protected:
     template <typename Allocator>
     ndarray_view_base(const ndarray<T, M, Order, Base, Allocator>& a)
         : data_(a.data()), num_elements_(a.num_elements()), shape_(a.shape()), strides_(a.strides())          
@@ -1369,7 +1441,7 @@ public:
         : data_(other.data()), num_elements_(other.num_elements())
     {
         //std::cout << "ndarray_view_base strides: " << other.strides() << ", offsets: " << other.offsets() << ", origin: " << origin << ", data[0] " << data_[0] << ", size: " << num_elements() << "\n";
- 
+
         constexpr size_t K = N-M;
         size_t rel = get_offset<N,K,Base>(other.strides(),other.offsets(),origin);
         //std::cout << "rel: " << rel << "\n";
@@ -1417,78 +1489,6 @@ public:
         Order::calculate_strides(shape_, strides_, num_elements_);
     }
 
-    size_t num_elements() const noexcept
-    {
-        return num_elements_;
-    }
-
-    bool empty() const noexcept
-    {
-        return num_elements_ == 0;
-    }
-
-    const std::array<size_t,M>& shape() const {return shape_;}
-
-    const std::array<size_t,M>& strides() const {return strides_;}
-
-    const std::array<size_t,M>& offsets() const {return offsets_;}
-
-    const T* data() const 
-    {
-        return data_;
-    }
-
-    template <typename TPtr2=TPtr>
-    typename std::enable_if<!is_pointer_to_const<TPtr2>::value,T*>::type
-    data()
-    {
-        return data_;
-    }
-
-    size_t size(size_t i) const
-    {
-        assert(i < shape_.size());
-        return shape_[i];
-    }
-
-    template <typename... Indices>
-    const T& operator()(size_t index, Indices... indices) const
-    {
-        size_t off = get_offset<M, Base, 0>(strides_, offsets_, index, indices...);
-
-        //std::cout << "operator() strides: " << strides_ << ", offsets: " << offsets_ << ", index: " << index << "\n";
-        //std::cout << "off: " << off << ", size: " << size() << "\n";
-
-        assert(off < num_elements());
-        return data_[off];
-    }
-
-    const T& operator()(const std::array<size_t,M>& indices) const 
-    {
-        size_t off = get_offset<M, M, Base>(strides_, offsets_, indices);
-        assert(off < num_elements());
-        return data_[off];
-    }
-
-    const_iterator begin() const
-    {
-        return const_iterator(data_,strides_[0],offsets_[0]);
-    }
-
-    const_iterator end() const
-    {
-        return const_iterator(data_,strides_[0],(offsets_[0]+size(0)*strides_[0]));
-    }
-    const_iterator cbegin() const
-    {
-        return const_iterator(data_,strides_[0],offsets_[0]);
-    }
-
-    const_iterator cend() const
-    {
-        return const_iterator(data_,strides_[0],(offsets_[0]+size(0)*strides_[0]));
-    }
-protected:
     template <typename Allocator, typename TPtr2=TPtr>
     ndarray_view_base(ndarray<T, M, Order, Base, Allocator>& a,
                        typename std::enable_if<!is_pointer_to_const<TPtr2>::value>::type* = 0)
@@ -1664,7 +1664,7 @@ public:
 
     template <size_t K> using view = ndarray_view<T,K,Order,Base>;
 
-    template <size_t K> using const_view = ndarray_view_base<T,K,Order,Base>;
+    template <size_t K> using const_view = const_ndarray_view<T,K,Order,Base>;
 
     template <typename Allocator>
     ndarray_view(ndarray<T, M, Order, Base, Allocator>& a)
@@ -1802,7 +1802,7 @@ public:
 
     template <size_t K> using view = ndarray_view<T,K,Order,Base>;
 
-    template <size_t K> using const_view = ndarray_view_base<T,K,Order,Base>;
+    template <size_t K> using const_view = const_ndarray_view<T,K,Order,Base>;
 
     template <typename Allocator>
     const_ndarray_view(const ndarray<T, M, Order, Base, Allocator>& a)
@@ -1866,42 +1866,6 @@ public:
         : super_type(data, dim)
     {
     }
-/*
-    using super_type::data; 
-    using super_type::num_elements;
-    using super_type::size;
-    using super_type::empty;
-    using super_type::shape;
-    using super_type::strides;
-    using super_type::offsets;
-    using super_type::cbegin;
-    using super_type::cend;
-
-    template <typename... Indices>
-    const T& operator()(size_t index, Indices... indices) const
-    {
-        size_t off = get_offset<M, Base, 0>(this->strides_, this->offsets_, index, indices...);
-        assert(off < num_elements());
-        return this->data_[off];
-    }
-
-    const T& operator()(const std::array<size_t, M>& indices) const
-    {
-        size_t off = get_offset<M, M, Base>(this->strides_, this->offsets_, indices);
-        assert(off < num_elements());
-        return this->data_[off];
-    }
-
-    const_iterator begin() const
-    {
-        return super_type::begin();
-    }
-
-    const_iterator end() const
-    {
-        return super_type::end();
-    }
-    */
 };
 
 template <typename T, size_t N, typename Order, typename Base, typename Allocator>
