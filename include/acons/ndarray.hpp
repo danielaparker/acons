@@ -18,23 +18,25 @@ namespace acons {
 
 struct zero_based
 {
-    static const size_t origin = 0;
+    static const size_t origin;
 
     static size_t rebase_to_zero(size_t index)
     {
         return index;
     }
 };
+const size_t zero_based::origin = 0;
 
 struct one_based
 {
-    static const size_t origin = 1;
+    static const size_t origin;
 
     static size_t rebase_to_zero(size_t index)
     {
         return index - origin;
     }
 };
+const size_t one_based::origin = 1;
 
 template <typename TPtr, typename Enable = void>
 struct is_pointer_to_const : std::false_type {};
