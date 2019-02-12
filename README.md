@@ -47,6 +47,9 @@ int main()
     // Construct a 2-dimensional 3 x 3 array 
     ndarray<double,2> a = {{1,2,3},{4,5,6},{7,8,9}};
 
+    std::cout << "The (1,2) element\n";
+    std::cout << a(1,2) << "\n\n";
+
     std::cout << "All items from the second row\n";
     ndarray_view<double,1> v1(a, {1});
     std::cout << v1 << "\n\n";
