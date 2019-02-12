@@ -16,6 +16,26 @@
   
 namespace acons {
 
+struct zero_based
+{
+    static const size_t origin = 0;
+
+    static size_t rebase_to_zero(size_t index)
+    {
+        return index;
+    }
+};
+
+struct one_based
+{
+    static const size_t origin = 1;
+
+    static size_t rebase_to_zero(size_t index)
+    {
+        return index - origin;
+    }
+};
+
 template <typename TPtr, typename Enable = void>
 struct is_pointer_to_const : std::false_type {};
 
@@ -192,26 +212,6 @@ get_offset(const std::array<size_t,N>& strides,
 
     return offset;
 }
-
-struct zero_based
-{
-    static const size_t origin = 0;
-
-    static size_t rebase_to_zero(size_t index)
-    {
-        return index;
-    }
-};
-
-struct one_based
-{
-    static const size_t origin = 1;
-
-    static size_t rebase_to_zero(size_t index)
-    {
-        return index - origin;
-    }
-};
 
 struct row_major
 {
