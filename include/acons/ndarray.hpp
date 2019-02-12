@@ -241,19 +241,21 @@ struct row_major
         (A::ndim>1)),bool>::type
     compare(const A& a, const B& b)
     {
+        constexpr size_t N = A::ndim;
+        typedef typename A::base_type base_type1;
+        typedef typename B::base_type base_type2;
+
         if (a.size(0) != b.size(0))
         {
             return false;
         }
-        typedef typename A::base_type base_type1;
-        typedef typename B::base_type base_type2;
         for (size_t i = 0; i < a.size(0); ++i)
         {
             std::array<size_t,1> origin1 = {base_type1::origin() + i};
             std::array<size_t,1> origin2 = {base_type2::origin() + i};
 
-            typename A::template const_view<A::ndim-1> u(a, origin1);
-            typename B::template const_view<B::ndim-1> v(b, origin2);
+            typename A::template const_view<N-1> u(a, origin1);
+            typename B::template const_view<N-1> v(b, origin2);
             if (!compare(u, v))
             {
                 return false;
@@ -317,19 +319,23 @@ struct column_major
                                    (A::ndim>1)),bool>::type
     compare(const A& a, const B& b)
     {
+        constexpr size_t N = A::ndim;
+        typedef typename A::base_type base_type1;
+        typedef typename B::base_type base_type2;
+
         if (a.size(0) != b.size(0))
         {
             return false;
         }
-        typedef typename A::base_type base_type1;
-        typedef typename B::base_type base_type2;
-        for (size_t i = 0; i < a.size(0); ++i)
+        for (size_t i = 0; i < a.size(N-1); ++i)
         {
             std::array<size_t,1> origin1 = {base_type1::origin() + i};
             std::array<size_t,1> origin2 = {base_type2::origin() + i};
 
-            typename A::template const_view<A::ndim-1> u(a, origin1);
-            typename B::template const_view<B::ndim-1> v(b, origin2);
+            std::array<slice,N-1> slices;
+
+            typename A::template const_view<N-1> u(a, slices, origin1);
+            typename B::template const_view<N-1> v(b, slices, origin2);
             if (!compare(u, v))
             {
                 return false;
