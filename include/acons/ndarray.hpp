@@ -106,11 +106,6 @@ public:
     }
 };
 
-constexpr slice colon()
-{
-    return slice();
-}
-
 template <typename T>
 struct is_stateless
  : public std::integral_constant<bool,  
@@ -227,14 +222,14 @@ struct row_major
     }
 
     template <size_t N, typename Base>
-    static void update_offsets(const std::array<size_t,N>& strides, 
+    static void calculate_offsets(const std::array<size_t,N>& strides, 
                                const std::array<slice,N>& slices, 
                                std::array<size_t,N>& offsets)
     {
-        offsets[N-1] += Base::rebase_to_zero(slices[N-1].start(Base::origin())) * strides[N-1];
+        offsets[N-1] = Base::rebase_to_zero(slices[N-1].start(Base::origin())) * strides[N-1];
         for (size_t i = 0; i+1 < N; ++i)
         {
-            offsets[i] += Base::rebase_to_zero(slices[i].start(Base::origin())) * strides[i]; 
+            offsets[i] = Base::rebase_to_zero(slices[i].start(Base::origin())) * strides[i]; 
         }
     }
 
@@ -302,14 +297,14 @@ struct column_major
     }
 
     template <size_t N, typename Base>
-    static void update_offsets(const std::array<size_t,N>& strides, 
+    static void calculate_offsets(const std::array<size_t,N>& strides, 
                                const std::array<slice,N>& slices, 
                                std::array<size_t,N>& offsets)
     {
-        offsets[0] += Base::rebase_to_zero(slices[0].start(Base::origin())) * strides[0];
+        offsets[0] = Base::rebase_to_zero(slices[0].start(Base::origin())) * strides[0];
         for (size_t i = 1; i < N; ++i)
         {
-            offsets[i] += Base::rebase_to_zero(slices[i].start(Base::origin())) * strides[i]; 
+            offsets[i] = Base::rebase_to_zero(slices[i].start(Base::origin())) * strides[i]; 
         }
     }
 
@@ -1386,8 +1381,7 @@ protected:
             shape_[i] = slices[i].length(Base::origin(), shape[K+i]);
             strides_[i] = strides[K+i];
         }
-        offsets_.fill(0);
-        Order::template update_offsets<M,Base>(strides_, slices, offsets_);
+        Order::template calculate_offsets<M,Base>(strides_, slices, offsets_);
         for (size_t i = 0; i < M; ++i)
         {
             strides_[i] *= slices[i].stride();
@@ -1410,7 +1404,7 @@ protected:
             shape_[i] = slices[i].length(Base::origin(), shape[K+i]);
             strides_[i] = strides[K+i];
         }
-        Order::template update_offsets<M,Base>(strides_, slices, offsets_);
+        Order::template calculate_offsets<M,Base>(strides_, slices, offsets_);
         for (size_t i = 0; i < M; ++i)
         {
             strides_[i] *= slices[i].stride();
@@ -1442,8 +1436,7 @@ protected:
             shape_[i] = slices[i].length(Base::origin(), shape[i]);
             strides_[i] = strides[i];
         }
-        offsets_.fill(0);
-        Order::template update_offsets<M,Base>(strides_, slices, offsets_);
+        Order::template calculate_offsets<M,Base>(strides_, slices, offsets_);
         for (size_t i = 0; i < M; ++i)
         {
             strides_[i] *= slices[i].stride();
@@ -1474,8 +1467,7 @@ protected:
             shape_[i] = slices[i].length(Base::origin(), shape[i]);
             strides_[i] = strides[i];
         }
-        offsets_.fill(0);
-        Order::template update_offsets<M,Base>(strides_, slices, offsets_);
+        Order::template calculate_offsets<M,Base>(strides_, slices, offsets_);
         for (size_t i = 0; i < M; ++i)
         {
             strides_[i] *= slices[i].stride();
