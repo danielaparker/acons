@@ -25,7 +25,9 @@ Download the latest [single header file](https://raw.githubusercontent.com/danie
 
 ### Examples
 
-#### A slice object can be constructed with start, stop and stride parameters
+#### Example 1
+
+A `slice` object can be constructed with `start`, `stop` and `stride` parameters.
 ```c++
 int main()
 {
@@ -40,7 +42,9 @@ Output:
 [2,4,6]
 ```
 
-#### A slice object constructed with no parameters selects all the elements along the dimension of an array. 
+#### Example 2
+
+A slice object constructed with no parameters selects all the elements along the dimension of an array. 
 ```c++
 int main()
 {
