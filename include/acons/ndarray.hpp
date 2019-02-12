@@ -249,11 +249,15 @@ struct row_major
         {
             return false;
         }
+        typedef typename A::base_type base_type1;
+        typedef typename B::base_type base_type2;
         for (size_t i = 0; i < a.size(0); ++i)
         {
-            std::array<size_t,1> origin = {i};
-            const_ndarray_view<typename A::value_type,A::ndim-1,typename A::order_type> u(a, origin);
-            const_ndarray_view<typename A::value_type,A::ndim-1,typename B::order_type> v(b, origin);
+            std::array<size_t,1> origin1 = {base_type1::origin + i};
+            std::array<size_t,1> origin2 = {base_type2::origin + i};
+
+            typename A::template const_view<A::ndim-1> u(a, origin1);
+            typename B::template const_view<B::ndim-1> v(b, origin2);
             if (!compare(u, v))
             {
                 return false;
@@ -320,11 +324,15 @@ struct column_major
         {
             return false;
         }
+        typedef typename A::base_type base_type1;
+        typedef typename B::base_type base_type2;
         for (size_t i = 0; i < a.size(0); ++i)
         {
-            std::array<size_t,1> origin = {i};
-            const_ndarray_view<typename A::value_type,A::ndim-1,typename A::order_type> u(a, origin);
-            const_ndarray_view<typename A::value_type,A::ndim-1,typename B::order_type> v(b, origin);
+            std::array<size_t,1> origin1 = {base_type1::origin + i};
+            std::array<size_t,1> origin2 = {base_type2::origin + i};
+
+            typename A::template const_view<A::ndim-1> u(a, origin1);
+            typename B::template const_view<B::ndim-1> v(b, origin2);
             if (!compare(u, v))
             {
                 return false;
@@ -366,6 +374,21 @@ struct ndarray_view_member_types
 
 // Forward declarations
 
+template <typename T, size_t M, typename Order = row_major, typename Base = zero_based, typename TPtr = const T*>
+class ndarray_view_base;
+
+template <typename T, size_t N, typename Order = row_major, typename Base = zero_based, typename Allocator = std::allocator<T>>
+class ndarray;
+
+template <typename T, size_t M, typename Order = row_major, typename Base = zero_based>
+class const_ndarray_view;
+
+template <typename T, size_t M, typename Order = row_major, typename Base = zero_based>
+class ndarray_view;
+
+template <typename T, typename TPtr>
+class ndarray_view_iterator_one;
+
 template <typename T, size_t M, typename Order, typename Base, typename TPtr>
 struct ndarray_view_member_types<T,M,Order,Base,TPtr,typename std::enable_if<M == 1>::type>
 {
@@ -374,21 +397,6 @@ struct ndarray_view_member_types<T,M,Order,Base,TPtr,typename std::enable_if<M =
     typedef const T& const_reference;
     typedef ndarray_view_iterator_one<T,TPtr> iterator;
 };
-
-template <typename T, size_t M, typename Order=row_major, typename Base=zero_based, typename TPtr=const T*>
-class ndarray_view_base;  
-
-template <typename T, size_t N, typename Order=row_major, typename Base=zero_based, typename Allocator=std::allocator<T>>
-class ndarray;
-
-template <typename T, size_t M, typename Order=row_major, typename Base=zero_based>
-class const_ndarray_view;  
-
-template <typename T, size_t M, typename Order=row_major, typename Base=zero_based>
-class ndarray_view;  
-
-template <typename T, typename TPtr>
-class ndarray_view_iterator_one;
 
 // ndarray
 
