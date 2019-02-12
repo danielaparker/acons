@@ -1481,6 +1481,29 @@ protected:
             strides_[i] *= slices[i].stride();
         }
     }
+    template <typename Allocator>
+    ndarray_view_base& operator=(const ndarray<T, M, Order, Base, Allocator>& a) = delete;
+
+    template<typename OtherTPtr>
+    ndarray_view_base& operator=(const ndarray_view_base<T, M, Order, Base, OtherTPtr>& other) = delete;
+
+    void assign(TPtr data, size_t size, const std::array<size_t,M>& shape, const std::array<size_t,M>& strides)
+    {
+        data_ = data; 
+        num_elements_ = size; 
+        shape_ = shape; 
+        strides_ = strides;
+        offsets_.fill(0);
+    }
+
+    void assign(TPtr data, size_t size, const std::array<size_t,M>& shape, const std::array<size_t,M>& strides, const std::array<size_t,M>& offsets)
+    {
+        data_ = data; 
+        num_elements_ = size; 
+        shape_ = shape; 
+        strides_ = strides;
+        offsets_ = offsets;
+    }
 };
 
 template <typename CharT, typename T, size_t M, typename Order, typename Base, typename TPtr>
@@ -1600,6 +1623,19 @@ public:
         : super_type(a.data(), a.size(), a.shape(), a.strides(), a.offsets(),
                      slices, origin)
     {
+    }
+
+    template <typename Allocator>
+    ndarray_view& operator=(ndarray<T, M, Order, Base, Allocator>& a)
+    {
+        this->assign(a.data(), a.size(), a.shape(), a.strides());
+        return *this;
+    }
+
+    ndarray_view& operator=(ndarray_view<T, M, Order, Base>& a)
+    {
+        this->assign(a.data(), a.size(), a.shape(), a.strides(), a.offsets());
+        return *this;
     }
 
     template <typename... Indices>
@@ -1760,6 +1796,20 @@ public:
         : super_type(other.data(), other.size(), other.shape(), other.strides(), other.offsets(),
                      slices, origin)
     {
+    }
+
+    template <typename Allocator>
+    const_ndarray_view& operator=(const ndarray<T, M, Order, Base, Allocator>& a)
+    {
+        this->assign(a.data(), a.size(), a.shape(), a.strides());
+        return *this;
+    }
+
+    template<typename OtherTPtr>
+    const_ndarray_view& operator=(const ndarray_view_base<T, M, Order, Base, OtherTPtr>& other)
+    {
+        this->assign(other.data(), other.size(), other.shape(), other.strides(), other.offsets());
+        return *this;
     }
 };
 
