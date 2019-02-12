@@ -18,7 +18,7 @@ namespace acons {
 
 struct zero_based
 {
-    static constexpr size_t origin = 0;
+    static constexpr size_t origin() {return 0;}
 
     static size_t rebase_to_zero(size_t index)
     {
@@ -28,11 +28,11 @@ struct zero_based
 
 struct one_based
 {
-    static constexpr size_t origin = 1;
+    static constexpr size_t origin() {return 1;}
 
     static size_t rebase_to_zero(size_t index)
     {
-        return index - origin;
+        return index - origin();
     }
 };
 
@@ -231,10 +231,10 @@ struct row_major
                                const std::array<slice,N>& slices, 
                                std::array<size_t,N>& offsets)
     {
-        offsets[N-1] += Base::rebase_to_zero(slices[N-1].start(Base::origin)) * strides[N-1];
+        offsets[N-1] += Base::rebase_to_zero(slices[N-1].start(Base::origin())) * strides[N-1];
         for (size_t i = 0; i+1 < N; ++i)
         {
-            offsets[i] += Base::rebase_to_zero(slices[i].start(Base::origin)) * strides[i]; 
+            offsets[i] += Base::rebase_to_zero(slices[i].start(Base::origin())) * strides[i]; 
         }
     }
 
@@ -253,8 +253,8 @@ struct row_major
         typedef typename B::base_type base_type2;
         for (size_t i = 0; i < a.size(0); ++i)
         {
-            std::array<size_t,1> origin1 = {base_type1::origin + i};
-            std::array<size_t,1> origin2 = {base_type2::origin + i};
+            std::array<size_t,1> origin1 = {base_type1::origin() + i};
+            std::array<size_t,1> origin2 = {base_type2::origin() + i};
 
             typename A::template const_view<A::ndim-1> u(a, origin1);
             typename B::template const_view<B::ndim-1> v(b, origin2);
@@ -306,10 +306,10 @@ struct column_major
                                const std::array<slice,N>& slices, 
                                std::array<size_t,N>& offsets)
     {
-        offsets[0] += Base::rebase_to_zero(slices[0].start(Base::origin)) * strides[0];
+        offsets[0] += Base::rebase_to_zero(slices[0].start(Base::origin())) * strides[0];
         for (size_t i = 1; i < N; ++i)
         {
-            offsets[i] += Base::rebase_to_zero(slices[i].start(Base::origin)) * strides[i]; 
+            offsets[i] += Base::rebase_to_zero(slices[i].start(Base::origin())) * strides[i]; 
         }
     }
 
@@ -328,8 +328,8 @@ struct column_major
         typedef typename B::base_type base_type2;
         for (size_t i = 0; i < a.size(0); ++i)
         {
-            std::array<size_t,1> origin1 = {base_type1::origin + i};
-            std::array<size_t,1> origin2 = {base_type2::origin + i};
+            std::array<size_t,1> origin1 = {base_type1::origin() + i};
+            std::array<size_t,1> origin2 = {base_type2::origin() + i};
 
             typename A::template const_view<A::ndim-1> u(a, origin1);
             typename B::template const_view<B::ndim-1> v(b, origin2);
@@ -1383,7 +1383,7 @@ protected:
 
         for (size_t i = 0; i < M; ++i)
         {
-            shape_[i] = slices[i].length(Base::origin, shape[K+i]);
+            shape_[i] = slices[i].length(Base::origin(), shape[K+i]);
             strides_[i] = strides[K+i];
         }
         offsets_.fill(0);
@@ -1407,7 +1407,7 @@ protected:
 
         for (size_t i = 0; i < M; ++i)
         {
-            shape_[i] = slices[i].length(Base::origin, shape[K+i]);
+            shape_[i] = slices[i].length(Base::origin(), shape[K+i]);
             strides_[i] = strides[K+i];
         }
         Order::template update_offsets<M,Base>(strides_, slices, offsets_);
@@ -1426,7 +1426,7 @@ protected:
         constexpr size_t K = N-M;
 
         std::array<size_t,N> indices;
-        indices.fill(Base::origin);
+        indices.fill(Base::origin());
         for (size_t i = 0; i < K; ++i)
         {
             indices[i+M] = origin[i];
@@ -1439,7 +1439,7 @@ protected:
 
         for (size_t i = 0; i < M; ++i)
         {
-            shape_[i] = slices[i].length(Base::origin, shape[i]);
+            shape_[i] = slices[i].length(Base::origin(), shape[i]);
             strides_[i] = strides[i];
         }
         offsets_.fill(0);
@@ -1458,7 +1458,7 @@ protected:
         constexpr size_t K = N-M;
 
         std::array<size_t,N> indices;
-        indices.fill(Base::origin);
+        indices.fill(Base::origin());
         for (size_t i = 0; i < K; ++i)
         {
             indices[i+M] = origin[i];
@@ -1471,7 +1471,7 @@ protected:
 
         for (size_t i = 0; i < M; ++i)
         {
-            shape_[i] = slices[i].length(Base::origin, shape[i]);
+            shape_[i] = slices[i].length(Base::origin(), shape[i]);
             strides_[i] = strides[i];
         }
         offsets_.fill(0);
