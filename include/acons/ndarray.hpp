@@ -68,10 +68,10 @@ class slice
 
     size_t start_;
     size_t stop_;
-    size_t stride_;
+    size_t step_;
 public:
     constexpr explicit slice(size_t start = npos, size_t stop = npos, size_t step=1)
-        : start_(start), stop_(stop), stride_(step)
+        : start_(start), stop_(stop), step_(step)
     {
     }
 
@@ -90,9 +90,9 @@ public:
     {
         return stop_ == npos ? (origin+n) : stop_;
     }
-    size_t stride() const
+    size_t step() const
     {
-        return stride_;
+        return step_;
     }
 
     size_t length(size_t origin, size_t n) const
@@ -102,7 +102,7 @@ public:
 
         assert(y >= x);
         size_t w = y - x;
-        return w/stride_ + (w % stride_ != 0);
+        return w/step_ + (w % step_ != 0);
     }
 };
 
@@ -1396,7 +1396,7 @@ protected:
         Order::template calculate_offsets<M,Base>(rel, strides_, slices, offsets_);
         for (size_t i = 0; i < M; ++i)
         {
-            strides_[i] *= slices[i].stride();
+            strides_[i] *= slices[i].step();
         }
     }
 
@@ -1417,7 +1417,7 @@ protected:
         Order::template calculate_offsets<M,Base>(rel, strides_, slices, offsets_);
         for (size_t i = 0; i < M; ++i)
         {
-            strides_[i] *= slices[i].stride();
+            strides_[i] *= slices[i].step();
         }
     }
 
@@ -1446,7 +1446,7 @@ protected:
         Order::template calculate_offsets<M,Base>(rel, strides_, slices, offsets_);
         for (size_t i = 0; i < M; ++i)
         {
-            strides_[i] *= slices[i].stride();
+            strides_[i] *= slices[i].step();
         }
     }
 
@@ -1474,7 +1474,7 @@ protected:
         Order::template calculate_offsets<M,Base>(rel, strides_, slices, offsets_);
         for (size_t i = 0; i < M; ++i)
         {
-            strides_[i] *= slices[i].stride();
+            strides_[i] *= slices[i].step();
         }
     }
     template <typename Allocator>
