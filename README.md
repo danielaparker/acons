@@ -25,7 +25,7 @@ Download the latest [single header file](https://raw.githubusercontent.com/danie
 
 ### Examples
 
-#### Example 1
+#### Indexing and slicing a 1-dimensional array
 
 A `slice` object can be constructed with `start`, `stop` and `stride` parameters.
 ```c++
@@ -33,16 +33,24 @@ int main()
 {
     ndarray<double,1> a = {0,1,2,3,4,5,6,7,8,9};
 
-    ndarray_view<double, 1> v(a, {slice(2,7,2)});
+    std::cout << "The (1)th element\n";
+    std::cout << a(1) << "\n\n";
+
+    std::cout << "Extracting a part of the array with a slice object\n";
+    ndarray_view<double,1> v(a, {slice(2,7,2)});
     std::cout << v << "\n\n";
 }
 ```
 Output:
 ```
+The (1)th element
+1
+
+Extracting a part of the array with a slice object
 [2,4,6]
 ```
 
-#### Example 2
+#### Indexing and slicing a 2-dimensional array
 
 A slice object constructed with no parameters selects all the elements along the dimension of an array. 
 ```c++
@@ -51,7 +59,7 @@ int main()
     // Construct a 2-dimensional 3 x 3 array 
     ndarray<double,2> a = {{1,2,3},{4,5,6},{7,8,9}};
 
-    std::cout << "The (1,2) element\n";
+    std::cout << "The (1,2)th element\n";
     std::cout << a(1,2) << "\n\n";
 
     std::cout << "All items from the second row\n";
@@ -69,7 +77,7 @@ int main()
 ```
 Output:
 ```
-The (1,2) element
+The (1,2)th element
 6
  
 All items from the second row
@@ -82,4 +90,99 @@ All items from column 1 onwards
 [[2,3],[5,6],[8,9]]
 ```
 
+#### Creating ndarrays in managed shared memory with Boost interprocess allocators
+
+```c++
+#include <boost/interprocess/managed_shared_memory.hpp>
+#include <boost/interprocess/containers/vector.hpp>
+#include <boost/interprocess/allocators/allocator.hpp>
+#include <boost/interprocess/containers/string.hpp>
+#include <cstdlib> //std::system
+#include <acons/ndarray.hpp>
+#include <iostream>
+
+using namespace acons;
+
+typedef boost::interprocess::allocator<double,
+        boost::interprocess::managed_shared_memory::segment_manager> shmem_allocator;
+
+typedef ndarray<double,2,row_major,zero_based,shmem_allocator> ndarray_shm;
+
+int main(int argc, char *argv[])
+{
+    typedef std::pair<double, int> MyType;
+
+    if(argc == 1) //Parent process
+    {  
+       //Remove shared memory on construction and destruction
+       struct shm_remove
+       {
+          shm_remove() { boost::interprocess::shared_memory_object::remove("MySharedMemory"); }
+          ~shm_remove(){ boost::interprocess::shared_memory_object::remove("MySharedMemory"); }
+       } 
+       remover;
+
+       //Construct managed shared memory
+       boost::interprocess::managed_shared_memory segment(boost::interprocess::create_only, 
+                                                          "MySharedMemory", 65536);
+
+       //Initialize shared memory STL-compatible allocator
+       const shmem_allocator allocator(segment.get_segment_manager());
+
+       // Create ndarray with all dynamic allocations in shared memory
+       ndarray_shm* pA = segment.construct<ndarray_shm>("my ndarray")(allocator, 2, 2, 0.0);
+       ndarray_shm& a = *pA;
+
+       a(0,0) = 0;
+       a(0,1) = 1;
+       a(1,0) = 2;
+       a(1,1) = 3;
+
+       std::pair<ndarray_shm*, boost::interprocess::managed_shared_memory::size_type> res;
+       res = segment.find<ndarray_shm>("my ndarray");
+
+       std::cout << "Parent process:\n";
+       std::cout << *(res.first) << "\n";
+
+       //Launch child process
+       std::string s(argv[0]); s += " child ";
+       if(0 != std::system(s.c_str()))
+          return 1;
+
+       //Check child has destroyed all objects
+       if(segment.find<MyType>("my ndarray").first)
+          return 1;
+    }
+    else
+    {
+       //Open managed shared memory
+       boost::interprocess::managed_shared_memory segment(boost::interprocess::open_only, 
+                                                          "MySharedMemory");
+
+       std::pair<ndarray_shm*, boost::interprocess::managed_shared_memory::size_type> res;
+       res = segment.find<ndarray_shm>("my ndarray");
+
+       if (res.first != nullptr)
+       {
+           std::cout << "\nChild process:\n";
+           std::cout << *(res.first) << "\n";
+       }
+       else
+       {
+           std::cout << "Result is null\n";
+       }
+
+       //We're done, delete all the objects
+       segment.destroy<ndarray_shm>("my ndarray");
+    }
+}
+```
+Output:
+```
+Parent process:
+[[0,1],[2,3]]
+
+Child process:
+[[0,1],[2,3]]
+```
 

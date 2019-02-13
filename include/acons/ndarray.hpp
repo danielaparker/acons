@@ -211,13 +211,13 @@ get_offset(const std::array<size_t,N>& strides,
 struct row_major
 {
     template <size_t N>
-    static void calculate_strides(const std::array<size_t,N>& dim, std::array<size_t,N>& strides, size_t& size)
+    static void calculate_strides(const std::array<size_t,N>& shape, std::array<size_t,N>& strides, size_t& size)
     {
         size = 1;
         for (size_t i = 0; i < N; ++i)
         {
             strides[N-i-1] = size;
-            size *= dim[N-i-1];
+            size *= shape[N-i-1];
         }
     }
 
@@ -289,13 +289,13 @@ struct row_major
 struct column_major
 {
     template <size_t N>
-    static void calculate_strides(const std::array<size_t,N>& dim, std::array<size_t,N>& strides, size_t& size)
+    static void calculate_strides(const std::array<size_t,N>& shape, std::array<size_t,N>& strides, size_t& size)
     {
         size = 1;
         for (size_t i = 0; i < N; ++i)
         {
             strides[i] = size;
-            size *= dim[i];
+            size *= shape[i];
         }
     }
 
@@ -499,10 +499,10 @@ struct init_helper
     using next = init_helper<Pos - 1>;
 
     template <typename Array, typename... Args>
-    static void init(std::array<size_t,Array::ndim>& dim, Array& a, size_t n, Args... args)
+    static void init(std::array<size_t,Array::ndim>& shape, Array& a, size_t n, Args... args)
     {
-        dim[Array::ndim - Pos] = n;
-        next::init(dim, a, args...);
+        shape[Array::ndim - Pos] = n;
+        next::init(shape, a, args...);
     }
 };
 
@@ -568,9 +568,16 @@ public:
         init_helper<N>::init(shape_, *this, i, args ...);
     }
 
-    explicit ndarray(const std::array<size_t,N>& dim)
+    template <typename... Args>
+    ndarray(const Allocator& alloc, size_t i, Args... args)
+        : super_type(alloc) 
+    {
+        init_helper<N>::init(shape_, *this, i, args ...);
+    }
+
+    explicit ndarray(const std::array<size_t,N>& shape)
         : super_type(allocator_type()), 
-          data_(nullptr), shape_(dim)
+          data_(nullptr), shape_(shape)
     {
         Order::calculate_strides(shape_, strides_, num_elements_);
         capacity_ = num_elements_;
@@ -578,9 +585,9 @@ public:
         std::fill(data_, data_+num_elements_, T());
     }
 
-    ndarray(const std::array<size_t,N>& dim, const Allocator& alloc)
+    ndarray(const std::array<size_t,N>& shape, const Allocator& alloc)
         : super_type(alloc), 
-          data_(nullptr), shape_(dim)
+          data_(nullptr), shape_(shape)
     {
         Order::calculate_strides(shape_, strides_, num_elements_);
         capacity_ = num_elements_;
@@ -588,9 +595,9 @@ public:
         std::fill(data_, data_+num_elements_, T());
     }
 
-    ndarray(const std::array<size_t,N>& dim, T val)
+    ndarray(const std::array<size_t,N>& shape, T val)
         : super_type(allocator_type()), 
-          data_(nullptr), shape_(dim)
+          data_(nullptr), shape_(shape)
     {
         Order::calculate_strides(shape_, strides_, num_elements_);
         capacity_ = num_elements_;
@@ -598,9 +605,9 @@ public:
         std::fill(data_, data_+num_elements_,val);
     }
 
-    ndarray(const std::array<size_t,N>& dim, T val, const Allocator& alloc)
+    ndarray(const std::array<size_t,N>& shape, T val, const Allocator& alloc)
         : super_type(alloc), 
-          data_(nullptr), shape_(dim)
+          data_(nullptr), shape_(shape)
     {
         Order::calculate_strides(shape_, strides_, num_elements_);
 
@@ -766,12 +773,12 @@ public:
         return to_plain_pointer(data_) + num_elements_;
     }
 
-    void resize(const std::array<size_t,N>& dim, T value = T())
+    void resize(const std::array<size_t,N>& shape, T value = T())
     {
         T* old_data = data();
         size_t old_size = num_elements();
 
-        shape_ = dim;
+        shape_ = shape;
         Order::calculate_strides(shape_, strides_, num_elements_);
 
         if (num_elements_ > capacity_)
@@ -1010,7 +1017,7 @@ private:
         std::fill(data_, data_+num_elements_,val);
     }
 
-    void dim_from_initializer_list(const array_item<T>& init, size_t dim)
+    void dim_from_initializer_list(const array_item<T>& init, size_t shape)
     {
         bool is_array = false;
         size_t size = 0;
@@ -1022,12 +1029,12 @@ private:
             {
                 is_array = item.is_array();
                 size = item.size();
-                if (dim < N)
+                if (shape < N)
                 {
-                    shape_[dim++] = init.size();
+                    shape_[shape++] = init.size();
                     if (is_array)
                     {
-                        dim_from_initializer_list(item, dim);
+                        dim_from_initializer_list(item, shape);
                     }
                 }
             }
@@ -1040,7 +1047,7 @@ private:
                         throw std::invalid_argument("initializer list contains non-conforming shapes");
                     }
                 }
-                else if (dim != N)
+                else if (shape != N)
                 {
                     throw std::invalid_argument("initializer list incompatible with array dimensionality");
                 }
@@ -1316,9 +1323,9 @@ protected:
     // data
 
     template<typename OtherTPtr>
-    ndarray_view_base(OtherTPtr data, const std::array<size_t,M>& dim,
+    ndarray_view_base(OtherTPtr data, const std::array<size_t,M>& shape,
                        typename std::enable_if<std::is_convertible<OtherTPtr,TPtr>::value>::type* = 0) 
-        : data_(data), shape_(dim)
+        : data_(data), shape_(shape)
     {
         offsets_.fill(0);
         Order::calculate_strides(shape_, strides_, num_elements_);
@@ -1343,7 +1350,7 @@ protected:
             shape_[i] = shape[(N-M)+i];
             strides_[i] = strides[(N-M)+i];
 
-            //std::cout << "dim " << i << ", size: " << shape_[i] << ", stride: " << strides_[i] << "\n";
+            //std::cout << "shape " << i << ", size: " << shape_[i] << ", stride: " << strides_[i] << "\n";
         }
         offsets_.fill(0);
     }
@@ -1366,7 +1373,7 @@ protected:
             shape_[i] = shape[K+i];
             strides_[i] = strides[K+i];
             offsets_[i] = offsets[K+i];
-            //std::cout << "dim " << i << ", size: " << shape_[i] << ", stride: " << strides_[i] << ", offset: " << offsets_[i] << "\n";
+            //std::cout << "shape " << i << ", size: " << shape_[i] << ", stride: " << strides_[i] << ", offset: " << offsets_[i] << "\n";
         }
     }
 
@@ -1534,8 +1541,8 @@ public:
 
     // data
 
-    ndarray_view(T* data, const std::array<size_t,M>& dim) 
-        : super_type(data, dim)
+    ndarray_view(T* data, const std::array<size_t,M>& shape) 
+        : super_type(data, shape)
     {
     }
 
@@ -1697,9 +1704,9 @@ public:
     template <size_t K> using const_view = const_ndarray_view<T,K,Order,Base>;
 
     template<typename OtherTPtr>
-    const_ndarray_view(OtherTPtr data, const std::array<size_t,M>& dim,
+    const_ndarray_view(OtherTPtr data, const std::array<size_t,M>& shape,
                        typename std::enable_if<std::is_convertible<OtherTPtr,const T*>::value>::type* = 0) 
-        : super_type(data, dim)
+        : super_type(data, shape)
     {
     }
 

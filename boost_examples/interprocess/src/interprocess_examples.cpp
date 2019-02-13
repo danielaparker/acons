@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
        const shmem_allocator allocator(segment.get_segment_manager());
 
        // Create ndarray with all dynamic allocations in shared memory
-       ndarray_shm* pA = segment.construct<ndarray_shm>("my ndarray")(2, 2, 0.0, allocator);
+       ndarray_shm* pA = segment.construct<ndarray_shm>("my ndarray")(allocator, 2, 2, 0.0);
        ndarray_shm& a = *pA;
 
        a(0,0) = 0;

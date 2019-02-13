@@ -8,7 +8,11 @@ void example1()
 {
     ndarray<double,1> a = {0,1,2,3,4,5,6,7,8,9};
 
-    ndarray_view<double, 1> v(a, { slice(2,7,2)});
+    std::cout << "The (1)th element\n";
+    std::cout << a(1) << "\n\n";
+
+    std::cout << "Extracting a part of the array with a slice object\n";
+    ndarray_view<double,1> v(a, {slice(2,7,2)});
     std::cout << v << "\n\n";
 
     // [2,4,6]
@@ -74,7 +78,7 @@ void example7()
     // Construct a 2-dimensional 3 x 3 array 
     ndarray<double,2> a = {{1,2,3},{4,5,6},{7,8,9}};
 
-    std::cout << "The (1,2) element\n";
+    std::cout << "The (1,2)th element\n";
     std::cout << a(1,2) << "\n\n";
 
     std::cout << "All items from the second row\n";
