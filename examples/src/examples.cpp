@@ -91,6 +91,9 @@ void example7()
 }
 
 /*
+The (1,2) element
+6
+ 
 All items from the second row
 [4,5,6]
 
