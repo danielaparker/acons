@@ -1539,15 +1539,6 @@ public:
     {
     }
 
-    // data
-
-    ndarray_view(T* data, const std::array<size_t,M>& shape) 
-        : super_type(data, shape)
-    {
-    }
-
-    // slices
-
     template<typename Allocator>
     ndarray_view(ndarray<T, M, Order, Base, Allocator>& a, 
                  const std::array<slice,M>& slices)
@@ -1563,8 +1554,6 @@ public:
     {
     }
 
-    // origin
-
     template<size_t N, typename Allocator>
     ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
                  const std::array<size_t,N-M>& origin)
@@ -1580,8 +1569,6 @@ public:
                      origin)
     {
     }
-
-    // origin, slices
 
     template<size_t N, typename Allocator>
     ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
@@ -1600,8 +1587,6 @@ public:
                      origin, slices)
     {
     }
-
-    // slices, origin
 
     template<size_t N, typename Allocator>
     ndarray_view(ndarray<T, N, Order, Base, Allocator>& a,
@@ -1618,6 +1603,11 @@ public:
                  const std::array<size_t,N-M>& origin)
         : super_type(a.data(), a.num_elements(), a.shape(), a.strides(), a.offsets(),
                      slices, origin)
+    {
+    }
+
+    ndarray_view(T* data, const std::array<size_t,M>& shape) 
+        : super_type(data, shape)
     {
     }
 
@@ -1703,13 +1693,6 @@ public:
 
     template <size_t K> using const_view = const_ndarray_view<T,K,Order,Base>;
 
-    template<typename OtherTPtr>
-    const_ndarray_view(OtherTPtr data, const std::array<size_t,M>& shape,
-                       typename std::enable_if<std::is_convertible<OtherTPtr,const T*>::value>::type* = 0) 
-        : super_type(data, shape)
-    {
-    }
-
     template <typename Allocator>
     const_ndarray_view(const ndarray<T, M, Order, Base, Allocator>& a)
         : super_type(a.data(), a.num_elements(), a.shape(), a.strides())        
@@ -1754,8 +1737,6 @@ public:
     {
     }
 
-    // origin, slices
-
     template<size_t N, typename Allocator>
     const_ndarray_view(const ndarray<T, N, Order, Base, Allocator>& other, 
                        const std::array<size_t,N-M>& origin,
@@ -1774,8 +1755,6 @@ public:
     {
     }
 
-    // slices, origin
-
     template<size_t N, typename Allocator>
     const_ndarray_view(const ndarray<T, N, Order, Base, Allocator>& other,
                        const std::array<slice,M>& slices, 
@@ -1791,6 +1770,13 @@ public:
                        const std::array<size_t,N-M>& origin)
         : super_type(other.data(), other.num_elements(), other.shape(), other.strides(), other.offsets(),
                      slices, origin)
+    {
+    }
+
+    template<typename OtherTPtr>
+    const_ndarray_view(OtherTPtr data, const std::array<size_t,M>& shape,
+                       typename std::enable_if<std::is_convertible<OtherTPtr,const T*>::value>::type* = 0) 
+        : super_type(data, shape)
     {
     }
 

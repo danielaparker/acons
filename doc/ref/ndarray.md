@@ -31,8 +31,8 @@ Member type                         |Definition
 `value_type`|T
 `reference`|T&
 `const_reference`|const T&
-`order_type`|T
-`base_type`|T
+`order_type`|Order
+`base_type`|Base
 `iterator`|T*
 `const_iterator`|const T*
 
@@ -43,61 +43,66 @@ Member type                         |Definition
     template <typename... Args>
     ndarray(size_t i, Args... args); // (2)
 
-    explicit ndarray(const std::array<size_t,N>& dimensions); // (3)
+    template <typename... Args>
+    ndarray(const Allocator& alloc, size_t i, Args... args); // (3)
 
-    ndarray(const std::array<size_t,N>& dimensions, 
-            const Allocator& alloc); // (4)
+    explicit ndarray(const std::array<size_t,N>& shape); // (4)
 
-    ndarray(const std::array<size_t,N>& dimensions,
-            T val); // (5)
+    ndarray(const std::array<size_t,N>& shape, 
+            const Allocator& alloc); // (5)
 
-    ndarray(const std::array<size_t,N>& dimensions, 
+    ndarray(const std::array<size_t,N>& shape,
+            T val); // (6)
+
+    ndarray(const std::array<size_t,N>& shape, 
             T val,
-            const Allocator& alloc); // (6)
+            const Allocator& alloc); // (7)
 
-    ndarray(std::initializer_list<array_item<T>> list); // (7)
+    ndarray(std::initializer_list<array_item<T>> list); // (8)
 
     ndarray(std::initializer_list<array_item<T>> list, 
-            const Allocator& alloc); // (8)
+            const Allocator& alloc); // (9)
 
-    ndarray(const ndarray& other); // (9)
+    ndarray(const ndarray& other); // (10)
 
-    ndarray(const ndarray& other, const Allocator& alloc); // (10)
+    ndarray(const ndarray& other, const Allocator& alloc); // (11)
 
-    ndarray(ndarray&& other); // (11)
+    ndarray(ndarray&& other); // (12)
 
-    ndarray(ndarray&& other, const Allocator& alloc); // (12)
+    ndarray(ndarray&& other, const Allocator& alloc); // (13)
 
     template <typename TPtr>
-    ndarray(const const_ndarray_view<T,N,Order,Base,TPtr>& av); // (13)
+    ndarray(const const_ndarray_view<T,N,Order,Base,TPtr>& av); // (14)
 
     template <typename TPtr>
     ndarray(const const_ndarray_view<T,N,Order,Base,TPtr>& av, 
-            const Allocator& alloc); // (14)
+            const Allocator& alloc); // (15)
 
 Constructs a new N-dimensional array, optionally using a user supplied allocator.
 
 (1) Default constructor. Constructs an empty N-dimensional array.
 
-(2) The first N arguments specify the dimensions of the N-dimensional array, 
-an optional (N+1)th argument specifies an initial value, and an optional
-last argument supplies an allocator.
+(2) The first N arguments specify the shape of the N-dimensional array, 
+an optional (N+1)th argument specifies an initial value.
 
-(3) Constructs an N-dimensional array with dimensions specified by `dimensions`
+(3) The first argument specifies an allocator, the next N arguments specify the shape of the N-dimensional array, 
+and an optional last argument specifies an initial value.
+
+(4) Constructs an N-dimensional array with shape specified by `shape`
     and values initialized to `T()`.
 
-(4) Constructs an N-dimensional array with dimensions specified by `dimensions`
+(5) Constructs an N-dimensional array with shape specified by `shape`
     and values initialized to `T()` and using the supplied allocator.
 
-(5) Constructs an N-dimensional array with dimensions specified by `dimensions`
+(6) Constructs an N-dimensional array with shape specified by `shape`
     and values initialized to `val`.
 
-(6) Constructs an N-dimensional array with dimensions specified by `dimensions`
+(7) Constructs an N-dimensional array with shape specified by `shape`
     and values initialized to `val` and using the supplied allocator.
 
-(7) Constructs an N-dimensional array from the initializer list init.
+(8) Constructs an N-dimensional array from the initializer list init.
 
-(8) Constructs an N-dimensional array from the initializer list init
+(9) Constructs an N-dimensional array from the initializer list init
     using the supplied allocator.
 
 Exceptions:
@@ -157,7 +162,7 @@ Exceptions:
 Swaps the contents of the two N-dimensional arrays
 
     void resize(const std::array<size_t,N>& dim, T value = T());
-Resizes the dimensions of the array. If the array size is shrunk, 
+Resizes the shape of the array. If the array size is shrunk, 
 the array is flattened in the order that the elements are stored in memory.
 If the array size is expanded, storage is reallocated if required, and
 additional elements are filled with `value`.

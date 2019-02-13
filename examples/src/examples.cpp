@@ -14,9 +14,14 @@ void example1()
     std::cout << "Extracting a part of the array with a slice object\n";
     ndarray_view<double,1> v(a, {slice(2,7,2)});
     std::cout << v << "\n\n";
-
-    // [2,4,6]
 }
+/*
+The (1)th element
+1
+
+Extracting a part of the array with a slice object
+[2,4,6]
+*/
 
 void example2()
 {

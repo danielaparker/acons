@@ -13,7 +13,7 @@ The `ndarray_view` class represents a view on an N-dimensional array.
 
 #### Base class
 
-[const_ndarray_view](const_ndarray_view.md)
+[ndarray_view_base](ndarray_view_base.md)
 
 #### Template parameters
 
@@ -32,52 +32,56 @@ Member type                         |Definition
 `value_type`|T
 `reference`|T&
 `const_reference`|const T&
-`order_type`|T
-`base_type`|T
-`iterator`|
-`const_iterator`|
+`order_type`|Order
+`base_type`|Base
+`iterator`|Defined if `ndim` is 1, otherwise void
+`const_iterator`|Defined if `ndim` is 1, otherwise void
 
 #### Member functions
 
-    ndarray_view(); // (1)
-
     template <typename Allocator>
-    ndarray_view(ndarray<T, M, Order, Base, Allocator>& a); // (2)
+    ndarray_view(ndarray<T, M, Order, Base, Allocator>& a); // (1)
+
+    ndarray_view(ndarray_view<T, M, Order, Base>& a); // (2)
+
+    template<typename Allocator>
+    ndarray_view(ndarray<T, M, Order, Base, Allocator>& a, 
+                 const std::array<slice,M>& slices); // (3)
+
+    ndarray_view(ndarray_view<T, M, Order, Base>& a, 
+                 const std::array<slice,M>& slices); // (4)
 
     template<size_t N, typename Allocator>
     ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
-                 const slices_type& slices); // (3)
+                 const std::array<size_t,N-M>& origin); // (5)
 
-    template<size_t N, typename Allocator>
-    ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
-                 const std::array<size_t,N-M>& origin); // (4)
+    template<size_t N>
+    ndarray_view(ndarray_view<T, N, Order, Base>& a, 
+                 const std::array<size_t,N-M>& origin); // (6)
 
     template<size_t N, typename Allocator>
     ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
                  const std::array<size_t,N-M>& origin,
-                 const slices_type& slices); // (5)
+                 const std::array<slice,M>& slices); // (7)
 
-    template <typename OtherTPtr>
-    ndarray_view(const const_ndarray_view<T, M, Order, Base, OtherTPtr>& a); // (6)
-
-    template<size_t N, typename OtherTPtr>
-    ndarray_view(const const_ndarray_view<T, N, Order, Base, OtherTPtr>& a, 
-                 const slices_type& slices); // (7)
-
-    template<size_t N, typename OtherTPtr>
-    ndarray_view(const const_ndarray_view<T, N, Order, Base, OtherTPtr>& a, 
-                 const std::array<size_t,N-M>& origin); // (8)
-
-    template<size_t N, typename OtherTPtr>
-    ndarray_view(const const_ndarray_view<T, N, Order, Base, OtherTPtr>& a, 
+    template<size_t N>
+    ndarray_view(ndarray_view<T, N, Order, Base>& a, 
                  const std::array<size_t,N-M>& origin,
-                 const slices_type& slices); // (9)
+                 const std::array<slice,M>& slices); // (8)
 
-    ndarray_view(T* data, const std::array<size_t,M>& dim); // (10) 
+    template<size_t N, typename Allocator>
+    ndarray_view(ndarray<T, N, Order, Base, Allocator>& a,
+                 const std::array<slice,M>& slices, 
+                 const std::array<size_t,N-M>& origin); // (9)
+
+    template<size_t N>
+    ndarray_view(ndarray_view<T, N, Order, Base>& a,
+                 const std::array<slice,M>& slices, 
+                 const std::array<size_t,N-M>& origin); // (10)
+
+    ndarray_view(T* data, const std::array<size_t,M>& shape); // (11)
 
 Constructs a new M-dimensional array view.
-
-(1) Default constructor. Constructs an empty M-dimensional array view.
 
 Exceptions:
 
