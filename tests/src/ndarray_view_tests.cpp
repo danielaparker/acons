@@ -246,8 +246,8 @@ TEST_CASE("2-dim row_major ndarray ndarray_view column")
 TEST_CASE("3-dim 2x3x4 ndarray ndarray_view column")
 {
     typedef ndarray<double,3,row_major> an_array;
-    an_array a = { {{0,1,2,3},{4,5,6,7},{8,9,10,11}}, {{12,13,14,15},{16,17,18,19},{20,21,22,23}} };
-    REQUIRE(a.size(0) == 2);
+    an_array a = { {{0,1,2,3},{4,5,6,7},{8,9,10,11}}, {{12,13,14,15},{16,17,18,19},{20,21,22,23}}, {{24,25,26,27},{28,29,30,31},{32,33,34,35}} };
+    REQUIRE(a.size(0) == 3);
     REQUIRE(a.size(1) == 3);
     REQUIRE(a.size(2) == 4);
 
@@ -260,6 +260,34 @@ TEST_CASE("3-dim 2x3x4 ndarray ndarray_view column")
 
         CHECK(v3(0,0) == 18);
         CHECK(v3(0,1) == 22);
+    }
+
+    SECTION("offset tests")
+    {
+        ndarray_view<double,3> v(a,{slice(1,3),slice(1,3),slice(1,3)});
+        // { {{17,18},{21,22}}, {{29,30},{33,34}} };
+
+        REQUIRE(v.size(0) == 2); 
+        REQUIRE(v.size(1) == 2); 
+        REQUIRE(v.size(2) == 2); 
+
+        CHECK(v(0,0,0) == 17.0);
+        CHECK(v(0,0,1) == 18.0);
+        CHECK(v(0,1,0) == 21.0);
+        CHECK(v(0,1,1) == 22.0);
+        CHECK(v(1,0,0) == 29.0);
+        CHECK(v(1,0,1) == 30.0);
+        CHECK(v(1,1,0) == 33.0);
+        CHECK(v(1,1,1) == 34.0);
+
+        ndarray_view<double,3> w(v,{slice(1,2),slice(1,2),slice(1,2)});
+        // {{{34}} };
+        REQUIRE(w.size(0) == 1);
+        REQUIRE(w.size(1) == 1); 
+        REQUIRE(w.size(2) == 1); 
+
+        w(0, 0, 0) = 34;
+
     }
 }
 
