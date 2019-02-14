@@ -15,8 +15,8 @@ TEST_CASE("2-dim 3 x 4 ndarray iterator tests")
 
     SECTION("row_major_iterator test")
     {
-        row_major_iterator<double,2,row_major,zero_based,double*> it(v.data(),v.num_elements(),v.shape(),v.strides(),v.offsets());
-        row_major_iterator<double,2,row_major,zero_based,double*> end(v.data(),v.num_elements(),v.shape(),v.strides(),v.offsets(),true);
+        row_major_iterator<double,2,row_major,zero_based,double*> it(v);
+        row_major_iterator<double,2,row_major,zero_based,double*> end(v,true);
 
         CHECK(*it++ == 1.0);
         CHECK(*it++ == 2.0);
@@ -46,8 +46,8 @@ TEST_CASE("3-dim 2x3x4 ndarray iterator tests")
 
     SECTION("row_major_iterator test")
     {
-        row_major_iterator<double,3,row_major,zero_based,double*> it(v.data(),v.num_elements(),v.shape(),v.strides(),v.offsets());
-        row_major_iterator<double,3,row_major,zero_based,double*> end(v.data(),v.num_elements(),v.shape(),v.strides(),v.offsets(),true);
+        row_major_iterator<double,3,row_major,zero_based,double*> it(v);
+        row_major_iterator<double,3,row_major,zero_based,double*> end(v,true);
 
         CHECK(*it++ == 0.0);
         CHECK(*it++ == 1.0);
