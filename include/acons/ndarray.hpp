@@ -1230,7 +1230,6 @@ class row_major_iterator
     std::array<size_t,N> offsets_;
     std::array<size_t,N-1> indices_;
 
-    ndarray_view_base<T,1,Order,Base,TPtr> v_;
     iterator_one<T,TPtr> it_;
     iterator_one<T,TPtr> end_;
 public:
@@ -1240,12 +1239,14 @@ public:
     typedef typename std::conditional<std::is_const<typename std::remove_pointer<TPtr>::type>::value,const T&,T&>::type reference;
     typedef std::input_iterator_tag iterator_category;
 
-    row_major_iterator(TPtr data, 
+    template <size_t n = N>
+    row_major_iterator(TPtr data,
                        size_t size, 
                        const std::array<size_t,N>& shape, 
                        const std::array<size_t,N>& strides, 
                        const std::array<size_t,N>& offsets,
-                       bool end = false)
+                       bool end = false,
+                       typename std::enable_if<(n>1)>::type* = 0)
         : data_(data), num_elements_(size), shape_(shape), strides_(strides), offsets_(offsets)          
     {
         if (end)
@@ -1261,9 +1262,24 @@ public:
         {
             indices_.fill(0);
         }
-        v_ = ndarray_view_base<T,1,Order,Base,TPtr>(data, size, shape, strides, offsets, indices_);
-        it_ = v_.begin();
-        end_ = v_.end();
+        ndarray_view_base<T,1,Order,Base,TPtr> v(data, size, shape, strides, offsets, indices_);
+        it_ = v.begin();
+        end_ = v.end();
+    }
+
+    template <size_t n=N>
+    row_major_iterator(TPtr data, 
+                       size_t size, 
+                       const std::array<size_t,N>& shape, 
+                       const std::array<size_t,N>& strides, 
+                       const std::array<size_t,N>& offsets,
+                       bool end = false,
+                       typename std::enable_if<(n==1)>::type* = 0)
+        : data_(data), num_elements_(size), shape_(shape), strides_(strides), offsets_(offsets)          
+    {
+        ndarray_view_base<T,1,Order,Base,TPtr> v(data, size, shape, strides, offsets);
+        it_ = v.begin();
+        end_ = v.end();
     }
 
     row_major_iterator(const row_major_iterator&) = default;
@@ -1273,29 +1289,7 @@ public:
 
     row_major_iterator& operator++()
     {
-        if (it_ != end_)
-        {
-            ++it_;
-        }
-        if (it_ == end_)
-        {
-            for (size_t i = N-1; i-- > 0;)
-            {
-                if (indices_[i]+1 < shape_[i])
-                {
-                    ++indices_[i];
-                    v_ = ndarray_view_base<T,1,Order,Base,TPtr>(data_, num_elements_, shape_, strides_, offsets_, indices_);
-                    it_ = v_.begin();
-                    end_ = v_.end();
-                    break;
-                }
-                else if (i > 0)
-                {
-                    indices_[i] = 0;
-                }
-            }
-        }
-        return *this;
+        return increment(std::integral_constant<bool,N==1>());
     }
 
     row_major_iterator operator++(int) // postfix increment
@@ -1317,6 +1311,166 @@ public:
     friend bool operator!=(const row_major_iterator& it1, const row_major_iterator& it2)
     {
         return !(it1 == it2);
+    }
+private:
+    row_major_iterator& increment(std::false_type)
+    {
+        if (it_ != end_)
+        {
+            ++it_;
+        }
+        if (it_ == end_)
+        {
+            for (size_t i = N-1; i-- > 0;)
+            {
+                if (indices_[i]+1 < shape_[i])
+                {
+                    ++indices_[i];
+                    ndarray_view_base<T,1,Order,Base,TPtr> v(data_, num_elements_, shape_, strides_, offsets_, indices_);
+                    it_ = v.begin();
+                    end_ = v.end();
+                    break;
+                }
+                else if (i > 0)
+                {
+                    indices_[i] = 0;
+                }
+            }
+        }
+        return *this;
+    }
+
+    row_major_iterator& increment(std::true_type)
+    {
+        ++it_;
+        return *this;
+    }
+};
+
+template <class T, size_t N, class Order, class Base, typename TPtr>
+class column_major_iterator
+{
+    TPtr data_;
+    size_t num_elements_;
+
+    std::array<size_t,N> shape_;
+    std::array<size_t,N> strides_;
+    std::array<size_t,N> offsets_;
+    std::array<size_t,N-1> indices_;
+
+    iterator_one<T,TPtr> it_;
+    iterator_one<T,TPtr> end_;
+public:
+    typedef T value_type;
+    typedef std::ptrdiff_t difference_type;
+    typedef TPtr pointer;
+    typedef typename std::conditional<std::is_const<typename std::remove_pointer<TPtr>::type>::value,const T&,T&>::type reference;
+    typedef std::input_iterator_tag iterator_category;
+
+    template <size_t n=N>
+    column_major_iterator(TPtr data, 
+                       size_t size, 
+                       const std::array<size_t,N>& shape, 
+                       const std::array<size_t,N>& strides, 
+                       const std::array<size_t,N>& offsets,
+                       bool end = false,
+                       typename std::enable_if<(n>1)>::type* = 0)
+        : data_(data), num_elements_(size), shape_(shape), strides_(strides), offsets_(offsets)          
+    {
+        if (end)
+        {
+            for (size_t i = 0; i < N-2; ++i)
+            {
+                indices_[i] = shape[i]-1;
+            }
+            indices_[N-2] = shape[N-2];
+
+        }
+        else
+        {
+            indices_.fill(0);
+        }
+        ndarray_view_base<T,1,Order,Base,TPtr> v(data, size, shape, strides, offsets, indices_);
+        it_ = v.begin();
+        end_ = v.end();
+    }
+
+    template <size_t n=N>
+    column_major_iterator(TPtr data, 
+                          size_t size, 
+                          const std::array<size_t,N>& shape, 
+                          const std::array<size_t,N>& strides, 
+                          const std::array<size_t,N>& offsets,
+                          bool end = false,
+                          typename std::enable_if<(n==1)>::type* = 0)
+        : data_(data), num_elements_(size), shape_(shape), strides_(strides), offsets_(offsets)          
+    {
+        ndarray_view_base<T,1,Order,Base,TPtr> v(data, size, shape, strides, offsets);
+        it_ = v.begin();
+        end_ = v.end();
+    }
+
+    column_major_iterator(const column_major_iterator&) = default;
+    column_major_iterator(column_major_iterator&&) = default;
+    column_major_iterator& operator=(const column_major_iterator&) = default;
+    column_major_iterator& operator=(column_major_iterator&&) = default;
+
+    column_major_iterator& operator++()
+    {
+        return increment(std::integral_constant<bool,N==1>());
+    }
+
+    column_major_iterator operator++(int) // postfix increment
+    {
+        column_major_iterator temp(*this);
+        ++(*this);
+        return temp;
+    }
+
+    reference operator*() const
+    {
+        return *it_;
+    }
+
+    friend bool operator==(const column_major_iterator& it1, const column_major_iterator& it2)
+    {
+        return it1.it_ == it2.it_;
+    }
+    friend bool operator!=(const column_major_iterator& it1, const column_major_iterator& it2)
+    {
+        return !(it1 == it2);
+    }
+private:
+    column_major_iterator& increment(std::false_type)
+    {
+        if (it_ != end_)
+        {
+            ++it_;
+        }
+        if (it_ == end_)
+        {
+            for (size_t i = 0; i < N-1; ++i)
+            {
+                if (indices_[i]+1 < shape_[i])
+                {
+                    ++indices_[i];
+                    ndarray_view_base<T,1,Order,Base,TPtr> v(data_, num_elements_, shape_, strides_, offsets_, indices_);
+                    it_ = v.begin();
+                    end_ = v.end();
+                    break;
+                }
+                else if (i > 0)
+                {
+                    indices_[i] = 0;
+                }
+            }
+        }
+        return *this;
+    }
+    column_major_iterator& increment(std::true_type)
+    {
+        ++it_;
+        return *this;
     }
 };
 
