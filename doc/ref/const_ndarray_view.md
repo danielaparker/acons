@@ -33,7 +33,7 @@ Member type                         |Definition
 `const_reference`|const T&
 `order_type`|Order
 `base_type`|Base
-`const_iterator`|Defined if ndim is 1, otherwise void
+`const_iterator`|
 `iterator`|Same as `const_iterator`
 
 #### Member functions
@@ -115,6 +115,7 @@ Constructs a new M-dimensional array view.
 ##### Iterators
     const_iterator begin() const;
     const_iterator cbegin() const;
+Returns an iterator to the first element in the view. The iteration order follows `order_type` (row major or column major.)
 
     const_iterator end() const;
     const_iterator cend() const;

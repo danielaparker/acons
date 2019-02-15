@@ -151,6 +151,7 @@ Exceptions:
     iterator begin();
     const_iterator begin() const;
     const_iterator cbegin() const;
+Returns an iterator to the first element in the view. The iteration order follows `order_type` (row major or column major.)
 
     iterator end();
     const_iterator end() const;
