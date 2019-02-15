@@ -116,7 +116,7 @@ Constructs a new M-dimensional array view.
     const_iterator begin() const;
     const_iterator cbegin() const;
 Returns an iterator to the first element in the view. The iteration order follows `order_type` (`row_major` or `column_major`)
-to ensure that elements are accessed with high locality.
+to allow elements to be accessed with high locality.
 
     const_iterator end() const;
     const_iterator cend() const;

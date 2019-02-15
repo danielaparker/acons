@@ -117,7 +117,7 @@ Exceptions:
     const_iterator begin() const;
     const_iterator cbegin() const;
 Returns an iterator to the first element in the view. The iteration order follows `order_type` (`row_major` or `column_major`)
-to ensure that elements are accessed with high locality.
+to allow elements to be accessed with high locality.
 
     iterator end();
     const_iterator end() const;
