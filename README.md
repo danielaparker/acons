@@ -25,6 +25,39 @@ Download the latest [single header file](https://raw.githubusercontent.com/danie
 
 ### Examples
 
+#### Create a 3-dim array
+
+```c++
+#include <iostream>
+#include <acons/ndarray.hpp>
+
+int main()
+{
+    // Create a 3-dim array of shape 3 x 4 x 2
+    acons::ndarray<double,3> a(3,4,2);
+
+    // Assign values to the elements
+    int x = 0;
+    for (size_t i = 0; i < a.size(0); ++i)
+    {
+        for (size_t j = 0; j < a.size(1); ++j)
+        {
+            for (size_t k = 0; k < a.size(2); ++k)
+            {
+                a(i,j,k) = x++;
+            }
+        }
+    }
+
+    // Print
+    std::cout << a << "\n";
+}
+```
+Output:
+```
+[[[0,1],[2,3],[4,5],[6,7]],[[8,9],[10,11],[12,13],[14,15]],[[16,17],[18,19],[20,21],[22,23]]]
+```
+
 #### Indexing and slicing a 1-dimensional array
 
 A `slice` object can be constructed with `start`, `stop` and `stride` parameters.

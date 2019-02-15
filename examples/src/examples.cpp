@@ -189,6 +189,28 @@ void enlarge_array_example()
     std::cout << a << "\n\n";
 }
 
+void create_a_3d_array()
+{
+    // Create a 3-dim array of shape 3 x 4 x 2
+    acons::ndarray<double,3> a(3,4,2);
+
+    // Assign values to the elements
+    int x = 0;
+    for (size_t i = 0; i < a.size(0); ++i)
+    {
+        for (size_t j = 0; j < a.size(1); ++j)
+        {
+            for (size_t k = 0; k < a.size(2); ++k)
+            {
+                a(i,j,k) = x++;
+            }
+        }
+    }
+
+    // Print
+    std::cout << a << "\n";
+}
+
 int main()
 {
     example1();
@@ -205,4 +227,6 @@ int main()
     column_major_one_based_example();
     shrink_array_example();
     enlarge_array_example();
+
+    create_a_3d_array();
 }
