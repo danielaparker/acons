@@ -6,7 +6,7 @@
 using namespace acons;
 
 // constructors
-#if 0
+
 TEST_CASE("constructor 1")
 {
     ndarray<double,3> a;
@@ -332,28 +332,9 @@ TEST_CASE("assignment 1")
     b = {{{0,1,2},{3,4,5}}};
     CHECK(b == a);
 }
-#endif
-// operator()
-/*
-TEST_CASE("indexing operator 1")
-{
-    ndarray<double, 3, column_major> a(2,3,4);
 
-    int init = 0;
-    for (size_t i = 0; i < a.size(0); ++i)
-    {
-        for (size_t j = 0; j < a.size(1); ++j)
-        {
-            for (size_t k = 0; k < a.size(2); ++k)
-            {
-                a(i,j,k) = init++;
-            }
-        }
-    }
-    std::cout << "a: " << a << "\n\n";
-} 
-*/ 
-/*
+// operator()
+
 TEST_CASE("indexing operator 1")
 {
     ndarray<double, 3> a(2,3,4);
@@ -371,35 +352,6 @@ TEST_CASE("indexing operator 1")
     }
     std::cout << "a: " << a << "\n\n";
 }
-*/
-TEST_CASE("indexing operator 1")
-{
-    ndarray<double, 2> a(2,3);
-
-    int init = 0;
-    for (size_t i = 0; i < a.size(0); ++i)
-    {
-        for (size_t j = 0; j < a.size(1); ++j)
-        {
-            a(i,j) = init++;
-        }
-    }
-
-    for (size_t i = 0; i < a.size(0); ++i)
-    {
-        std::array<size_t,1> dim = {i};
-        ndarray_view<double,1> w(a,dim);
-        //std::cout << w(0) << " " << w(1) << "\n";
-        row_major_iterator<double,1,row_major,zero_based,double*> it(w);
-        row_major_iterator<double,1,row_major,zero_based,double*> end(w,true);
-        while (it != end)
-        {
-            std::cout << *it++ << " ";
-        }
-        std::cout << "\n";
-    }
-}
-#if 0
 
 TEST_CASE("shrink row_major array")
 {
@@ -468,4 +420,4 @@ TEST_CASE("enlarge row_major array with specified fill")
 
     CHECK_FALSE(oldp == a.data());
 }
-#endif
+
