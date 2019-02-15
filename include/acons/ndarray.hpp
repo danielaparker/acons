@@ -1173,7 +1173,6 @@ class iterator_one
     TPtr data_;
     size_t stride_;
     size_t offset_;
-    TPtr p_;
 public:
     typedef T value_type;
     typedef std::ptrdiff_t difference_type;
@@ -1182,14 +1181,13 @@ public:
     typedef std::input_iterator_tag iterator_category;
 
     iterator_one()
-        : data_(nullptr), stride_(0), offset_(0), p_(nullptr)
+        : data_(nullptr), stride_(0), offset_(0)
     {
     }
 
     iterator_one(TPtr data, size_t stride, size_t offset)
         : data_(data), stride_(stride), offset_(offset)
     {
-        p_ = data_ + offset_;
     }
 
     iterator_one(const iterator_one&) = default;
@@ -1199,7 +1197,7 @@ public:
 
     iterator_one& operator++()
     {
-        p_ += stride_;
+        offset_ += stride_;
         return *this;
     }
 
@@ -1212,12 +1210,12 @@ public:
 
     reference operator*() const
     {
-        return *p_;
+        return *(data_+offset_);
     }
 
     friend bool operator==(const iterator_one& it1, const iterator_one& it2)
     {
-        return it1.p_ == it2.p_;
+        return (it1.data_ == it2.data_) && (it1.offset_ == it2.offset_);
     }
     friend bool operator!=(const iterator_one& it1, const iterator_one& it2)
     {
