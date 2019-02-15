@@ -1,8 +1,8 @@
 ### acons::ndarray
 
 ```c++
-template <typename T, size_t N, typename Order, typename Base, typename Allocator>
-class ndarray
+template <typename T, size_t N, typename Order = row_major, typename Base = zero_based, typename Allocator = std::allocator<T>>
+class ndarray;
 ```
 The `ndarray` class represents an N-dimensional array.
 

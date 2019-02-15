@@ -1239,6 +1239,9 @@ class row_major_iterator_base
     iterator_one<T,TPtr> end_;
 public:
     typedef T value_type;
+    static constexpr size_t ndim = N;
+    typedef Order order_type;
+    typedef Base base_type;
     typedef std::ptrdiff_t difference_type;
     typedef TPtr pointer;
     typedef typename std::conditional<std::is_const<typename std::remove_pointer<TPtr>::type>::value,const T&,T&>::type reference;
@@ -1387,6 +1390,9 @@ class column_major_iterator_base
     iterator_one<T,TPtr> end_;
 public:
     typedef T value_type;
+    static constexpr size_t ndim = N;
+    typedef Order order_type;
+    typedef Base base_type;
     typedef std::ptrdiff_t difference_type;
     typedef TPtr pointer;
     typedef typename std::conditional<std::is_const<typename std::remove_pointer<TPtr>::type>::value,const T&,T&>::type reference;
@@ -1522,23 +1528,26 @@ private:
     }
 };
 
-template <class T, size_t N, class Order, class Base, typename TPtr>
-class row_major_iterator : public row_major_iterator_base<T,N,Order,Base,T*>
+template <class Array>
+class row_major_iterator : public row_major_iterator_base<typename Array::value_type,Array::ndim,typename Array::order_type,typename Array::base_type,typename Array::value_type*>
 {
-    typedef row_major_iterator_base<T, N, Order, Base, T*> super_type;
+    typedef row_major_iterator_base<typename Array::value_type,Array::ndim,typename Array::order_type,typename Array::base_type,typename Array::value_type*> super_type;
 public:
     using typename super_type::value_type;
+    using super_type::ndim;
+    using typename super_type::order_type;
+    using typename super_type::base_type;
     using typename super_type::difference_type;
     using typename super_type::pointer;
     using typename super_type::reference;
     using typename super_type::iterator_category;
 
     template <typename Allocator>
-    row_major_iterator(ndarray<T, N, Order, Base, Allocator>& a, bool end = false)
+    row_major_iterator(ndarray<value_type,ndim,order_type,base_type,Allocator>& a, bool end = false)
         : super_type(a.data(), a.num_elements(), a.shape(), a.strides(), end)          
     {
     }
-    row_major_iterator(ndarray_view<T, N, Order, Base>& a, bool end = false)
+    row_major_iterator(ndarray_view<value_type,ndim,order_type,base_type>& a, bool end = false)
         : super_type(a.data(), a.num_elements(), a.shape(), a.strides(), a.offsets(), end)          
     {
     }
@@ -1547,24 +1556,26 @@ public:
     row_major_iterator& operator=(const row_major_iterator&) = default;
 };
 
-
-template <class T, size_t N, class Order, class Base, typename TPtr>
-class column_major_iterator : public column_major_iterator_base<T,N,Order,Base,T*>
+template <class Array>
+class column_major_iterator : public column_major_iterator_base<typename Array::value_type,Array::ndim,typename Array::order_type,typename Array::base_type,typename Array::value_type*>
 {
-    typedef column_major_iterator_base<T, N, Order, Base, T*> super_type;
+    typedef column_major_iterator_base<typename Array::value_type,Array::ndim,typename Array::order_type,typename Array::base_type,typename Array::value_type*> super_type;
 public:
     using typename super_type::value_type;
+    using super_type::ndim;
+    using typename super_type::order_type;
+    using typename super_type::base_type;
     using typename super_type::difference_type;
     using typename super_type::pointer;
     using typename super_type::reference;
     using typename super_type::iterator_category;
 
     template <typename Allocator>
-    column_major_iterator(ndarray<T, N, Order, Base, Allocator>& a, bool end = false)
+    column_major_iterator(ndarray<value_type, ndim, order_type, base_type, Allocator>& a, bool end = false)
         : super_type(a.data(), a.num_elements(), a.shape(), a.strides(), end)          
     {
     }
-    column_major_iterator(ndarray_view<T, N, Order, Base>& a, bool end = false)
+    column_major_iterator(ndarray_view<value_type, ndim, order_type, base_type>& a, bool end = false)
         : super_type(a.data(), a.num_elements(), a.shape(), a.strides(), a.offsets(), end)          
     {
     }

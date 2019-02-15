@@ -390,8 +390,8 @@ TEST_CASE("indexing operator 1")
         std::array<size_t,1> dim = {i};
         ndarray_view<double,1> w(a,dim);
         //std::cout << w(0) << " " << w(1) << "\n";
-        row_major_iterator<double,1,row_major,zero_based,double*> it(w);
-        row_major_iterator<double,1,row_major,zero_based,double*> end(w,true);
+        row_major_iterator<ndarray_view<double, 1>> it(w);
+        row_major_iterator<ndarray_view<double, 1>> end(w,true);
         while (it != end)
         {
             std::cout << *it++ << " ";

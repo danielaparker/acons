@@ -14,8 +14,8 @@ TEST_CASE("1-dim row_major ndarray iterator tests")
 
     SECTION("test 1")
     {
-        row_major_iterator<double,1,row_major,zero_based,double*> it(v);
-        row_major_iterator<double,1,row_major,zero_based,double*> end(v,true);
+        row_major_iterator<ndarray_view<double,1>> it(v);
+        row_major_iterator<ndarray_view<double,1>> end(v,true);
 
         CHECK(*it++ == 0.0);
         CHECK(*it++ == 1.0);
@@ -38,8 +38,8 @@ TEST_CASE("1-dim column_major ndarray iterator tests")
 
     SECTION("test 1")
     {
-        row_major_iterator<double,1,column_major,zero_based,double*> it(v);
-        row_major_iterator<double,1,column_major,zero_based,double*> end(v,true);
+        row_major_iterator<ndarray_view<double,1,column_major>> it(v);
+        row_major_iterator<ndarray_view<double,1,column_major>> end(v,true);
 
         CHECK(*it++ == 0.0);
         CHECK(*it++ == 1.0);
@@ -63,8 +63,8 @@ TEST_CASE("2-dim 3 x 4 ndarray iterator tests")
 
     SECTION("row_major_iterator test")
     {
-        row_major_iterator<double,2,row_major,zero_based,double*> it(v);
-        row_major_iterator<double,2,row_major,zero_based,double*> end(v,true);
+        row_major_iterator<ndarray_view<double,2>> it(v);
+        row_major_iterator<ndarray_view<double,2>> end(v,true);
 
         CHECK(*it++ == 1.0);
         CHECK(*it++ == 2.0);
@@ -92,8 +92,8 @@ TEST_CASE("2-dim 3 x 4 column_major ndarray iterator tests")
 
     SECTION("column_major_iterator test")
     {
-        column_major_iterator<double,2,column_major,zero_based,double*> it(v);
-        column_major_iterator<double,2,column_major,zero_based,double*> end(v,true);
+        column_major_iterator<ndarray_view<double,2,column_major>> it(v);
+        column_major_iterator<ndarray_view<double,2,column_major>> end(v,true);
 
         CHECK(*it++ == 1.0);
         CHECK(*it++ == 5.0);
@@ -123,8 +123,8 @@ TEST_CASE("3-dim 2x3x4 ndarray iterator tests")
 
     SECTION("row_major_iterator test")
     {
-        row_major_iterator<double,3,row_major,zero_based,double*> it(v);
-        row_major_iterator<double,3,row_major,zero_based,double*> end(v,true);
+        row_major_iterator<ndarray_view<double,3>> it(v);
+        row_major_iterator<ndarray_view<double,3>> end(v,true);
 
         CHECK(*it++ == 0.0);
         CHECK(*it++ == 1.0);

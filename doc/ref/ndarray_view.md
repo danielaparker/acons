@@ -1,8 +1,8 @@
 ### acons::ndarray_view
 
 ```c++
-template <typename T, size_t M, typename Order=row_major, typename Base=zero_based>
-class ndarray_view
+template <typename T, size_t M, typename Order = row_major, typename Base = zero_based>
+class ndarray_view;
 ```
 The `ndarray_view` class represents a view on an N-dimensional array.
 
