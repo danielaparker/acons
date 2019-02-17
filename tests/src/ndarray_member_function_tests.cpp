@@ -6,7 +6,19 @@
 using namespace acons;
 
 // constructors
-#if 0
+
+TEST_CASE("constructor temp")
+{
+    ndarray<double,2> a = {{0,1},{2,3}};
+
+    SECTION("ndarray_view")
+    {
+        auto u = ndarray_view<double,2>(ndarray_view<double,2>(a));
+        auto v = const_ndarray_view<double,2>(const_ndarray_view<double,2>(a));
+        auto w = const_ndarray_view<double, 2>(ndarray_view<double, 2>(a));
+    }
+}
+
 TEST_CASE("constructor 1")
 {
     ndarray<double,3> a;
@@ -332,7 +344,7 @@ TEST_CASE("assignment 1")
     b = {{{0,1,2},{3,4,5}}};
     CHECK(b == a);
 }
-#endif
+
 // operator()
 /*
 TEST_CASE("indexing operator 1")
@@ -399,7 +411,6 @@ TEST_CASE("indexing operator 1")
         std::cout << "\n";
     }
 }
-#if 0
 
 TEST_CASE("shrink row_major array")
 {
@@ -468,4 +479,4 @@ TEST_CASE("enlarge row_major array with specified fill")
 
     CHECK_FALSE(oldp == a.data());
 }
-#endif
+

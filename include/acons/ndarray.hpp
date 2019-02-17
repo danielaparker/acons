@@ -1680,6 +1680,13 @@ public:
     }
 protected:
 public:
+    ndarray_view_base()
+        : data_(nullptr), num_elements_(0)
+    {
+        shape_.fill(0);
+        offsets_.fill(0);
+    }
+
     ndarray_view_base(TPtr data, size_t size, const std::array<size_t,M>& shape, const std::array<size_t,M>& strides)
         : data_(data), num_elements_(size), shape_(shape), strides_(strides)          
     {
@@ -1868,6 +1875,15 @@ public:
         strides_ = strides;
         offsets_ = offsets;
     }
+
+    void swap(ndarray_view_base<T, M, Order, Base, TPtr>& a)
+    {
+        std::swap(a.data_,this->data_);
+        std::swap(a.num_elements_,this->num_elements_);
+        a.shape_.swap(this->shape_);
+        a.strides_.swap(this->strides_);
+        a.offsets_.swap(this->offsets_);
+    }
 };
 
 template <typename CharT, typename T, size_t M, typename Order, typename Base, typename TPtr>
@@ -1904,6 +1920,11 @@ public:
     ndarray_view(ndarray_view<T, M, Order, Base>& a)
         : super_type(a.data(), a.num_elements(), a.shape(), a.strides(), a.offsets())          
     {
+    }
+
+    ndarray_view(ndarray_view<T, M, Order, Base>&& a)
+    {
+        this->swap(a);
     }
 
     template<typename Allocator>
@@ -2065,6 +2086,17 @@ public:
     {
     }
 
+    template<typename OtherTPtr>
+    const_ndarray_view(const ndarray_view_base<T, M, Order, Base, OtherTPtr>& other)
+        : super_type(other.data(), other.num_elements(), other.shape(), other.strides(), other.offsets())        
+    {
+    }
+
+    const_ndarray_view(const_ndarray_view<T, M, Order, Base>&& a)
+    {
+        this->swap(a);
+    }
+
     template<typename Allocator>
     const_ndarray_view(const ndarray<T, M, Order, Base, Allocator>& a, 
                        const std::array<slice,M>& slices)
@@ -2078,12 +2110,6 @@ public:
                        const std::array<size_t,N-M>& first_dim)
         : super_type(a.data(), a.num_elements(), a.shape(), a.strides(),
                      first_dim)
-    {
-    }
-
-    template<typename OtherTPtr>
-    const_ndarray_view(const ndarray_view_base<T, M, Order, Base, OtherTPtr>& other)
-        : super_type(other.data(), other.num_elements(), other.shape(), other.strides(), other.offsets())        
     {
     }
 
