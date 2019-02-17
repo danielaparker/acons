@@ -2297,22 +2297,22 @@ bool operator!=(const ndarray_view_base<T, M, Order, Base, TPtr>& lhs,
 namespace std
 {
     template<class Array>
-    acons::row_major_iterator<Array> begin(acons::row_major_iterator<Array> it)
+    acons::row_major_iterator<Array> begin(acons::row_major_iterator<Array> it) noexcept
     {
         return it;
     }
     template<class Array>
-    acons::row_major_iterator<Array> end(acons::row_major_iterator<Array> it)
+    acons::row_major_iterator<Array> end(acons::row_major_iterator<Array> it) noexcept
     {
         return acons::row_major_iterator<Array>(it,true);
     }
     template<class Array>
-    acons::column_major_iterator<Array> begin(acons::column_major_iterator<Array> it)
+    acons::column_major_iterator<Array> begin(acons::column_major_iterator<Array> it) noexcept
     {
         return it;
     }
     template<class Array>
-    acons::column_major_iterator<Array> end(acons::column_major_iterator<Array> it)
+    acons::column_major_iterator<Array> end(acons::column_major_iterator<Array> it) noexcept
     {
         return acons::column_major_iterator<Array>(it,true);
     }
