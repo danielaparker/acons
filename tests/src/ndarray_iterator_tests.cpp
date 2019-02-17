@@ -27,6 +27,30 @@ TEST_CASE("1-dim row_major ndarray iterator tests")
         CHECK(*it++ == 7.0);
         CHECK(it == end);
     }
+
+    SECTION("test 2")
+    {
+        row_major_iterator<ndarray_view<double,1>> it(v);
+
+        size_t i = 0;
+        for (auto element : it)
+        {
+            CHECK(element == a(i++));
+        }
+        CHECK(i == a.size(0));
+    }
+
+    SECTION("test 3")
+    {
+        column_major_iterator<ndarray_view<double,1>> it(v);
+
+        size_t i = 0;
+        for (auto element : it)
+        {
+            CHECK(element == a(i++));
+        }
+        CHECK(i == a.size(0));
+    }
 }
 
 TEST_CASE("1-dim column_major ndarray iterator tests")

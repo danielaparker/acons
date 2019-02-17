@@ -1247,6 +1247,13 @@ public:
     typedef typename std::conditional<std::is_const<typename std::remove_pointer<TPtr>::type>::value,const T&,T&>::type reference;
     typedef std::input_iterator_tag iterator_category;
 
+    row_major_iterator_base(row_major_iterator_base<T,N,Order,Base,TPtr>& base, bool end)
+        : data_(base.data_), num_elements_(base.num_elements_), shape_(base.shape_), strides_(base.offsets_), offsets_(base.offsets_),
+          offset_one_end_(base.shape_[N-1]*base.strides_[N-1])
+    {
+        initialize(end, std::integral_constant<bool,N==1>());
+    }
+
     row_major_iterator_base(TPtr data,
                             size_t size, 
                             const std::array<size_t,N>& shape, 
@@ -1398,6 +1405,13 @@ public:
     typedef typename std::conditional<std::is_const<typename std::remove_pointer<TPtr>::type>::value,const T&,T&>::type reference;
     typedef std::input_iterator_tag iterator_category;
 
+    column_major_iterator_base(column_major_iterator_base<T,N,Order,Base,TPtr>& base, bool end)
+        : data_(base.data_), num_elements_(base.num_elements_), shape_(base.shape_), strides_(base.offsets_), offsets_(base.offsets_),
+          offset_one_end_(base.shape_[0]*base.strides_[0])
+    {
+        initialize(end, std::integral_constant<bool,N==1>());
+    }
+
     column_major_iterator_base(TPtr data,
                             size_t size, 
                             const std::array<size_t,N>& shape, 
@@ -1527,7 +1541,6 @@ private:
         return *this;
     }
 };
-
 template <class Array>
 class row_major_iterator : public row_major_iterator_base<typename Array::value_type,Array::ndim,typename Array::order_type,typename Array::base_type,typename Array::value_type*>
 {
@@ -1549,6 +1562,10 @@ public:
     }
     row_major_iterator(ndarray_view<value_type,ndim,order_type,base_type>& a, bool end = false)
         : super_type(a.data(), a.num_elements(), a.shape(), a.strides(), a.offsets(), end)          
+    {
+    }
+    row_major_iterator(row_major_iterator a, bool end)
+        : super_type(a, end)          
     {
     }
     row_major_iterator(const row_major_iterator&) = default;
@@ -1577,6 +1594,10 @@ public:
     }
     column_major_iterator(ndarray_view<value_type, ndim, order_type, base_type>& a, bool end = false)
         : super_type(a.data(), a.num_elements(), a.shape(), a.strides(), a.offsets(), end)          
+    {
+    }
+    column_major_iterator(column_major_iterator a, bool end)
+        : super_type(a, end)          
     {
     }
     column_major_iterator(const column_major_iterator&) = default;
@@ -2271,6 +2292,30 @@ bool operator!=(const ndarray_view_base<T, M, Order, Base, TPtr>& lhs,
     return !(lhs == rhs);
 }
 
+}
+
+namespace std
+{
+    template<class Array>
+    acons::row_major_iterator<Array> begin(acons::row_major_iterator<Array> it)
+    {
+        return it;
+    }
+    template<class Array>
+    acons::row_major_iterator<Array> end(acons::row_major_iterator<Array> it)
+    {
+        return acons::row_major_iterator<Array>(it,true);
+    }
+    template<class Array>
+    acons::column_major_iterator<Array> begin(acons::column_major_iterator<Array> it)
+    {
+        return it;
+    }
+    template<class Array>
+    acons::column_major_iterator<Array> end(acons::column_major_iterator<Array> it)
+    {
+        return acons::column_major_iterator<Array>(it,true);
+    }
 }
 
 #endif
