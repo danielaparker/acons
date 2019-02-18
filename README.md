@@ -60,7 +60,7 @@ Output:
 
 #### Slicing a 1-dimensional array
 
-A `slice` object can be constructed with `start`, `stop` and `stride` parameters.
+A `slice` object can be constructed with `start`, `stop` and `step` parameters.
 ```c++
 int main()
 {
