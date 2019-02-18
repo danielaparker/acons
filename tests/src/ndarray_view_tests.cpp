@@ -171,15 +171,10 @@ TEST_CASE("3-dim 2x3x4 ndarray ndarray_view tests")
         CHECK(v3(0,1,0) == 20);
         CHECK(v3(0,1,1) == 22);
 
-        //std::cout << "Here\n";
         an_array::const_view<2> v2(v3,{0});
-        //std::cout << "After\n";
         REQUIRE(v2.size(0) == 2);
         REQUIRE(v2.size(1) == 2);
         CHECK(v2(0,0) == 16);
-        //CHECK(v2(0,1) == 18);
-        //CHECK(v2(1,0) == 20);
-        //CHECK(v2(1,1) == 22);
     }
 
     SECTION("2-dim ndarray_view")

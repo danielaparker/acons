@@ -71,30 +71,37 @@ void example6()
     // [3 4 5]
 }
 
-void example7()
+void slicing_a_2d_array()
 {
-    // Construct a 2-dimensional 3 x 3 array 
-    ndarray<double,2> a = {{1,2,3},{4,5,6},{7,8,9}};
+    // Construct a 2-dimensional 3 x 4 array 
+    ndarray<double,2> a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
 
-    // All items from the second row
-    ndarray_view<double,1> v1(a, {1});
+    // All items from row 1 and columns 0 and 1
+    ndarray_view<double,2> v1(a, {slice(1,2),slice(0,2)});
     std::cout << "(1) " << v1 << "\n\n";
 
-    // All items from the second column
-    ndarray_view<double,1> v2(a, {slice()}, {1});
-    std::cout << "(2) " << v2 << "\n\n";
-
     // All items from column 1 onwards
-    ndarray_view<double,2> v3(a, {slice(),slice(1)});
-    std::cout << "(3) " << v3 << "\n\n";
+    ndarray_view<double,2> v2(a, {slice(),slice(1)});
+    std::cout << "(2) " << v2 << "\n\n";
+}
+/*
+*/
+
+void reduction()
+{
+    // Construct a 2-dimensional 3 x 4 array 
+    ndarray<double,2> a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
+
+    // Reduce the 2-dimensional array to a 1-dimensional array, along row 0
+    ndarray_view<double,1> v1(a, {0});
+    std::cout << "(1) " << v1 << "\n\n";
+
+    // Reduce the 2-dimensional array to a 1-dimensional array, along column 2
+    ndarray_view<double,1> v2(a, {slice()}, {2});
+    std::cout << "(2) " << v2 << "\n\n";
 }
 
 /*
-(1) [4,5,6]
-
-(2) [2,5,8]
-
-(3) [[2,3],[5,6],[8,9]]
 */
 
 void row_major_zero_based_example()
@@ -203,9 +210,6 @@ int main()
     example4();
     example5();
     example6();
-    example7();
-
-    std::cout << "---\n";
 
     row_major_zero_based_example();
     column_major_one_based_example();
@@ -213,4 +217,9 @@ int main()
     enlarge_array_example();
 
     create_a_3d_array();
+
+    slicing_a_2d_array();
+    reduction();
+
+    std::cout << "---\n";
 }

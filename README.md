@@ -76,35 +76,53 @@ Output:
 [2,4,6]
 ```
 
-#### Indexing and slicing a 2-dimensional array
+#### Slicing a 2-dimensional array
 
 A slice object constructed with no parameters selects all the elements along the dimension of an array. 
 ```c++
 int main()
 {
-    // Construct a 2-dimensional 3 x 3 array 
-    ndarray<double,2> a = {{1,2,3},{4,5,6},{7,8,9}};
+    // Construct a 2-dimensional 3 x 4 array 
+    ndarray<double,2> a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
 
-    // All items from the second row
-    ndarray_view<double,1> v1(a, {1});
+    // All items from row 1 and columns 0 and 1
+    ndarray_view<double,2> v1(a, {slice(1,2),slice(0,2)});
     std::cout << "(1) " << v1 << "\n\n";
 
-    // All items from the second column
-    ndarray_view<double,1> v2(a, {slice()}, {1});
-    std::cout << "(2) " << v2 << "\n\n";
-
     // All items from column 1 onwards
-    ndarray_view<double,2> v3(a, {slice(),slice(1)});
-    std::cout << "(3) " << v3 << "\n\n";
+    ndarray_view<double,2> v2(a, {slice(),slice(1)});
+    std::cout << "(2) " << v2 << "\n\n";
 }
 ```
 Output:
 ```
-(1) [4,5,6]
+(1) [[4,5]]
 
-(2) [2,5,8]
+(2) [[1,2,3],[5,6,7],[9,10,11]]
+```
 
-(3) [[2,3],[5,6],[8,9]]
+#### Reduction
+
+```c++
+int main()
+{
+    // Construct a 2-dimensional 3 x 4 array 
+    ndarray<double,2> a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
+
+    // Reduce the 2-dimensional array to a 1-dimensional array, along row 0
+    ndarray_view<double,1> v1(a, {0});
+    std::cout << "(1) " << v1 << "\n\n";
+
+    // Reduce the 2-dimensional array to a 1-dimensional array, along column 2
+    ndarray_view<double,1> v2(a, {slice()}, {2});
+    std::cout << "(2) " << v2 << "\n\n";
+}
+```
+Output:
+```
+(1) [0,1,2,3]
+
+(2) [2,6,10]
 ```
 
 #### Creating ndarrays in managed shared memory with Boost interprocess allocators
