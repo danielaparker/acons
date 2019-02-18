@@ -58,7 +58,7 @@ Output:
 [[[0,1],[2,3],[4,5],[6,7]],[[8,9],[10,11],[12,13],[14,15]],[[16,17],[18,19],[20,21],[22,23]]]
 ```
 
-#### Indexing and slicing a 1-dimensional array
+#### Slicing a 1-dimensional array
 
 A `slice` object can be constructed with `start`, `stop` and `stride` parameters.
 ```c++
@@ -66,20 +66,13 @@ int main()
 {
     ndarray<double,1> a = {0,1,2,3,4,5,6,7,8,9};
 
-    std::cout << "The (1)th element\n";
-    std::cout << a(1) << "\n\n";
-
-    std::cout << "Extracting a part of the array with a slice object\n";
+    // Extracting a part of the array with a slice object
     ndarray_view<double,1> v(a, {slice(2,7,2)});
     std::cout << v << "\n\n";
 }
 ```
 Output:
 ```
-The (1)th element
-1
-
-Extracting a part of the array with a slice object
 [2,4,6]
 ```
 
@@ -92,35 +85,26 @@ int main()
     // Construct a 2-dimensional 3 x 3 array 
     ndarray<double,2> a = {{1,2,3},{4,5,6},{7,8,9}};
 
-    std::cout << "The (1,2)th element\n";
-    std::cout << a(1,2) << "\n\n";
-
-    std::cout << "All items from the second row\n";
+    // All items from the second row
     ndarray_view<double,1> v1(a, {1});
-    std::cout << v1 << "\n\n";
+    std::cout << "(1) " << v1 << "\n\n";
 
-    std::cout << "All items from the second column\n";
+    // All items from the second column
     ndarray_view<double,1> v2(a, {slice()}, {1});
-    std::cout << v2 << "\n\n";
+    std::cout << "(2) " << v2 << "\n\n";
 
-    std::cout << "All items from column 1 onwards\n";
+    // All items from column 1 onwards
     ndarray_view<double,2> v3(a, {slice(),slice(1)});
-    std::cout << v3 << "\n\n";
+    std::cout << "(3) " << v3 << "\n\n";
 }
 ```
 Output:
 ```
-The (1,2)th element
-6
- 
-All items from the second row
-[4,5,6]
+(1) [4,5,6]
 
-All items from the second column
-[2,5,8]
+(2) [2,5,8]
 
-All items from column 1 onwards
-[[2,3],[5,6],[8,9]]
+(3) [[2,3],[5,6],[8,9]]
 ```
 
 #### Creating ndarrays in managed shared memory with Boost interprocess allocators
