@@ -62,6 +62,9 @@ Output:
 
 A `slice` object can be constructed with `start`, `stop` and `step` parameters.
 ```c++
+#include <iostream>
+#include <acons/ndarray.hpp>
+
 int main()
 {
     ndarray<double,1> a = {0,1,2,3,4,5,6,7,8,9};
@@ -80,6 +83,9 @@ Output:
 
 A slice object constructed with no parameters selects all the elements along the dimension of an array. 
 ```c++
+#include <iostream>
+#include <acons/ndarray.hpp>
+
 int main()
 {
     // Construct a 2-dimensional 3 x 4 array 
@@ -104,6 +110,9 @@ Output:
 #### Reduction
 
 ```c++
+#include <iostream>
+#include <acons/ndarray.hpp>
+
 int main()
 {
     // Construct a 2-dimensional 3 x 4 array 
