@@ -1556,6 +1556,30 @@ private:
     }
 };
 
+template <class T, size_t N, class TPtr>
+row_major_iterator<T,N,TPtr> begin(row_major_iterator<T,N,TPtr> it) noexcept
+{
+    return it;
+}
+
+template <class T, size_t N, class TPtr>
+row_major_iterator<T,N,TPtr> end(row_major_iterator<T,N,TPtr> it) noexcept
+{
+    return row_major_iterator<T,N,TPtr>(it,true);
+}
+
+template <class T, size_t N, class TPtr>
+column_major_iterator<T,N,TPtr> begin(column_major_iterator<T,N,TPtr> it) noexcept
+{
+    return it;
+}
+
+template <class T, size_t N, class TPtr>
+column_major_iterator<T,N,TPtr> end(column_major_iterator<T,N,TPtr> it) noexcept
+{
+    return column_major_iterator<T,N,TPtr>(it,true);
+}
+
 // ndarray_view_base
 
 template <typename T, size_t M, typename Order, typename Base, typename TPtr>
@@ -2241,30 +2265,6 @@ bool operator!=(const ndarray_view_base<T, M, Order, Base, TPtr>& lhs,
                 const ndarray<T, M, Order, Base, Allocator>& rhs)
 {
     return !(lhs == rhs);
-}
-
-template <class T, size_t N, class TPtr>
-row_major_iterator<T,N,TPtr> begin(row_major_iterator<T,N,TPtr> it) noexcept
-{
-    return it;
-}
-
-template <class T, size_t N, class TPtr>
-row_major_iterator<T,N,TPtr> end(row_major_iterator<T,N,TPtr> it) noexcept
-{
-    return row_major_iterator<T,N,TPtr>(it,true);
-}
-
-template <class T, size_t N, class TPtr>
-column_major_iterator<T,N,TPtr> begin(column_major_iterator<T,N,TPtr> it) noexcept
-{
-    return it;
-}
-
-template <class T, size_t N, class TPtr>
-column_major_iterator<T,N,TPtr> end(column_major_iterator<T,N,TPtr> it) noexcept
-{
-    return column_major_iterator<T,N,TPtr>(it,true);
 }
 
 // make_row_major_iterator
