@@ -21,10 +21,10 @@ namespace acons {
 template <typename T, typename TPtr>
 class iterator_one;
   
-template <class T, size_t N, class Order, typename TPtr>
+template <class T, size_t N, typename TPtr>
 class row_major_iterator;
 
-template <class T, size_t N, class Order, typename TPtr>
+template <class T, size_t N, typename TPtr>
 class column_major_iterator;
 
 struct zero_based
@@ -221,7 +221,7 @@ get_offset(const std::array<size_t,N>& strides,
 
 struct row_major
 {
-    template <class T,size_t N,class Order,class TPtr> using iterator = row_major_iterator<T,N,Order,TPtr>;
+    template <class T,size_t N,class TPtr> using iterator = row_major_iterator<T,N,TPtr>;
 
     template <size_t N>
     static void calculate_strides(const std::array<size_t,N>& shape, std::array<size_t,N>& strides, size_t& size)
@@ -307,7 +307,7 @@ struct row_major
 
 struct column_major
 {
-    template <class T, size_t N, class Order, class TPtr> using iterator = column_major_iterator<T,N,Order,TPtr>;
+    template <class T, size_t N, class TPtr> using iterator = column_major_iterator<T,N,TPtr>;
 
     template <size_t N>
     static void calculate_strides(const std::array<size_t,N>& shape, std::array<size_t,N>& strides, size_t& size)
@@ -1225,7 +1225,7 @@ public:
     }
 };
 
-template <class T, size_t N, class Order, typename TPtr>
+template <class T, size_t N, typename TPtr>
 class row_major_iterator
 {
     TPtr data_;
@@ -1243,13 +1243,12 @@ class row_major_iterator
 public:
     typedef T value_type;
     static constexpr size_t ndim = N;
-    typedef Order order_type;
     typedef std::ptrdiff_t difference_type;
     typedef TPtr pointer;
     typedef typename std::conditional<std::is_const<typename std::remove_pointer<TPtr>::type>::value,const T&,T&>::type reference;
     typedef std::input_iterator_tag iterator_category;
 
-    row_major_iterator(row_major_iterator<T,N,Order,TPtr>& base, bool end)
+    row_major_iterator(row_major_iterator<T,N,TPtr>& base, bool end)
         : data_(base.data_), num_elements_(base.num_elements_), shape_(base.shape_), strides_(base.strides_), offsets_(base.offsets_),
           offset_one_end_(base.shape_[N-1]*base.strides_[N-1])
     {
@@ -1389,7 +1388,7 @@ private:
     }
 };
 
-template <class T, size_t N, class Order, typename TPtr>
+template <class T, size_t N, typename TPtr>
 class column_major_iterator
 {
     TPtr data_;
@@ -1407,13 +1406,12 @@ class column_major_iterator
 public:
     typedef T value_type;
     static constexpr size_t ndim = N;
-    typedef Order order_type;
     typedef std::ptrdiff_t difference_type;
     typedef TPtr pointer;
     typedef typename std::conditional<std::is_const<typename std::remove_pointer<TPtr>::type>::value,const T&,T&>::type reference;
     typedef std::input_iterator_tag iterator_category;
 
-    column_major_iterator(column_major_iterator<T,N,Order,TPtr>& base, bool end)
+    column_major_iterator(column_major_iterator<T,N,TPtr>& base, bool end)
         : data_(base.data_), num_elements_(base.num_elements_), shape_(base.shape_), strides_(base.strides_), offsets_(base.offsets_),
           offset_one_end_(base.shape_[N-1]*base.strides_[N-1])
     {
@@ -1474,11 +1472,6 @@ public:
     friend bool operator!=(const column_major_iterator& it1, const column_major_iterator& it2)
     {
         return !(it1 == it2);
-    }
-
-    column_major_iterator end()
-    {
-        return end_;
     }
 private:
     void initialize(bool end, std::false_type)
@@ -1591,8 +1584,8 @@ public:
     typedef T value_type;
     typedef typename std::conditional<std::is_const<typename std::remove_pointer<TPtr>::type>::value,const T&,T&>::type reference;
     typedef const T& const_reference;
-    using iterator = typename Order::template iterator<T,M,Order,TPtr>;
-    using const_iterator = typename Order::template iterator<T,M,Order,const T*>;
+    using iterator = typename Order::template iterator<T,M,TPtr>;
+    using const_iterator = typename Order::template iterator<T,M,const T*>;
 
     template <size_t K> using const_view = const_ndarray_view<T,K,Order,Base>;
 protected:
@@ -2266,80 +2259,80 @@ bool operator!=(const ndarray_view_base<T, M, Order, Base, TPtr>& lhs,
     return !(lhs == rhs);
 }
 
-template <class T, size_t N, class Order, class TPtr>
-row_major_iterator<T,N,Order,TPtr> begin(row_major_iterator<T,N,Order,TPtr> it) noexcept
+template <class T, size_t N, class TPtr>
+row_major_iterator<T,N,TPtr> begin(row_major_iterator<T,N,TPtr> it) noexcept
 {
     return it;
 }
 
-template <class T, size_t N, class Order, class TPtr>
-row_major_iterator<T,N,Order,TPtr> end(row_major_iterator<T,N,Order,TPtr> it) noexcept
+template <class T, size_t N, class TPtr>
+row_major_iterator<T,N,TPtr> end(row_major_iterator<T,N,TPtr> it) noexcept
 {
-    return row_major_iterator<T,N,Order,TPtr>(it,true);
+    return row_major_iterator<T,N,TPtr>(it,true);
 }
 
-template <class T, size_t N, class Order, class TPtr>
-column_major_iterator<T,N,Order,TPtr> begin(column_major_iterator<T,N,Order,TPtr> it) noexcept
+template <class T, size_t N, class TPtr>
+column_major_iterator<T,N,TPtr> begin(column_major_iterator<T,N,TPtr> it) noexcept
 {
     return it;
 }
 
-template <class T, size_t N, class Order, class TPtr>
-column_major_iterator<T,N,Order,TPtr> end(column_major_iterator<T,N,Order,TPtr> it) noexcept
+template <class T, size_t N, class TPtr>
+column_major_iterator<T,N,TPtr> end(column_major_iterator<T,N,TPtr> it) noexcept
 {
-    return column_major_iterator<T,N,Order,TPtr>(it,true);
+    return column_major_iterator<T,N,TPtr>(it,true);
 }
 
 // make_row_major_iterator
 
 template <class T, size_t N, class Order, class Base>
-row_major_iterator<T,N,Order,const T*> make_row_major_iterator(const ndarray<T,N,Order,Base>& v)
+row_major_iterator<T,N,const T*> make_row_major_iterator(const ndarray<T,N,Order,Base>& v)
 {
-    return row_major_iterator<T,N,Order,const T*>(v.data(),v.num_elements(),v.shape(),v.strides());
+    return row_major_iterator<T,N,const T*>(v.data(),v.num_elements(),v.shape(),v.strides());
 }
 
 template <class T, size_t N, class Order, class Base>
-row_major_iterator<T,N,Order,T*> make_row_major_iterator(ndarray<T,N,Order,Base>& v)
+row_major_iterator<T,N,T*> make_row_major_iterator(ndarray<T,N,Order,Base>& v)
 {
-    return row_major_iterator<T,N,Order,T*>(v.data(),v.num_elements(),v.shape(),v.strides());
+    return row_major_iterator<T,N,T*>(v.data(),v.num_elements(),v.shape(),v.strides());
 }
 
 template <class T, size_t N, class Order, class Base, class TPtr>
-row_major_iterator<T,N,Order,const T*> make_row_major_iterator(const ndarray_view_base<T,N,Order,Base,TPtr>& v)
+row_major_iterator<T,N,const T*> make_row_major_iterator(const ndarray_view_base<T,N,Order,Base,TPtr>& v)
 {
-    return row_major_iterator<T,N,Order,const T*>(v.data(),v.num_elements(),v.shape(),v.strides(),v.offsets());
+    return row_major_iterator<T,N,const T*>(v.data(),v.num_elements(),v.shape(),v.strides(),v.offsets());
 }
 
 template <class T, size_t N, class Order, class Base, class TPtr>
-row_major_iterator<T,N,Order,TPtr> make_row_major_iterator(ndarray_view_base<T,N,Order,Base,TPtr>& v)
+row_major_iterator<T,N,TPtr> make_row_major_iterator(ndarray_view_base<T,N,Order,Base,TPtr>& v)
 {
-    return row_major_iterator<T,N,Order,TPtr>(v.data(),v.num_elements(),v.shape(),v.strides(),v.offsets());
+    return row_major_iterator<T,N,TPtr>(v.data(),v.num_elements(),v.shape(),v.strides(),v.offsets());
 }
 
 // make_column_major_iterator
 
 template <class T, size_t N, class Order, class Base>
-column_major_iterator<T,N,Order,const T*> make_column_major_iterator(const ndarray<T,N,Order,Base>& v)
+column_major_iterator<T,N,const T*> make_column_major_iterator(const ndarray<T,N,Order,Base>& v)
 {
-    return column_major_iterator<T,N,Order,const T*>(v.data(),v.num_elements(),v.shape(),v.strides());
+    return column_major_iterator<T,N,const T*>(v.data(),v.num_elements(),v.shape(),v.strides());
 }
 
 template <class T, size_t N, class Order, class Base>
-column_major_iterator<T,N,Order,T*> make_column_major_iterator(ndarray<T,N,Order,Base>& v)
+column_major_iterator<T,N,T*> make_column_major_iterator(ndarray<T,N,Order,Base>& v)
 {
-    return column_major_iterator<T,N,Order,T*>(v.data(),v.num_elements(),v.shape(),v.strides());
+    return column_major_iterator<T,N,T*>(v.data(),v.num_elements(),v.shape(),v.strides());
 }
 
 template <class T, size_t N, class Order, class Base, class TPtr>
-column_major_iterator<T,N,Order,const T*> make_column_major_iterator(const ndarray_view_base<T,N,Order,Base,TPtr>& v)
+column_major_iterator<T,N,const T*> make_column_major_iterator(const ndarray_view_base<T,N,Order,Base,TPtr>& v)
 {
-    return column_major_iterator<T,N,Order,const T*>(v.data(),v.num_elements(),v.shape(),v.strides(),v.offsets());
+    return column_major_iterator<T,N,const T*>(v.data(),v.num_elements(),v.shape(),v.strides(),v.offsets());
 }
 
 template <class T, size_t N, class Order, class Base, class TPtr>
-column_major_iterator<T,N,Order,TPtr> make_column_major_iterator(ndarray_view_base<T,N,Order,Base,TPtr>& v)
+column_major_iterator<T,N,TPtr> make_column_major_iterator(ndarray_view_base<T,N,Order,Base,TPtr>& v)
 {
-    return column_major_iterator<T,N,Order,TPtr>(v.data(),v.num_elements(),v.shape(),v.strides(),v.offsets());
+    return column_major_iterator<T,N,TPtr>(v.data(),v.num_elements(),v.shape(),v.strides(),v.offsets());
 }
 
 }

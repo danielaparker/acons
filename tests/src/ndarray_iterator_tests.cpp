@@ -40,9 +40,9 @@ TEST_CASE("1-dim row_major ndarray iterator tests")
         CHECK(i == a.size(0));
     }
     
-    /* SECTION("test 3")
+    SECTION("test 3")
     {
-        auto it = make_column_major_iterator(v);
+        column_major_iterator<double,1,double*> it = make_column_major_iterator(v);
 
         size_t i = 0;
         for (auto element : it)
@@ -50,7 +50,7 @@ TEST_CASE("1-dim row_major ndarray iterator tests")
             CHECK(element == a(i++));
         }
         CHECK(i == a.size(0));
-    }*/
+    }
     
 }
 TEST_CASE("1-dim column_major ndarray iterator tests")
@@ -205,7 +205,7 @@ TEST_CASE("3-dim 2x3x4 ndarray iterator tests")
     SECTION("row_major_iterator test")
     {
         auto it = make_row_major_iterator(v);
-        auto last = acons::end(it);
+        auto last = end(it);
 
         CHECK(*it++ == 0.0);
         CHECK(*it++ == 1.0);
