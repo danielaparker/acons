@@ -39,8 +39,8 @@ TEST_CASE("1-dim row_major ndarray iterator tests")
         }
         CHECK(i == a.size(0));
     }
-
-    SECTION("test 3")
+    
+    /* SECTION("test 3")
     {
         auto it = make_column_major_iterator(v);
 
@@ -50,9 +50,9 @@ TEST_CASE("1-dim row_major ndarray iterator tests")
             CHECK(element == a(i++));
         }
         CHECK(i == a.size(0));
-    }
+    }*/
+    
 }
-
 TEST_CASE("1-dim column_major ndarray iterator tests")
 {
     ndarray<double,1,column_major> a = {0,1,2,3,4,5,6,7};
@@ -88,7 +88,7 @@ TEST_CASE("2-dim 3 x 4 ndarray iterator tests")
     SECTION("row_major_iterator test")
     {
         auto it = make_row_major_iterator(v);
-        auto last = acons::end(it);
+        auto last = end(it);
 
         CHECK(*it++ == 1.0);
         CHECK(*it++ == 2.0);
@@ -96,6 +96,7 @@ TEST_CASE("2-dim 3 x 4 ndarray iterator tests")
         CHECK(*it++ == 4.0);
         CHECK(*it++ == 5.0);
         CHECK(*it++ == 6.0);
+
         CHECK(*it++ == 7.0);
         CHECK(*it++ == 8.0);
         CHECK(*it++ == 9.0);
@@ -103,6 +104,62 @@ TEST_CASE("2-dim 3 x 4 ndarray iterator tests")
         CHECK(*it++ == 11.0);
         CHECK(*it++ == 12.0);
         CHECK(it == last);
+
+    }
+}
+
+TEST_CASE("2-dim 3 x 3 row major iterator tests")
+{
+    typedef ndarray<double,2,row_major> array_t;
+
+    // Construct a 2-dimensional 3 x 3 row-major array 
+    array_t a = {{0,1,2},{4,5,6},{8,9,10}};
+    std::cout << "a: " << a << "\n\n";
+
+    // All items from row 1 and columns 0 and 1
+    array_t::view<2> v(a, {slice(1,2),slice(0,2)});
+    std::cout << "v: " << v << "\n\n";
+
+    REQUIRE(v.size(0) == 1);
+    REQUIRE(v.size(1) == 2);
+
+    SECTION("test 1")
+    {
+        auto it = make_row_major_iterator(v);
+        auto last = end(it);
+
+        CHECK(*it++ == 4);
+        CHECK(*it++ == 5);
+        CHECK(it == last);
+    }
+}
+
+TEST_CASE("2-dim 3 x 3 column major iterator tests")
+{
+    typedef ndarray<double,2,column_major> array_t;
+
+    // Construct a 2-dimensional 3 x 3 column-major array 
+    array_t a = {{0,1,2},{4,5,6},{8,9,10}};
+    std::cout << "a: " << a << "\n\n";
+
+    // All items from row 1 and columns 0 and 1
+    ndarray_view<double,2,column_major> v(a, {slice(1,2),slice(0,2)});
+    std::cout << "v: " << v << "\n\n";
+
+    REQUIRE(v.size(0) == 1);
+    REQUIRE(v.size(1) == 2);
+    CHECK(v(0,0) == 4);
+    CHECK(v(0,1) == 5);
+
+    SECTION("test 1")
+    {
+        auto it = make_column_major_iterator(v);
+
+        auto last = end(it);
+        CHECK(*it++ == 4);
+        CHECK(*it++ == 5);
+        CHECK(it == last);
+
     }
 }
 
