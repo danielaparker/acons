@@ -62,7 +62,7 @@ Output:
 
 #### Slicing a 1-dimensional array
 
-A `slice` object can be constructed with `start`, `stop` and `step` parameters.
+A `slice` object can be constructed with `start`, `stop` and `step` parameters. 
 ```c++
 #include <iostream>
 #include <acons/ndarray.hpp>
@@ -85,7 +85,10 @@ Output:
 
 #### Slicing a 2-dimensional array
 
-A slice object constructed with no parameters selects all the elements along the dimension of an array. 
+A slice object constructed with no parameters identifies all the elements along the dimension of an array.
+If `stop` and `step` are not given, `stop` defaults to one past the last element along the dimension,
+and `step` defaults to 1.
+
 ```c++
 #include <iostream>
 #include <acons/ndarray.hpp>
