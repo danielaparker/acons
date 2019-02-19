@@ -132,13 +132,6 @@ struct is_stateless
 {};
 
 template <size_t n, typename Base, size_t m>
-typename std::enable_if<m == n, size_t>::type
-get_offset(const std::array<size_t,n>& strides) 
-{
-    return 0;
-}
-
-template <size_t n, typename Base, size_t m>
 typename std::enable_if<m+1 == n, size_t>::type
 get_offset(const std::array<size_t,n>& strides, 
            size_t index) 
@@ -169,14 +162,6 @@ get_offset(const std::array<size_t,N>& strides,
     }
 
     return offset;
-}
-
-template <size_t n, typename Base, size_t m>
-typename std::enable_if<m == n, size_t>::type
-get_offset(const std::array<size_t,n>& strides,
-           const std::array<size_t,n>& offsets) 
-{
-    return 0;
 }
 
 template <size_t n, typename Base, size_t m>
@@ -1144,15 +1129,15 @@ public:
     typedef typename std::conditional<std::is_const<typename std::remove_pointer<TPtr>::type>::value,const T&,T&>::type reference;
     typedef std::input_iterator_tag iterator_category;
 
-    row_major_iterator(row_major_iterator<T,N,TPtr>& base, bool end)
-        : data_(base.data_), num_elements_(base.num_elements_), shape_(base.shape_), strides_(base.strides_), offsets_(base.offsets_),
-          offset_one_end_(base.shape_[N-1]*base.strides_[N-1])
+    row_major_iterator(row_major_iterator<T,N,TPtr>& other, bool end)
+        : data_(other.data_), num_elements_(other.num_elements_), shape_(other.shape_), strides_(other.strides_), offsets_(other.offsets_),
+          offset_one_end_(other.shape_[N-1]*other.strides_[N-1])
     {
         if (end)
         {
-            it_ = base.end_;
-            last_ = base.end_;
-            end_ = base.end_;
+            it_ = other.end_;
+            last_ = other.end_;
+            end_ = other.end_;
         }
         else
         {
@@ -1299,15 +1284,15 @@ public:
     typedef typename std::conditional<std::is_const<typename std::remove_pointer<TPtr>::type>::value,const T&,T&>::type reference;
     typedef std::input_iterator_tag iterator_category;
 
-    column_major_iterator(column_major_iterator<T,N,TPtr>& base, bool end)
-        : data_(base.data_), num_elements_(base.num_elements_), shape_(base.shape_), strides_(base.strides_), offsets_(base.offsets_),
-          offset_one_end_(base.shape_[N-1]*base.strides_[N-1])
+    column_major_iterator(column_major_iterator<T,N,TPtr>& other, bool end)
+        : data_(other.data_), num_elements_(other.num_elements_), shape_(other.shape_), strides_(other.strides_), offsets_(other.offsets_),
+          offset_one_end_(other.shape_[N-1]*other.strides_[N-1])
     {
         if (end)
         {
-            it_ = base.end_;
-            last_ = base.end_;
-            end_ = base.end_;
+            it_ = other.end_;
+            last_ = other.end_;
+            end_ = other.end_;
         }
         else
         {
@@ -1493,20 +1478,20 @@ public:
 
     template <size_t K> using const_view = const_ndarray_view<T,K,Order,Base>;
 protected:
-    TPtr data_;
-    size_t num_elements_;
+    TPtr base_data_;
+    size_t base_size_;
     std::array<size_t,M> shape_;
     std::array<size_t,M> strides_;
     std::array<size_t,M> offsets_;
 public:
-    size_t num_elements() const noexcept
+    size_t base_size() const noexcept
     {
-        return num_elements_;
+        return base_size_;
     }
 
     bool empty() const noexcept
     {
-        return num_elements_ == 0;
+        return base_size_ == 0;
     }
 
     const std::array<size_t,M>& shape() const {return shape_;}
@@ -1515,16 +1500,16 @@ public:
 
     const std::array<size_t,M>& offsets() const {return offsets_;}
 
-    const T* data() const 
+    const T* base_data() const 
     {
-        return data_;
+        return base_data_;
     }
 
     template <typename TPtr2=TPtr>
     typename std::enable_if<!is_pointer_to_const<TPtr2>::value,T*>::type
-    data()
+    base_data()
     {
-        return data_;
+        return base_data_;
     }
 
     size_t size(size_t i) const
@@ -1541,52 +1526,52 @@ public:
         //std::cout << "operator() strides: " << strides_ << ", offsets: " << offsets_ << ", index: " << index << "\n";
         //std::cout << "off: " << off << ", size: " << size() << "\n";
 
-        assert(off < num_elements());
-        return data_[off];
+        assert(off < base_size());
+        return base_data_[off];
     }
 
     const T& operator()(const std::array<size_t,M>& indices) const 
     {
         size_t off = get_offset<M, M, Base>(strides_, offsets_, indices);
-        assert(off < num_elements());
-        return data_[off];
+        assert(off < base_size());
+        return base_data_[off];
     }
 
     const_iterator begin() const
     {
-        return const_iterator(data(),num_elements(),shape(),strides(),offsets());
+        return const_iterator(base_data(),base_size(),shape(),strides(),offsets());
     }
 
     const_iterator end() const
     {
-        return acons::end(const_iterator(data(),num_elements(),shape(),strides(),offsets()));
+        return acons::end(const_iterator(base_data(),base_size(),shape(),strides(),offsets()));
     }
     const_iterator cbegin() const
     {
-        return const_iterator(data(),num_elements(),shape(),strides(),offsets());
+        return const_iterator(base_data(),base_size(),shape(),strides(),offsets());
     }
 
     const_iterator cend() const
     {
-        return acons::end(const_iterator(data(),num_elements(),shape(),strides(),offsets()));
+        return acons::end(const_iterator(base_data(),base_size(),shape(),strides(),offsets()));
     }
 protected:
 public:
     ndarray_view_base()
-        : data_(nullptr), num_elements_(0)
+        : base_data_(nullptr), base_size_(0)
     {
         shape_.fill(0);
         offsets_.fill(0);
     }
 
     ndarray_view_base(TPtr data, size_t size, const std::array<size_t,M>& shape, const std::array<size_t,M>& strides)
-        : data_(data), num_elements_(size), shape_(shape), strides_(strides)          
+        : base_data_(data), base_size_(size), shape_(shape), strides_(strides)          
     {
         offsets_.fill(0);
     }
 
     ndarray_view_base(TPtr data, size_t size, const std::array<size_t,M>& shape, const std::array<size_t,M>& strides, const std::array<size_t,M>& offsets)
-        : data_(data), num_elements_(size), shape_(shape), strides_(strides), offsets_(offsets)          
+        : base_data_(data), base_size_(size), shape_(shape), strides_(strides), offsets_(offsets)          
     {
     }
 
@@ -1595,10 +1580,10 @@ public:
     template<typename OtherTPtr>
     ndarray_view_base(OtherTPtr data, const std::array<size_t,M>& shape,
                        typename std::enable_if<std::is_convertible<OtherTPtr,TPtr>::value>::type* = 0) 
-        : data_(data), shape_(shape)
+        : base_data_(data), shape_(shape)
     {
         offsets_.fill(0);
-        Order::calculate_strides(shape_, strides_, num_elements_);
+        Order::calculate_strides(shape_, strides_, base_size_);
     }
 
     // first_dim
@@ -1606,7 +1591,7 @@ public:
     template<size_t N>
     ndarray_view_base(TPtr data, size_t size, const std::array<size_t,N>& shape, const std::array<size_t,N>& strides,
                       const std::array<size_t,N-M>& first_dim)
-        : data_(data), num_elements_(size)
+        : base_data_(data), base_size_(size)
     {
         size_t rel = get_offset<N,N-M,Base>(strides,first_dim);
 
@@ -1626,9 +1611,9 @@ public:
     template<size_t N>
     ndarray_view_base(TPtr data, size_t size, const std::array<size_t,N>& shape, const std::array<size_t,N>& strides, const std::array<size_t,N>& offsets,
                       const std::array<size_t,N-M>& first_dim)
-        : data_(data), num_elements_(size)
+        : base_data_(data), base_size_(size)
     {
-        //std::cout << "ndarray_view_base strides: " << other.strides() << ", offsets: " << other.offsets() << ", first_dim: " << first_dim << ", data[0] " << data_[0] << ", size: " << size() << "\n";
+        //std::cout << "ndarray_view_base strides: " << other.strides() << ", offsets: " << other.offsets() << ", first_dim: " << first_dim << ", data[0] " << base_data_[0] << ", size: " << size() << "\n";
 
         constexpr size_t K = N-M;
         size_t rel = get_offset<N,K,Base>(strides, offsets, first_dim);
@@ -1650,7 +1635,7 @@ public:
     ndarray_view_base(TPtr data, size_t size, const std::array<size_t,N>& shape, const std::array<size_t,N>& strides,
                       const std::array<size_t,N-M>& first_dim,
                       const std::array<slice,M>& slices)
-        : data_(data), num_elements_(size)
+        : base_data_(data), base_size_(size)
     {
         constexpr size_t K = N-M;
         size_t rel = get_offset<N,K,Base>(strides,first_dim);
@@ -1671,7 +1656,7 @@ public:
     ndarray_view_base(TPtr data, size_t size, const std::array<size_t,N>& shape, const std::array<size_t,N>& strides, const std::array<size_t,N>& offsets,
                       const std::array<size_t,N-M>& first_dim,
                       const std::array<slice,M>& slices)
-        : data_(data), num_elements_(size)
+        : base_data_(data), base_size_(size)
     {
         constexpr size_t K = N-M;
         size_t rel = get_offset<N,K,Base>(strides, offsets ,first_dim);
@@ -1692,7 +1677,7 @@ public:
     ndarray_view_base(TPtr data, size_t size, const std::array<size_t,N>& shape, const std::array<size_t,N>& strides,
                       const std::array<slice,M>& slices, 
                       const std::array<size_t,N-M>& last_dim)
-        : data_(data), num_elements_(size)
+        : base_data_(data), base_size_(size)
     {
         constexpr size_t K = N-M;
 
@@ -1720,7 +1705,7 @@ public:
     template<size_t N>
     ndarray_view_base(TPtr data, size_t size, const std::array<size_t,N>& shape, const std::array<size_t,N>& strides, const std::array<size_t,N>& offsets,
                       const std::array<slice,M>& slices, const std::array<size_t,N-M>& last_dim)
-        : data_(data), num_elements_(size)
+        : base_data_(data), base_size_(size)
     {
         constexpr size_t K = N-M;
 
@@ -1752,8 +1737,8 @@ public:
 
     void assign(TPtr data, size_t size, const std::array<size_t,M>& shape, const std::array<size_t,M>& strides)
     {
-        data_ = data; 
-        num_elements_ = size; 
+        base_data_ = data; 
+        base_size_ = size; 
         shape_ = shape; 
         strides_ = strides;
         offsets_.fill(0);
@@ -1761,8 +1746,8 @@ public:
 
     void assign(TPtr data, size_t size, const std::array<size_t,M>& shape, const std::array<size_t,M>& strides, const std::array<size_t,M>& offsets)
     {
-        data_ = data; 
-        num_elements_ = size; 
+        base_data_ = data; 
+        base_size_ = size; 
         shape_ = shape; 
         strides_ = strides;
         offsets_ = offsets;
@@ -1770,8 +1755,8 @@ public:
 
     void swap(ndarray_view_base<T, M, Order, Base, TPtr>& a)
     {
-        std::swap(a.data_,this->data_);
-        std::swap(a.num_elements_,this->num_elements_);
+        std::swap(a.base_data_,this->base_data_);
+        std::swap(a.base_size_,this->base_size_);
         a.shape_.swap(this->shape_);
         a.strides_.swap(this->strides_);
         a.offsets_.swap(this->offsets_);
@@ -1810,7 +1795,7 @@ public:
     }
 
     ndarray_view(ndarray_view<T, M, Order, Base>& a)
-        : super_type(a.data(), a.num_elements(), a.shape(), a.strides(), a.offsets())          
+        : super_type(a.base_data(), a.base_size(), a.shape(), a.strides(), a.offsets())          
     {
     }
 
@@ -1829,7 +1814,7 @@ public:
 
     ndarray_view(ndarray_view<T, M, Order, Base>& a, 
                  const std::array<slice,M>& slices)
-        : super_type(a.data(), a.num_elements(), a.shape(), a.strides(), a.offsets(),
+        : super_type(a.base_data(), a.base_size(), a.shape(), a.strides(), a.offsets(),
                      slices, std::array<size_t,0>())
     {
     }
@@ -1845,7 +1830,7 @@ public:
     template<size_t N>
     ndarray_view(ndarray_view<T, N, Order, Base>& a, 
                  const std::array<size_t,N-M>& first_dim)
-        : super_type(a.data(), a.num_elements(), a.shape(), a.strides(), a.offsets(),
+        : super_type(a.base_data(), a.base_size(), a.shape(), a.strides(), a.offsets(),
                      first_dim)
     {
     }
@@ -1863,7 +1848,7 @@ public:
     ndarray_view(ndarray_view<T, N, Order, Base>& a, 
                  const std::array<size_t,N-M>& first_dim,
                  const std::array<slice,M>& slices)
-        : super_type(a.data(), a.num_elements(), a.shape(), a.strides(), a.offsets(),
+        : super_type(a.base_data(), a.base_size(), a.shape(), a.strides(), a.offsets(),
                      first_dim, slices)
     {
     }
@@ -1881,7 +1866,7 @@ public:
     ndarray_view(ndarray_view<T, N, Order, Base>& a,
                  const std::array<slice,M>& slices, 
                  const std::array<size_t,N-M>& last_dim)
-        : super_type(a.data(), a.num_elements(), a.shape(), a.strides(), a.offsets(),
+        : super_type(a.base_data(), a.base_size(), a.shape(), a.strides(), a.offsets(),
                      slices, last_dim)
     {
     }
@@ -1900,7 +1885,7 @@ public:
 
     ndarray_view& operator=(ndarray_view<T, M, Order, Base>& a)
     {
-        this->assign(a.data(), a.num_elements(), a.shape(), a.strides(), a.offsets());
+        this->assign(a.base_data(), a.base_size(), a.shape(), a.strides(), a.offsets());
         return *this;
     }
 
@@ -1908,40 +1893,40 @@ public:
     T& operator()(size_t index, Indices... indices) 
     {
         size_t off = get_offset<M, Base, 0>(this->strides_, this->offsets_, index, indices...);
-        assert(off < this->num_elements());
-        return this->data_[off];
+        assert(off < this->base_size());
+        return this->base_data_[off];
     }
 
     T& operator()(const std::array<size_t,M>& indices) 
     {
         size_t off = get_offset<M, M, Base>(this->strides_, this->offsets_, indices);
-        assert(off < this->num_elements());
-        return this->data_[off];
+        assert(off < this->base_size());
+        return this->base_data_[off];
     }
 
     template <typename... Indices>
     const T& operator()(size_t index, Indices... indices) const
     {
         size_t off = get_offset<M, Base, 0>(this->strides_, this->offsets_, index, indices...);
-        assert(off < this->num_elements());
-        return this->data_[off];
+        assert(off < this->base_size());
+        return this->base_data_[off];
     }
 
     const T& operator()(const std::array<size_t, M>& indices) const
     {
         size_t off = get_offset<M, M, Base>(this->strides_, this->offsets_, indices);
-        assert(off < this->num_elements());
-        return this->data_[off];
+        assert(off < this->base_size());
+        return this->base_data_[off];
     }
 
     iterator begin()
     {
-        return iterator(this->data_,this->num_elements(),this->shape(), this->strides(),this->offsets());
+        return iterator(this->base_data_,this->base_size(),this->shape(), this->strides(),this->offsets());
     }
 
     iterator end() 
     {
-        return acons::end(iterator(this->data_,this->num_elements(),this->shape(), this->strides(),this->offsets()));
+        return acons::end(iterator(this->base_data_,this->base_size(),this->shape(), this->strides(),this->offsets()));
     }
 
     const_iterator begin() const
@@ -1980,7 +1965,7 @@ public:
 
     template<typename OtherTPtr>
     const_ndarray_view(const ndarray_view_base<T, M, Order, Base, OtherTPtr>& other)
-        : super_type(other.data(), other.num_elements(), other.shape(), other.strides(), other.offsets())        
+        : super_type(other.base_data(), other.base_size(), other.shape(), other.strides(), other.offsets())        
     {
     }
 
@@ -2008,7 +1993,7 @@ public:
     template<typename OtherTPtr>
     const_ndarray_view(const ndarray_view_base<T, M, Order, Base, OtherTPtr>& other, 
                        const std::array<slice,M>& slices)
-        : super_type(other.data(), other.num_elements(), other.shape(), other.strides(), other.offsets(),
+        : super_type(other.base_data(), other.base_size(), other.shape(), other.strides(), other.offsets(),
                      slices, std::array<size_t,0>())        
     {
     }
@@ -2016,7 +2001,7 @@ public:
     template<size_t m = M, size_t N, typename OtherTPtr>
     const_ndarray_view(const ndarray_view_base<T, N, Order, Base, OtherTPtr>& other, 
                        const std::array<size_t,N-m>& first_dim)
-        : super_type(other.data(), other.num_elements(), other.shape(), other.strides(), other.offsets(),
+        : super_type(other.base_data(), other.base_size(), other.shape(), other.strides(), other.offsets(),
                      first_dim)
     {
     }
@@ -2034,7 +2019,7 @@ public:
     const_ndarray_view(const ndarray_view_base<T, N, Order, Base, OtherTPtr>& other, 
                        const std::array<size_t,N-M>& first_dim,
                        const std::array<slice,M>& slices)
-        : super_type(other.data(), other.num_elements(), other.shape(), other.strides(), other.offsets(),
+        : super_type(other.base_data(), other.base_size(), other.shape(), other.strides(), other.offsets(),
                      first_dim, slices)
     {
     }
@@ -2052,7 +2037,7 @@ public:
     const_ndarray_view(const ndarray_view_base<T, N, Order, Base, OtherTPtr>& other,
                        const std::array<slice,M>& slices, 
                        const std::array<size_t,N-M>& last_dim)
-        : super_type(other.data(), other.num_elements(), other.shape(), other.strides(), other.offsets(),
+        : super_type(other.base_data(), other.base_size(), other.shape(), other.strides(), other.offsets(),
                      slices, last_dim)
     {
     }
@@ -2074,7 +2059,7 @@ public:
     template<typename OtherTPtr>
     const_ndarray_view& operator=(const ndarray_view_base<T, M, Order, Base, OtherTPtr>& other)
     {
-        this->assign(other.data(), other.num_elements(), other.shape(), other.strides(), other.offsets());
+        this->assign(other.base_data(), other.base_size(), other.shape(), other.strides(), other.offsets());
         return *this;
     }
 };
@@ -2241,13 +2226,13 @@ row_major_iterator<T,N,T*> make_row_major_iterator(ndarray<T,N,Order,Base>& v)
 template <class T, size_t N, class Order, class Base, class TPtr>
 row_major_iterator<T,N,const T*> make_row_major_iterator(const ndarray_view_base<T,N,Order,Base,TPtr>& v)
 {
-    return row_major_iterator<T,N,const T*>(v.data(),v.num_elements(),v.shape(),v.strides(),v.offsets());
+    return row_major_iterator<T,N,const T*>(v.base_data(),v.base_size(),v.shape(),v.strides(),v.offsets());
 }
 
 template <class T, size_t N, class Order, class Base, class TPtr>
 row_major_iterator<T,N,TPtr> make_row_major_iterator(ndarray_view_base<T,N,Order,Base,TPtr>& v)
 {
-    return row_major_iterator<T,N,TPtr>(v.data(),v.num_elements(),v.shape(),v.strides(),v.offsets());
+    return row_major_iterator<T,N,TPtr>(v.base_data(),v.base_size(),v.shape(),v.strides(),v.offsets());
 }
 
 // make_column_major_iterator
@@ -2267,13 +2252,13 @@ column_major_iterator<T,N,T*> make_column_major_iterator(ndarray<T,N,Order,Base>
 template <class T, size_t N, class Order, class Base, class TPtr>
 column_major_iterator<T,N,const T*> make_column_major_iterator(const ndarray_view_base<T,N,Order,Base,TPtr>& v)
 {
-    return column_major_iterator<T,N,const T*>(v.data(),v.num_elements(),v.shape(),v.strides(),v.offsets());
+    return column_major_iterator<T,N,const T*>(v.base_data(),v.base_size(),v.shape(),v.strides(),v.offsets());
 }
 
 template <class T, size_t N, class Order, class Base, class TPtr>
 column_major_iterator<T,N,TPtr> make_column_major_iterator(ndarray_view_base<T,N,Order,Base,TPtr>& v)
 {
-    return column_major_iterator<T,N,TPtr>(v.data(),v.num_elements(),v.shape(),v.strides(),v.offsets());
+    return column_major_iterator<T,N,TPtr>(v.base_data(),v.base_size(),v.shape(),v.strides(),v.offsets());
 }
 
 }

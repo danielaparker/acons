@@ -100,6 +100,12 @@ Constructs a new M-dimensional array view.
 
 ##### Element access
 
+    const T* base_data() const;
+    Base data of array that owns its data 
+
+    size_t base_size() const;
+    Number of elements in the array that owns the data
+
     size_t size(size_t i) const;
 
     template <typename... Indices>
