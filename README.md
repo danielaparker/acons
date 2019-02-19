@@ -268,6 +268,11 @@ A `row_major_iterator` always traverses the elements of an array in row major or
 the underlying storage. Similarly a `column_major_iterator` always traverses the elements in column major order.
 
 ```c++
+#include <iostream>
+#include <acons/ndarray.hpp>
+
+using namespace acons; // For convenience
+
 int main()
 {
     typedef ndarray<double,2,row_major> array_t;
