@@ -2,14 +2,14 @@
 #include <acons/ndarray.hpp>
 #include <cassert>
 
-using namespace acons;
+namespace ac = acons;
 
 void example1()
 {
-    ndarray<double,1> a = {0,1,2,3,4,5,6,7,8,9};
+    ac::ndarray<double,1> a = {0,1,2,3,4,5,6,7,8,9};
 
-    // Extracting a part of the array with a slice object
-    ndarray_view<double,1> v(a, {slice(2,7,2)});
+    // Extracting a part of the array with a ac::slice object
+    ac::ndarray_view<double,1> v(a, {ac::slice(2,7,2)});
     std::cout << v << "\n\n";
 }
 /*
@@ -19,7 +19,7 @@ void example1()
 void example2()
 {
     // Construct a 2-dimensional 2 x 2 array 
-    ndarray<double,1> a = {0,1,2,3,4,5,6,7,8,9};
+    ac::ndarray<double,1> a = {0,1,2,3,4,5,6,7,8,9};
 
     std::cout << a(5) << "\n\n";
 
@@ -29,9 +29,9 @@ void example2()
 void example3()
 {
     // Construct a 2-dimensional 2 x 2 array 
-    ndarray<double,1> a = {0,1,2,3,4,5,6,7,8,9};
+    ac::ndarray<double,1> a = {0,1,2,3,4,5,6,7,8,9};
 
-    ndarray_view<double, 1> v(a, { slice(2) });
+    ac::ndarray_view<double, 1> v(a, { ac::slice(2) });
     std::cout << v << "\n\n";
 
     // [2,3,4,5,6,7,8,9]
@@ -40,9 +40,9 @@ void example3()
 void example4()
 {
     // Construct a 2-dimensional 2 x 2 array 
-    ndarray<double,1> a = {0,1,2,3,4,5,6,7,8,9};
+    ac::ndarray<double,1> a = {0,1,2,3,4,5,6,7,8,9};
 
-    ndarray_view<double, 1> v(a, { slice(2,5) });
+    ac::ndarray_view<double, 1> v(a, { ac::slice(2,5) });
     std::cout << v << "\n\n";
 
     // [2,3,4]
@@ -51,9 +51,9 @@ void example4()
 void example5()
 {
     // Construct a 2-dimensional 3 x 3 array 
-    ndarray<double,2> a = {{1,2,3},{3,4,5},{4,5,6}};
+    ac::ndarray<double,2> a = {{1,2,3},{3,4,5},{4,5,6}};
 
-    ndarray_view<double, 2> v(a, { slice(1) });
+    ac::ndarray_view<double, 2> v(a, { ac::slice(1) });
     std::cout << v << "\n\n";
 
     // [[3,4,5],[4,5,6]]
@@ -62,10 +62,10 @@ void example5()
 void example6()
 {
     // Construct a 2-dimensional 3 x 3 array 
-    ndarray<double,2> a = {{1,2,3},{3,4,5},{4,5,6}};
+    ac::ndarray<double,2> a = {{1,2,3},{3,4,5},{4,5,6}};
 
     // Slice all items from the second row
-    ndarray_view<double, 1> v(a, {1});
+    ac::ndarray_view<double, 1> v(a, {1});
     std::cout << v << "\n\n";
 
     // [3 4 5]
@@ -74,14 +74,14 @@ void example6()
 void slicing_a_2d_array()
 {
     // Construct a 2-dimensional 3 x 4 array 
-    ndarray<double,2> a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
+    ac::ndarray<double,2> a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
 
     // All items from row 1 and columns 0 and 1
-    ndarray_view<double,2> v1(a, {slice(1,2),slice(0,2)});
+    ac::ndarray_view<double,2> v1(a, {ac::slice(1,2),ac::slice(0,2)});
     std::cout << "(1) " << v1 << "\n\n";
 
     // All items from column 1 onwards
-    ndarray_view<double,2> v2(a, {slice(),slice(1)});
+    ac::ndarray_view<double,2> v2(a, {ac::slice(),ac::slice(1)});
     std::cout << "(2) " << v2 << "\n\n";
 }
 /*
@@ -90,21 +90,21 @@ void slicing_a_2d_array()
 void reduction()
 {
     // Construct a 2-dimensional 3 x 4 array 
-    ndarray<double,2> a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
+    ac::ndarray<double,2> a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
 
     // Reduce the 2-dimensional array to a 1-dimensional array, along row 0
-    ndarray_view<double,1> v1(a, {0});
+    ac::ndarray_view<double,1> v1(a, {0});
     std::cout << "(1) " << v1 << "\n\n";
 
     // Reduce the 2-dimensional array to a 1-dimensional array, along column 2
-    ndarray_view<double,1> v2(a, {slice()}, {2});
+    ac::ndarray_view<double,1> v2(a, {ac::slice()}, {2});
     std::cout << "(2) " << v2 << "\n\n";
 }
 
 void reduction3()
 {
     // Construct a 3-dimensional 2 x 3 x 4 array 
-    typedef ndarray<double,3> array_t;
+    typedef ac::ndarray<double,3> array_t;
     array_t a = { {{0,1,2,3},{4,5,6,7},{8,9,10,11}}, {{12,13,14,15},{16,17,18,19},{20,21,22,23}} };
 
     // Reduce the 3-dimensional array to a 2-dimensional view, along leftmost index 1
@@ -112,7 +112,7 @@ void reduction3()
     std::cout << "(1) " << v1 << "\n\n";
 
     // Reduce the 2-dimensional view to a 1-dimensional view, along rightmost index 2
-    array_t::view<1> v2(v1, {slice()}, {2});
+    array_t::view<1> v2(v1, {ac::slice()}, {2});
     std::cout << "(2) " << v2 << "\n\n";
 }
 
@@ -122,7 +122,7 @@ void reduction3()
 void row_major_zero_based_example()
 {
     // Construct a 3-dimensional 2 x 3 x 4 array 
-    ndarray<double, 3> a = {{{0,1,2,3},{4,5,6,7},{8,9,10,11}}, 
+    ac::ndarray<double, 3> a = {{{0,1,2,3},{4,5,6,7},{8,9,10,11}}, 
                             {{12,13,14,15},{16,17,18,19},{20,21,22,23}}};
 
     std::cout << "(1)\n" << a << "\n\n";
@@ -130,12 +130,12 @@ void row_major_zero_based_example()
     // Construct a 3-dimensional 1 x 2 x 2 view on the array.
     // The second argument provides a list of index ranges 
     // on the three dimensions of the array.
-    ndarray_view<double,3> v(a, {slice(1,2),slice(1,3),slice(0,4,2)});
+    ac::ndarray_view<double,3> v(a, {ac::slice(1,2),ac::slice(1,3),ac::slice(0,4,2)});
 
     std::cout << "(2)\n" << v << "\n\n";
 
-    // Construct a 2-dimensional 3 x 4 slice from the array
-    ndarray_view<double,2> s(a,{1});
+    // Construct a 2-dimensional 3 x 4 ac::slice from the array
+    ac::ndarray_view<double,2> s(a,{1});
 
     std::cout << "(3)\n" << s << "\n\n";
 
@@ -149,7 +149,7 @@ void row_major_zero_based_example()
 void column_major_one_based_example()
 {
     // Construct a 3-dimensional 2 x 3 x 4 array 
-    ndarray<double, 3, column_major, one_based> a = {{{0,1,2,3},{4,5,6,7},{8,9,10,11}}, 
+    ac::ndarray<double, 3, ac::column_major, ac::one_based> a = {{{0,1,2,3},{4,5,6,7},{8,9,10,11}}, 
                                                      {{12,13,14,15},{16,17,18,19},{20,21,22,23}}};
 
     std::cout << "(1)\n" << a << "\n\n";
@@ -157,12 +157,12 @@ void column_major_one_based_example()
     // Construct a 3-dimensional 1 x 2 x 2 view on the array.
     // The second argument provides a list of index ranges 
     // on the three dimensions of the array.
-    ndarray_view<double, 3, column_major, one_based> v(a, {slice(2,3),slice(2,4),slice(1,5,2)});
+    ac::ndarray_view<double, 3, ac::column_major, ac::one_based> v(a, {ac::slice(2,3),ac::slice(2,4),ac::slice(1,5,2)});
 
     std::cout << "(2)\n" << v << "\n\n";
 
-    // Construct a 2-dimensional 3 x 4 slice from the array
-    ndarray_view<double, 2, column_major, one_based> s(a,{2});
+    // Construct a 2-dimensional 3 x 4 ac::slice from the array
+    ac::ndarray_view<double, 2, ac::column_major, ac::one_based> s(a,{2});
 
     std::cout << "(3)\n" << s << "\n\n";
 
@@ -176,7 +176,7 @@ void column_major_one_based_example()
 void shrink_array_example()
 {
     // Construct a 2-dimensional 2 x 2 array 
-    ndarray<double,2> a = {{0, 1}, {2, 3}};
+    ac::ndarray<double,2> a = {{0, 1}, {2, 3}};
 
     // Shrink to 2 x 1
     a.resize({2,1});
@@ -187,7 +187,7 @@ void shrink_array_example()
 void enlarge_array_example()
 {
     // Construct a 2-dimensional 2 x 2 array 
-    ndarray<double,2> a = {{0, 1}, {2, 3}};
+    ac::ndarray<double,2> a = {{0, 1}, {2, 3}};
 
     // Enlarge to 2 x 3
     a.resize({2,3});
@@ -198,7 +198,7 @@ void enlarge_array_example()
 void create_a_3d_array()
 {
     // Create a 3-dim array of shape 3 x 4 x 2
-    ndarray<double,3> a(3,4,2);
+    ac::ndarray<double,3> a(3,4,2);
 
     // Assign values to the elements
     int x = 0;
@@ -219,14 +219,14 @@ void create_a_3d_array()
 
 void row_major_iterator_example()
 {
-    typedef ndarray<double,2> array_t;
+    typedef ac::ndarray<double,2> array_t;
 
     // Construct a 2-dimensional 3 x 4 row-major array 
     array_t a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
     std::cout << "(1) " << a << "\n\n";
 
     // All items from row 1 and columns 1 through 2
-    array_t::view<2> v(a, {slice(1,2),slice(1,3)});
+    array_t::view<2> v(a, {ac::slice(1,2),ac::slice(1,3)});
     std::cout << "(2) " << v << "\n\n";
 
     std::cout << "(3) ";
@@ -254,14 +254,14 @@ void row_major_iterator_example()
 
 void column_major_iterator_example()
 {
-    typedef ndarray<double,2,column_major> array_t;
+    typedef ac::ndarray<double,2,ac::column_major> array_t;
 
     // Construct a 2-dimensional 3 x 4 column-major array 
     array_t a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
     std::cout << "(1) " << a << "\n\n";
 
     // All items from row 2 and columns 0 and 2
-    array_t::view<2> v(a, {slice(2,3),slice(0,4,2)});
+    array_t::view<2> v(a, {ac::slice(2,3),ac::slice(0,4,2)});
     std::cout << "(2) " << v << "\n\n";
 
     std::cout << "(3) ";
@@ -289,13 +289,13 @@ void column_major_iterator_example()
 
 void row_major_and_column_major_iterator_example()
 {
-    typedef ndarray<double,2> array_t;
+    typedef ac::ndarray<double,2> array_t;
 
     // Construct a 2-dimensional 3 x 4 row-major array 
     array_t a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
 
     // All items from rows 1 and 2 
-    array_t::view<2> v(a, {slice(1,3),slice()});
+    array_t::view<2> v(a, {ac::slice(1,3),ac::slice()});
     std::cout << "(1) " << v << "\n\n";
 
     std::cout << "(2) ";

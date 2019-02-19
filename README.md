@@ -31,12 +31,12 @@ Download the latest [single header file](https://raw.githubusercontent.com/danie
 #include <iostream>
 #include <acons/ndarray.hpp>
 
-using namespace acons; // For convenience
+namespace ac = acons // For brevity
 
 int main()
 {
     // Create a 3-dim array of shape 3 x 4 x 2
-    acons::ndarray<double,3> a(3,4,2);
+    ac::ndarray<double,3> a(3,4,2);
 
     // Assign values to the elements
     int x = 0;
@@ -67,14 +67,14 @@ A `slice` object can be constructed with `start`, `stop` and `step` parameters.
 #include <iostream>
 #include <acons/ndarray.hpp>
 
-using namespace acons; // For convenience
+namespace ac = acons // For brevity
 
 int main()
 {
-    ndarray<double,1> a = {0,1,2,3,4,5,6,7,8,9};
+    ac::ndarray<double,1> a = {0,1,2,3,4,5,6,7,8,9};
 
-    // Extracting a part of the array with a slice object
-    ndarray_view<double,1> v(a, {slice(2,7,2)});
+    // Extracting a part of the array with a ac::slice object
+    ac::ndarray_view<double,1> v(a, {ac::slice(2,7,2)});
     std::cout << v << "\n\n";
 }
 ```
@@ -85,7 +85,7 @@ Output:
 
 #### Slicing a 2-dimensional array
 
-A slice object constructed with no parameters identifies all the elements along the dimension of an array.
+A `slice` object constructed with no parameters identifies all the elements along the dimension of an array.
 If `stop` and `step` are not given, `stop` defaults to one past the last element along the dimension,
 and `step` defaults to 1.
 
@@ -93,19 +93,19 @@ and `step` defaults to 1.
 #include <iostream>
 #include <acons/ndarray.hpp>
 
-using namespace acons; // For convenience
+namespace ac = acons // For brevity
 
 int main()
 {
     // Construct a 2-dimensional 3 x 4 array 
-    ndarray<double,2> a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
+    ac::ndarray<double,2> a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
 
     // All items from row 1 and columns 0 and 1
-    ndarray_view<double,2> v1(a, {slice(1,2),slice(0,2)});
+    ac::ndarray_view<double,2> v1(a, {ac::slice(1,2),ac::slice(0,2)});
     std::cout << "(1) " << v1 << "\n\n";
 
     // All items from column 1 onwards
-    ndarray_view<double,2> v2(a, {slice(),slice(1)});
+    ac::ndarray_view<double,2> v2(a, {ac::slice(),ac::slice(1)});
     std::cout << "(2) " << v2 << "\n\n";
 }
 ```
@@ -124,12 +124,12 @@ Construct a view on an array or another view that has fewer dimensions than the 
 #include <iostream>
 #include <acons/ndarray.hpp>
 
-using namespace acons; // For convenience
+namespace ac = acons; // For brevity
 
 int main()
 {
     // Construct a 3-dimensional 2 x 3 x 4 array 
-    typedef ndarray<double,3> array_t;
+    typedef ac::ndarray<double,3> array_t;
     array_t a = { {{0,1,2,3},{4,5,6,7},{8,9,10,11}}, {{12,13,14,15},{16,17,18,19},{20,21,22,23}} };
 
     // Reduce the 3-dimensional array to a 2-dimensional view, along leftmost index 1
@@ -137,7 +137,7 @@ int main()
     std::cout << "(1) " << v1 << "\n\n";
 
     // Reduce the 2-dimensional view to a 1-dimensional view, along rightmost index 2
-    array_t::view<1> v2(v1, {slice()}, {2});
+    array_t::view<1> v2(v1, {ac::slice()}, {2});
     std::cout << "(2) " << v2 << "\n\n";
 }
 ```
@@ -159,18 +159,18 @@ element in the array or view.
 #include <iostream>
 #include <acons/ndarray.hpp>
 
-using namespace acons; // For convenience
+namespace ac = acons; // For brevity
 
 int main()
 {
-    typedef ndarray<double,2> array_t;
+    typedef ac::ndarray<double,2> array_t;
 
     // Construct a 2-dimensional 3 x 4 row-major array 
     array_t a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
     std::cout << "(1) " << a << "\n\n";
 
     // All items from row 1 and columns 1 through 2
-    array_t::view<2> v(a, {slice(1,2),slice(1,3)});
+    array_t::view<2> v(a, {ac::slice(1,2),ac::slice(1,3)});
     std::cout << "(2) " << v << "\n\n";
 
     std::cout << "(3) ";
@@ -217,18 +217,18 @@ element in the array or view.
 #include <iostream>
 #include <acons/ndarray.hpp>
 
-using namespace acons; // For convenience
+namespace ac = acons; // For brevity
 
 int main()
 {
-    typedef ndarray<double,2,column_major> array_t;
+    typedef ac::ndarray<double,2,ac::column_major> array_t;
 
     // Construct a 2-dimensional 3 x 4 column-major array 
     array_t a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
     std::cout << "(1) " << a << "\n\n";
 
     // All items from row 2 and columns 0 and 2
-    array_t::view<2> v(a, {slice(2,3),slice(0,4,2)});
+    array_t::view<2> v(a, {ac::slice(2,3),ac::slice(0,4,2)});
     std::cout << "(2) " << v << "\n\n";
 
     std::cout << "(3) ";
@@ -274,17 +274,17 @@ the underlying storage. Similarly a `column_major_iterator` always traverses the
 #include <iostream>
 #include <acons/ndarray.hpp>
 
-using namespace acons; // For convenience
+namespace ac = acons; // For brevity
 
 int main()
 {
-    typedef ndarray<double,2> array_t;
+    typedef ac::ndarray<double,2> array_t;
 
     // Construct a 2-dimensional 3 x 4 row-major array 
     array_t a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
 
     // All items from rows 1 and 2 
-    array_t::view<2> v(a, {slice(1,3),slice()});
+    array_t::view<2> v(a, {ac::slice(1,3),ac::slice()});
     std::cout << "(1) " << v << "\n\n";
 
     std::cout << "(2) ";
@@ -335,12 +335,12 @@ Ouput:
 #include <acons/ndarray.hpp>
 #include <iostream>
 
-using namespace acons; // For convenience
+namespace ac = acons; // For brevity
 
 typedef boost::interprocess::allocator<double,
         boost::interprocess::managed_shared_memory::segment_manager> shmem_allocator;
 
-typedef ndarray<double,2,row_major,zero_based,shmem_allocator> ndarray_shm;
+typedef ac::ndarray<double,2,ac::row_major,zero_based,shmem_allocator> ndarray_shm;
 
 int main(int argc, char *argv[])
 {
@@ -363,8 +363,8 @@ int main(int argc, char *argv[])
        //Initialize shared memory STL-compatible allocator
        const shmem_allocator allocator(segment.get_segment_manager());
 
-       // Create ndarray with all dynamic allocations in shared memory
-       ndarray_shm* pA = segment.construct<ndarray_shm>("my ndarray")(allocator, 2, 2, 0.0);
+       // Create ac::ndarray with all dynamic allocations in shared memory
+       ndarray_shm* pA = segment.construct<ndarray_shm>("my ac::ndarray")(allocator, 2, 2, 0.0);
        ndarray_shm& a = *pA;
 
        a(0,0) = 0;
@@ -373,7 +373,7 @@ int main(int argc, char *argv[])
        a(1,1) = 3;
 
        std::pair<ndarray_shm*, boost::interprocess::managed_shared_memory::size_type> res;
-       res = segment.find<ndarray_shm>("my ndarray");
+       res = segment.find<ndarray_shm>("my ac::ndarray");
 
        std::cout << "Parent process:\n";
        std::cout << *(res.first) << "\n";
@@ -384,7 +384,7 @@ int main(int argc, char *argv[])
           return 1;
 
        //Check child has destroyed all objects
-       if(segment.find<MyType>("my ndarray").first)
+       if(segment.find<MyType>("my ac::ndarray").first)
           return 1;
     }
     else
@@ -394,7 +394,7 @@ int main(int argc, char *argv[])
                                                           "MySharedMemory");
 
        std::pair<ndarray_shm*, boost::interprocess::managed_shared_memory::size_type> res;
-       res = segment.find<ndarray_shm>("my ndarray");
+       res = segment.find<ndarray_shm>("my ac::ndarray");
 
        if (res.first != nullptr)
        {
@@ -407,7 +407,7 @@ int main(int argc, char *argv[])
        }
 
        //We're done, delete all the objects
-       segment.destroy<ndarray_shm>("my ndarray");
+       segment.destroy<ndarray_shm>("my ac::ndarray");
     }
 }
 ```
