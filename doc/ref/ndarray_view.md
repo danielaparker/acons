@@ -106,6 +106,10 @@ Exceptions:
     size_t base_size() const;
     Number of elements in the array that owns the data
 
+    T* data();
+    const T* data() const;
+    Returns the address of the first element in the view
+
     size_t num_elements() const;
     Number of elements in the view, equivalent to the product of the view's dimensions.
 

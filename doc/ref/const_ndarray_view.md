@@ -101,10 +101,14 @@ Constructs a new M-dimensional array view.
 ##### Element access
 
     const T* base_data() const;
-    Base data of array that owns its data 
+    Base data of array that owns the data 
 
     size_t base_size() const;
     Number of elements in the array that owns the data
+
+    T* data();
+    const T* data() const;
+    Returns the address of the first element in the view
 
     size_t num_elements() const;
     Number of elements in the view, equivalent to the product of the view's dimensions.
