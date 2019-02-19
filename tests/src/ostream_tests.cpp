@@ -32,9 +32,9 @@ TEST_CASE("print test")
 TEST_CASE("simple ostream test")
 {
     ndarray<double, 3, row_major> a = { {{0,1},{2,3}}, {{4,5},{6,7}} };
-    CHECK(a.size(0) == 2);
-    CHECK(a.size(1) == 2);
-    CHECK(a.size(2) == 2);
+    CHECK(a.shape(0) == 2);
+    CHECK(a.shape(1) == 2);
+    CHECK(a.shape(2) == 2);
 
     CHECK(a(0,0,0) == 0);
     CHECK(a(0,0,1) == 1);
@@ -54,9 +54,9 @@ TEST_CASE("simple ostream test")
 TEST_CASE("2x2x2 ostream test")
 {
     ndarray<double, 3, row_major> a = { {{0,1},{2,3}}, {{4,5},{6,7}} };
-    CHECK(a.size(0) == 2);
-    CHECK(a.size(1) == 2);
-    CHECK(a.size(2) == 2);
+    CHECK(a.shape(0) == 2);
+    CHECK(a.shape(1) == 2);
+    CHECK(a.shape(2) == 2);
 
     CHECK(a(0,0,0) == 0);
     CHECK(a(0,0,1) == 1);

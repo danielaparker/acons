@@ -54,7 +54,7 @@ TEST_CASE("row major tests")
     a(1, 1) = 4;
     a(1, 2) = 5;
 
-    REQUIRE(a.num_elements() == 6);
+    REQUIRE(a.size() == 6);
     CHECK(a.data()[0] == 0);
     CHECK(a.data()[1] == 1);
     CHECK(a.data()[2] == 2);
@@ -65,7 +65,7 @@ TEST_CASE("row major tests")
     SECTION("v(a,{0},{slice(1,3)})")
     {
         ndarray_view<double,1,row_major> v(a,{0},{slice(1,3)});
-        REQUIRE(v.size(0) == 2);
+        REQUIRE(v.shape(0) == 2);
         CHECK(v(0) == 1);
         CHECK(v(1) == 2);
     }
@@ -73,16 +73,16 @@ TEST_CASE("row major tests")
     SECTION("v(a,{slice(0,1),slice(1,2)})")
     {
         ndarray_view<double,2,row_major> v(a,{slice(0,1),slice(1,2)});
-        REQUIRE(v.size(0) == 1);
-        REQUIRE(v.size(1) == 1);
+        REQUIRE(v.shape(0) == 1);
+        REQUIRE(v.shape(1) == 1);
         CHECK(v(0,0) == 1);
     }
 
     SECTION("v(a,{slice(0,1),slice(1,3)})")
     {
         ndarray_view<double,2,row_major> v(a,{slice(0,1),slice(1,3)});
-        REQUIRE(v.size(0) == 1);
-        REQUIRE(v.size(1) == 2);
+        REQUIRE(v.shape(0) == 1);
+        REQUIRE(v.shape(1) == 2);
         CHECK(v(0,0) == 1);
         CHECK(v(0,1) == 2);
     }
@@ -90,16 +90,16 @@ TEST_CASE("row major tests")
     SECTION("v(a,{slice(0,1),slice(1,2)})")
     {
         ndarray_view<double,2,row_major> v(a,{slice(0,1),slice(1,2)});
-        REQUIRE(v.size(0) == 1);
-        REQUIRE(v.size(1) == 1);
+        REQUIRE(v.shape(0) == 1);
+        REQUIRE(v.shape(1) == 1);
         CHECK(v(0,0) == 1);
     }
 
     SECTION("v(a,{slice(1,2),slice(1,2)})")
     {
         ndarray_view<double,2,row_major> v(a,{slice(1,2),slice(1,2)});
-        REQUIRE(v.size(0) == 1);
-        REQUIRE(v.size(1) == 1);
+        REQUIRE(v.shape(0) == 1);
+        REQUIRE(v.shape(1) == 1);
         CHECK(v(0,0) == 4);
     }
 }
@@ -115,7 +115,7 @@ TEST_CASE("column major tests")
     a(1, 1) = 4;
     a(1, 2) = 5;
 
-    REQUIRE(a.num_elements() == 6);
+    REQUIRE(a.size() == 6);
     CHECK(a.data()[0] == 0);
     CHECK(a.data()[1] == 3);
     CHECK(a.data()[2] == 1);
@@ -126,7 +126,7 @@ TEST_CASE("column major tests")
     SECTION("v(a,{0})")
     {
         ndarray_view<double,1,column_major> v(a,{0});
-        REQUIRE(v.size(0) == 3);
+        REQUIRE(v.shape(0) == 3);
         CHECK(v(0) == 0);
         CHECK(v(1) == 1);
         CHECK(v(2) == 2);
@@ -134,7 +134,7 @@ TEST_CASE("column major tests")
     SECTION("v(a, { 1 })")
     {
         ndarray_view<double, 1, column_major> v(a, { 1 });
-        REQUIRE(v.size(0) == 3);
+        REQUIRE(v.shape(0) == 3);
         CHECK(v(0) == 3);
         CHECK(v(1) == 4);
         CHECK(v(2) == 5);
@@ -144,7 +144,7 @@ TEST_CASE("column major tests")
     {
         ndarray_view<double,1,column_major> v(a,{0},{slice(1,3)});
         
-        REQUIRE(v.size(0) == 2);
+        REQUIRE(v.shape(0) == 2);
         //std::cout << "start\n"; 
         CHECK(v(0) == 1);
         //std::cout << "stop\n"; 
@@ -154,8 +154,8 @@ TEST_CASE("column major tests")
     SECTION("v(a,{slice(0,1),slice(1,2)})")
     {
         ndarray_view<double,2,column_major> v(a,{slice(0,1),slice(1,2)});
-        REQUIRE(v.size(0) == 1);
-        REQUIRE(v.size(1) == 1);
+        REQUIRE(v.shape(0) == 1);
+        REQUIRE(v.shape(1) == 1);
         //std::cout << "start\n"; 
         CHECK(v(0,0) == 1); 
         //std::cout << "stop\n"; 
@@ -164,8 +164,8 @@ TEST_CASE("column major tests")
     SECTION("v(a,{slice(0,1),slice(1,3)})")
     {
         ndarray_view<double,2,column_major> v(a,{slice(0,1),slice(1,3)});
-        REQUIRE(v.size(0) == 1);
-        REQUIRE(v.size(1) == 2);
+        REQUIRE(v.shape(0) == 1);
+        REQUIRE(v.shape(1) == 2);
         CHECK(v(0,0) == 1);
         CHECK(v(0,1) == 2);
     }
@@ -173,8 +173,8 @@ TEST_CASE("column major tests")
     SECTION("v(a,{slice(0,1),slice(1,3)})")
     {
         ndarray_view<double,2,column_major> v(a,{slice(0,1),slice(1,3)});
-        REQUIRE(v.size(0) == 1);
-        REQUIRE(v.size(1) == 2);
+        REQUIRE(v.shape(0) == 1);
+        REQUIRE(v.shape(1) == 2);
         CHECK(v(0,0) == 1);
         CHECK(v(0,1) == 2);
     }
@@ -182,8 +182,8 @@ TEST_CASE("column major tests")
     SECTION("v(a,{slice(1,2),slice(1,3)})")
     {
         ndarray_view<double,2,column_major> v(a,{slice(1,2),slice(1,3)});
-        REQUIRE(v.size(0) == 1);
-        REQUIRE(v.size(1) == 2);
+        REQUIRE(v.shape(0) == 1);
+        REQUIRE(v.shape(1) == 2);
         CHECK(v(0,0) == 4);
         CHECK(v(0,1) == 5);
     }

@@ -96,7 +96,7 @@ Constructs a new M-dimensional array view.
 
     bool empty() const noexcept;
 
-    size_t num_elements() const noexcept;
+    size_t size() const noexcept;
 
 ##### Element access
 
@@ -110,13 +110,13 @@ Constructs a new M-dimensional array view.
     const T* data() const;
     Returns the address of the first element in the view
 
-    size_t num_elements() const;
+    size_t size() const;
     Number of elements in the view, equivalent to the product of the view's dimensions.
 
     std::array<size_t,M> shape() const;
     Returns an array of M items specifying the size of each dimension.
 
-    size_t size(size_t i) const;
+    size_t shape(size_t i) const;
     The size of the ith dimension, equivalent to `shape()[i]`.
 
     size_t size(size_t i) const;

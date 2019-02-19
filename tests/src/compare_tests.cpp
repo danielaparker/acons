@@ -67,11 +67,11 @@ TEST_CASE("compare 2 x 2 ndarray_view on 4 x 4 row major")
     ndarray_view<double,2,row_major> v(a, {slice(1, 2), slice(1,2)});
     ndarray_view<double,2,row_major> w(b, {slice(1, 2), slice(1,2)});
 
-    REQUIRE(v.size(0) == 1);
-    REQUIRE(v.size(1) == 1);
+    REQUIRE(v.shape(0) == 1);
+    REQUIRE(v.shape(1) == 1);
     CHECK(v(0,0) == 5);
-    REQUIRE(w.size(0) == 1);
-    REQUIRE(w.size(1) == 1);
+    REQUIRE(w.shape(0) == 1);
+    REQUIRE(w.shape(1) == 1);
     CHECK(w(0,0) == 5);
 
     std::cout << v << "\n";

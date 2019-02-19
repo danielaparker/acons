@@ -40,11 +40,11 @@ int main()
 
     // Assign values to the elements
     int x = 0;
-    for (size_t i = 0; i < a.size(0); ++i)
+    for (size_t i = 0; i < a.shape(0); ++i)
     {
-        for (size_t j = 0; j < a.size(1); ++j)
+        for (size_t j = 0; j < a.shape(1); ++j)
         {
-            for (size_t k = 0; k < a.size(2); ++k)
+            for (size_t k = 0; k < a.shape(2); ++k)
             {
                 a(i,j,k) = x++;
             }

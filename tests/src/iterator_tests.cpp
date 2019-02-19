@@ -10,7 +10,7 @@ TEST_CASE("1-dim row_major ndarray iterator tests")
     ndarray<double,1> a = {0,1,2,3,4,5,6,7};
     ndarray_view<double,1> v(a);
 
-    REQUIRE(v.size(0) == 8);
+    REQUIRE(v.shape(0) == 8);
 
     SECTION("test 1")
     {
@@ -37,7 +37,7 @@ TEST_CASE("1-dim row_major ndarray iterator tests")
         {
             CHECK(element == a(i++));
         }
-        CHECK(i == a.size(0));
+        CHECK(i == a.shape(0));
     }
     
     SECTION("test 3")
@@ -49,7 +49,7 @@ TEST_CASE("1-dim row_major ndarray iterator tests")
         {
             CHECK(element == a(i++));
         }
-        CHECK(i == a.size(0));
+        CHECK(i == a.shape(0));
     }
     
 }
@@ -58,7 +58,7 @@ TEST_CASE("1-dim column_major ndarray iterator tests")
     ndarray<double,1,column_major> a = {0,1,2,3,4,5,6,7};
     ndarray_view<double,1,column_major> v(a);
 
-    REQUIRE(v.size(0) == 8);
+    REQUIRE(v.shape(0) == 8);
 
     SECTION("test 1")
     {
@@ -82,8 +82,8 @@ TEST_CASE("2-dim 3 x 4 ndarray iterator tests")
     ndarray<double,2> a = {{1.0,2.0,3.0,4.0},{5.0,6.0,7.0,8.0},{9.0,10.0,11.0,12.0}};
     ndarray_view<double,2> v(a);
 
-    REQUIRE(v.size(0) == 3);
-    REQUIRE(v.size(1) == 4);
+    REQUIRE(v.shape(0) == 3);
+    REQUIRE(v.shape(1) == 4);
 
     SECTION("row_major_iterator test")
     {
@@ -120,8 +120,8 @@ TEST_CASE("2-dim 3 x 3 row major iterator tests")
     array_t::view<2> v(a, {slice(1,2),slice(0,2)});
     std::cout << "v: " << v << "\n\n";
 
-    REQUIRE(v.size(0) == 1);
-    REQUIRE(v.size(1) == 2);
+    REQUIRE(v.shape(0) == 1);
+    REQUIRE(v.shape(1) == 2);
 
     SECTION("test 1")
     {
@@ -146,8 +146,8 @@ TEST_CASE("2-dim 3 x 4 row major iterator tests")
     array_t::view<2> v(a, {slice(1,2),slice(1,3)});
     std::cout << "v: " << v << "\n\n";
 
-    REQUIRE(v.size(0) == 1);
-    REQUIRE(v.size(1) == 2);
+    REQUIRE(v.shape(0) == 1);
+    REQUIRE(v.shape(1) == 2);
 
     SECTION("test 1")
     {
@@ -172,8 +172,8 @@ TEST_CASE("2-dim 3 x 3 column major iterator tests")
     ndarray_view<double,2,column_major> v(a, {slice(1,2),slice(0,2)});
     std::cout << "v: " << v << "\n\n";
 
-    REQUIRE(v.size(0) == 1);
-    REQUIRE(v.size(1) == 2);
+    REQUIRE(v.shape(0) == 1);
+    REQUIRE(v.shape(1) == 2);
     CHECK(v(0,0) == 4);
     CHECK(v(0,1) == 5);
 
@@ -194,8 +194,8 @@ TEST_CASE("2-dim 3 x 4 column_major ndarray iterator tests")
     ndarray<double,2,column_major> a = {{1.0,2.0,3.0,4.0},{5.0,6.0,7.0,8.0},{9.0,10.0,11.0,12.0}};
     ndarray_view<double,2,column_major> v(a);
 
-    REQUIRE(v.size(0) == 3);
-    REQUIRE(v.size(1) == 4);
+    REQUIRE(v.shape(0) == 3);
+    REQUIRE(v.shape(1) == 4);
 
     SECTION("column_major_iterator test")
     {
@@ -224,9 +224,9 @@ TEST_CASE("3-dim 2x3x4 ndarray iterator tests")
     an_array a = { {{0,1,2,3},{4,5,6,7},{8,9,10,11}}, {{12,13,14,15},{16,17,18,19},{20,21,22,23}} };
     ndarray_view<double,3> v(a);
 
-    REQUIRE(v.size(0) == 2);
-    REQUIRE(v.size(1) == 3);
-    REQUIRE(v.size(2) == 4);
+    REQUIRE(v.shape(0) == 2);
+    REQUIRE(v.shape(1) == 3);
+    REQUIRE(v.shape(2) == 4);
 
     SECTION("row_major_iterator test")
     {
