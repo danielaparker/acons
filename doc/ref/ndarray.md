@@ -126,7 +126,17 @@ Exceptions:
 
 ##### Element access
 
+    T* data();
+    const T* data() const;
+
+    size_t num_elements() const;
+    Number of elements in the array, equivalent to the product of the array's dimensions.
+
+    std::array<size_t,N> shape() const;
+    Returns an array of N items specifying the size of each dimension.
+
     size_t size(size_t i) const;
+    The size of the ith dimension, equivalent to `shape()[i]`.
 
     template <typename... Indices>
     T& operator()(size_t index, Indices... indices); 

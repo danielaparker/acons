@@ -96,6 +96,7 @@ TEST_CASE("1-dim row_major ndarray ndarray_view size tests")
         CHECK(v(1) == 2);
     }
 }
+
 TEST_CASE("2-dim row_major ndarray ndarray_view size tests")
 {
     typedef ndarray<double,2> an_array;
@@ -116,6 +117,10 @@ TEST_CASE("2-dim row_major ndarray ndarray_view size tests")
 
         REQUIRE(v.size(0) == 2); 
         REQUIRE(v.size(1) == 2); 
+
+        CHECK(v.num_elements() == 4);
+        CHECK((v.data() == &v(0,0)));
+
         CHECK(v(0,0) == 5.0);
         CHECK(v(1,0) == 9.0);
         CHECK(v(0,1) == 7.0);
@@ -143,6 +148,10 @@ TEST_CASE("2-dim column_major ndarray ndarray_view size tests")
 
         REQUIRE(v.size(0) == 2); 
         REQUIRE(v.size(1) == 2); 
+
+        CHECK(v.num_elements() == 4);
+        CHECK((v.data() == &v(0,0)));
+
         CHECK(v(0,0) == 5.0);
         CHECK(v(1,0) == 9.0);
         CHECK(v(0,1) == 7.0);

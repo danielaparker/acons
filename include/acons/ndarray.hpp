@@ -13,6 +13,7 @@
 #include <stdexcept>
 #include <type_traits>
 #include <iterator>
+#include <numeric> // std::accumulate
   
 namespace acons {
 
@@ -1489,9 +1490,14 @@ public:
         return base_size_;
     }
 
+    size_t num_elements() const
+    {
+        return std::accumulate(shape_.begin(), shape_.end(), size_t(1), std::multiplies<size_t>());
+    }
+
     bool empty() const noexcept
     {
-        return base_size_ == 0;
+        return size(0) == 0;
     }
 
     const std::array<size_t,M>& shape() const {return shape_;}
@@ -1510,6 +1516,18 @@ public:
     base_data()
     {
         return base_data_;
+    }
+
+    const T* data() const 
+    {
+        return base_data_ + std::accumulate(offsets_.begin(), offsets_.end(), size_t(0));
+    }
+
+    template <typename TPtr2=TPtr>
+    typename std::enable_if<!is_pointer_to_const<TPtr2>::value,T*>::type
+    data()
+    {
+        return base_data_ + std::accumulate(offsets_.begin(), offsets_.end(), size_t(0));
     }
 
     size_t size(size_t i) const
