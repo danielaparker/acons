@@ -201,15 +201,15 @@ TEST_CASE("3-dim 2x3x4 ndarray ndarray_view tests")
 
 TEST_CASE("3-dim 2x3x4 const ndarray ndarray_view tests")
 {
-    typedef ndarray<double,3,row_major> an_array;
-    const an_array a = { {{0,1,2,3},{4,5,6,7},{8,9,10,11}}, {{12,13,14,15},{16,17,18,19},{20,21,22,23}} };
+    typedef ndarray<double,3,row_major> array_t;
+    const array_t a = { {{0,1,2,3},{4,5,6,7},{8,9,10,11}}, {{12,13,14,15},{16,17,18,19},{20,21,22,23}} };
     REQUIRE(a.shape(0) == 2);
     REQUIRE(a.shape(1) == 3);
     REQUIRE(a.shape(2) == 4);
 
     SECTION("size tests")
     {
-        an_array::const_view<3> v3(a,{slice(1,2),slice(1,3),slice(0,4,2)});
+        array_t::const_view<3> v3(a,{slice(1,2),slice(1,3),slice(0,4,2)});
 
         REQUIRE(v3.shape(0) == 1); 
         REQUIRE(v3.shape(1) == 2); 
@@ -221,7 +221,7 @@ TEST_CASE("3-dim 2x3x4 const ndarray ndarray_view tests")
         CHECK(v3(0,1,1) == 22);
 
         //std::cout << "Here\n";
-        an_array::const_view<2> v2(v3,{0});
+        array_t::const_view<2> v2(v3,{0});
         //std::cout << "After\n";
         REQUIRE(v2.shape(0) == 2);
         REQUIRE(v2.shape(1) == 2);
@@ -234,8 +234,8 @@ TEST_CASE("3-dim 2x3x4 const ndarray ndarray_view tests")
 
 TEST_CASE("2-dim row_major ndarray ndarray_view column")
 {
-    typedef ndarray<double,2> an_array;
-    an_array a = {{1.0,2.0,3.0,4.0},{5.0,6.0,7.0,8.0},{9.0,10.0,11.0,12.0}};
+    typedef ndarray<double,2> array_t;
+    array_t a = {{1.0,2.0,3.0,4.0},{5.0,6.0,7.0,8.0},{9.0,10.0,11.0,12.0}};
 
     SECTION("column")
     {
@@ -249,8 +249,8 @@ TEST_CASE("2-dim row_major ndarray ndarray_view column")
 
 TEST_CASE("3-dim 2x3x4 ndarray ndarray_view column")
 {
-    typedef ndarray<double,3,row_major> an_array;
-    an_array a = { {{0,1,2,3},{4,5,6,7},{8,9,10,11}}, {{12,13,14,15},{16,17,18,19},{20,21,22,23}}, {{24,25,26,27},{28,29,30,31},{32,33,34,35}} };
+    typedef ndarray<double,3,row_major> array_t;
+    array_t a = { {{0,1,2,3},{4,5,6,7},{8,9,10,11}}, {{12,13,14,15},{16,17,18,19},{20,21,22,23}}, {{24,25,26,27},{28,29,30,31},{32,33,34,35}} };
     REQUIRE(a.shape(0) == 3);
     REQUIRE(a.shape(1) == 3);
     REQUIRE(a.shape(2) == 4);
