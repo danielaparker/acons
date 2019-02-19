@@ -25,7 +25,28 @@ Download the latest [single header file](https://raw.githubusercontent.com/danie
 
 ### Examples
 
-#### Create a 3-dim array
+#### Construct an array with zeros
+
+```c++
+#include <iostream>
+#include <acons/ndarray.hpp>
+
+namespace ac = acons; // For brevity
+
+int main()
+{
+    // Construct an array of shape 2 x 3 with zeros
+    ac::ndarray<double,2> a(2,3,0.0);
+
+    std::cout << a << "\n\n";
+}
+```
+Output:
+```
+[[0,0,0],[0,0,0]]
+```
+
+#### Construct a 3-dim array
 
 ```c++
 #include <iostream>
