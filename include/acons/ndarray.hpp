@@ -1333,8 +1333,8 @@ private:
 
         indices_.fill(0);
         size_t rel = get_offset<N,N-1,zero_based>(strides_,offsets_,indices_);
-        it_ = iterator_one<T,TPtr>(data_,strides_[N-1],rel+offsets_[N-1]);
-        last_ = iterator_one<T,TPtr>(data_,strides_[N-1],rel+offset_one_end_);
+        it_ = iterator_one<T,TPtr>(data_,strides_[N-1],rel);
+        last_ = iterator_one<T,TPtr>(data_,strides_[N-1],rel+strides_[N-1]*shape_[N-1]);
     }
 
     void initialize(std::true_type)
@@ -1360,8 +1360,8 @@ private:
                     ++indices_[i];
 
                     size_t rel = get_offset<N,N-1,zero_based>(strides_,offsets_,indices_);
-                    it_ = iterator_one<T,TPtr>(data_,strides_[N-1],rel + offsets_[N-1]);
-                    last_ = iterator_one<T,TPtr>(data_,strides_[N-1],rel + offset_one_end_);
+                    it_ = iterator_one<T,TPtr>(data_,strides_[N-1],rel);
+                    last_ = iterator_one<T,TPtr>(data_,strides_[N-1],rel + strides_[N-1]*shape_[N-1]);
                     break;
                 }
                 else if (i > 0)
