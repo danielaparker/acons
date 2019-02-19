@@ -31,7 +31,7 @@ Download the latest [single header file](https://raw.githubusercontent.com/danie
 #include <iostream>
 #include <acons/ndarray.hpp>
 
-namespace ac = acons // For brevity
+namespace ac = acons; // For brevity
 
 int main()
 {
@@ -67,7 +67,7 @@ A `slice` object can be constructed with `start`, `stop` and `step` parameters.
 #include <iostream>
 #include <acons/ndarray.hpp>
 
-namespace ac = acons // For brevity
+namespace ac = acons; // For brevity
 
 int main()
 {
@@ -93,7 +93,7 @@ and `step` defaults to 1.
 #include <iostream>
 #include <acons/ndarray.hpp>
 
-namespace ac = acons // For brevity
+namespace ac = acons; // For brevity
 
 int main()
 {
