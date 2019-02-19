@@ -145,9 +145,12 @@ Output:
 (2) [2,6,10]
 ```
 
-#### Iterate over row major arrays and columns
+#### Iterate over row major arrays and views
 
-Row major (C-style) arrays are traversed in memory order by rows.
+The member function `begin()` returns an iterator to the first element in the
+array or view. Row major (C-style) arrays are traversed in memory order by rows.
+The member function `end()` returns an iterator positioned at one past the last
+element in the array or view.
 
 ```c++
 #include <iostream>
@@ -202,7 +205,10 @@ Output:
 ```
 #### Iterate over column major array and views
 
-Column major (Fortran-style) arrays and views are traversed in memory order by columns.
+The member function `begin()` returns an iterator to the first element in the
+array or view. Column major (FORTRAN-style) arrays are traversed in memory order by columns.
+The member function `end()` returns an iterator positioned at one past the last
+element in the array or view.
 
 ```c++
 #include <iostream>

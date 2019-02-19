@@ -115,7 +115,7 @@ Constructs a new M-dimensional array view.
 ##### Iterators
     const_iterator begin() const;
     const_iterator cbegin() const;
-Returns an iterator to the first element in the view. The iteration order follows `order_type` (`row_major` or `column_major`)
+Returns an iterator to the first element in the view. The iteration order is in memory order (`row_major` or `column_major`)
 to allow elements to be accessed with high locality.
 
     const_iterator end() const;
