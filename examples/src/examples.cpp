@@ -8,7 +8,7 @@ void example1()
 {
     ac::ndarray<double,1> a = {0,1,2,3,4,5,6,7,8,9};
 
-    // Extracting a part of the array with a ac::slice object
+    // Extracting a part of the array with a slice object
     ac::ndarray_view<double,1> v(a, {ac::slice(2,7,2)});
     std::cout << v << "\n\n";
 }
@@ -134,7 +134,7 @@ void row_major_zero_based_example()
 
     std::cout << "(2)\n" << v << "\n\n";
 
-    // Construct a 2-dimensional 3 x 4 ac::slice from the array
+    // Construct a 2-dimensional 3 x 4 slice from the array
     ac::ndarray_view<double,2> s(a,{1});
 
     std::cout << "(3)\n" << s << "\n\n";
@@ -161,7 +161,7 @@ void column_major_one_based_example()
 
     std::cout << "(2)\n" << v << "\n\n";
 
-    // Construct a 2-dimensional 3 x 4 ac::slice from the array
+    // Construct a 2-dimensional 3 x 4 slice from the array
     ac::ndarray_view<double, 2, ac::column_major, ac::one_based> s(a,{2});
 
     std::cout << "(3)\n" << s << "\n\n";
