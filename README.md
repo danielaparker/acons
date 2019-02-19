@@ -145,7 +145,7 @@ Output:
 (2) [2,6,10]
 ```
 
-#### Iterate over row major arrays and views
+#### Iterate over row major arrays and views in memory order
 
 The member function `begin()` returns an iterator to the first element in the
 array or view. Row major (C-style) arrays are traversed in memory order by rows.
@@ -203,7 +203,7 @@ Output:
 
 (4) 5,6
 ```
-#### Iterate over column major array and views
+#### Iterate over column major arrays and views in memory order
 
 The member function `begin()` returns an iterator to the first element in the
 array or view. Column major (FORTRAN-style) arrays are traversed in memory order by columns.
@@ -260,6 +260,60 @@ Output:
 (3) 0,4,8,1,5,9,2,6,10,3,7,11
 
 (4) 8,10
+```
+
+#### Other iterators
+
+A `row_major_iterator` always traverses the elements of an array in row major order regardless of
+the underlying storage. Similarly a `column_major_iterator` always traverses the elements in column major order.
+
+```c++
+int main()
+{
+    typedef ndarray<double,2,row_major> array_t;
+
+    // Construct a 2-dimensional 3 x 4 row-major array 
+    array_t a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
+
+    // All items from rows 1 and 2 
+    array_t::view<2> v(a, {slice(1,3),slice()});
+    std::cout << "(1) " << v << "\n\n";
+
+    std::cout << "(2) ";
+    auto first_by_row = make_row_major_iterator(v);
+    auto last_by_row = end(first_by_row);
+    for (auto it = first_by_row; it != last_by_row; ++it)
+    {
+        if (it != first_by_row)
+        {
+            std::cout << ",";
+        }
+        std::cout << *it;
+    }
+    std::cout << "\n\n";
+
+    std::cout << "(3) ";
+    auto first_by_column = make_column_major_iterator(v);
+    auto last_by_column = end(first_by_column);
+    for (auto it = first_by_column; it != last_by_column; ++it)
+    {
+        if (it != first_by_column)
+        {
+            std::cout << ",";
+        }
+        std::cout << *it;
+    }
+
+    std::cout << "\n\n"; 
+}
+```
+Ouput:
+```
+(1) [[4,5,6,7],[8,9,10,11]]
+
+(2) 4,5,6,7,8,9,10,11
+
+(3) 4,8,5,9,6,10,7,11
 ```
 
 #### Creating ndarrays in managed shared memory with Boost interprocess allocators

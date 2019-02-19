@@ -272,6 +272,45 @@ void column_major_iterator_example()
     std::cout << "\n\n";
 }
 
+void row_major_and_column_major_iterator_example()
+{
+    typedef ndarray<double,2,row_major> array_t;
+
+    // Construct a 2-dimensional 3 x 4 row-major array 
+    array_t a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
+
+    // All items from rows 1 and 2 
+    array_t::view<2> v(a, {slice(1,3),slice()});
+    std::cout << "(1) " << v << "\n\n";
+
+    std::cout << "(2) ";
+    auto first_by_row = make_row_major_iterator(v);
+    auto last_by_row = end(first_by_row);
+    for (auto it = first_by_row; it != last_by_row; ++it)
+    {
+        if (it != first_by_row)
+        {
+            std::cout << ",";
+        }
+        std::cout << *it;
+    }
+    std::cout << "\n\n";
+
+    std::cout << "(3) ";
+    auto first_by_column = make_column_major_iterator(v);
+    auto last_by_column = end(first_by_column);
+    for (auto it = first_by_column; it != last_by_column; ++it)
+    {
+        if (it != first_by_column)
+        {
+            std::cout << ",";
+        }
+        std::cout << *it;
+    }
+
+    std::cout << "\n\n"; 
+}
+
 int main()
 {
     example1();
@@ -293,6 +332,7 @@ int main()
 
     row_major_iterator_example();
     column_major_iterator_example();
+    row_major_and_column_major_iterator_example();
 
     std::cout << "---\n";
 }
