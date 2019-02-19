@@ -206,12 +206,12 @@ void row_major_iterator_example()
 {
     typedef ndarray<double,2,row_major> array_t;
 
-    // Construct a 2-dimensional 2 x 3 row-major array 
-    array_t a = {{0,1,2},{4,5,6},{8,9,10}};
+    // Construct a 2-dimensional 3 x 4 row-major array 
+    array_t a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
     std::cout << "a: " << a << "\n\n";
 
     // All items from row 1 and rows 0 and 1
-    array_t::view<2> v(a, {slice(1,2),slice(0,2)});
+    array_t::view<2> v(a, {slice(1,2),slice(1,3)});
     std::cout << "v: " << v << "\n\n";
 
     std::cout << "(1) ";
@@ -225,7 +225,7 @@ void row_major_iterator_example()
     }
     std::cout << "\n\n";
 
-    /* std::cout << "(2) ";
+    std::cout << "(2) ";
     for (auto it = v.begin(); it != v.end(); ++it)
     {
         if (it != v.begin())
@@ -234,19 +234,19 @@ void row_major_iterator_example()
         }
         std::cout << *it;
     }
-    std::cout << "\n\n"; */
+    std::cout << "\n\n"; 
 }
 
 void column_major_iterator_example()
 {
     typedef ndarray<double,2,column_major> array_t;
 
-    // Construct a 2-dimensional 2 x 3 column-major array 
-    array_t a = {{0,1,2},{4,5,6},{8,9,10}};
+    // Construct a 2-dimensional 3 x 4 column-major array 
+    array_t a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
     std::cout << "a: " << a << "\n\n";
 
     // All items from row 1 and columns 0 and 1
-    array_t::view<2> v(a, {slice(1,2),slice(0,2)});
+    array_t::view<2> v(a, {slice(2,3),slice(0,4,2)});
     std::cout << "v: " << v << "\n\n";
 
     std::cout << "(1) ";
@@ -259,7 +259,7 @@ void column_major_iterator_example()
         std::cout << *it;
     }
     std::cout << "\n\n";
-/*
+
     std::cout << "(2) ";
     for (auto it = v.begin(); it != v.end(); ++it)
     {
@@ -270,7 +270,6 @@ void column_major_iterator_example()
         std::cout << *it;
     }
     std::cout << "\n\n";
-*/
 }
 
 int main()
@@ -292,8 +291,8 @@ int main()
     slicing_a_2d_array();
     reduction();
 
+    row_major_iterator_example();
     column_major_iterator_example();
 
-    row_major_iterator_example();
     std::cout << "---\n";
 }
