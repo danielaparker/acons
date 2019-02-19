@@ -73,7 +73,7 @@ int main()
 {
     ac::ndarray<double,1> a = {0,1,2,3,4,5,6,7,8,9};
 
-    // Extracting a part of the array with a ac::slice object
+    // Extracting a part of the array with a slice object
     ac::ndarray_view<double,1> v(a, {ac::slice(2,7,2)});
     std::cout << v << "\n\n";
 }
