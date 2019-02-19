@@ -31,6 +31,8 @@ Download the latest [single header file](https://raw.githubusercontent.com/danie
 #include <iostream>
 #include <acons/ndarray.hpp>
 
+using namespace acons; // For convenience
+
 int main()
 {
     // Create a 3-dim array of shape 3 x 4 x 2
@@ -65,6 +67,8 @@ A `slice` object can be constructed with `start`, `stop` and `step` parameters.
 #include <iostream>
 #include <acons/ndarray.hpp>
 
+using namespace acons; // For convenience
+
 int main()
 {
     ndarray<double,1> a = {0,1,2,3,4,5,6,7,8,9};
@@ -85,6 +89,8 @@ A slice object constructed with no parameters selects all the elements along the
 ```c++
 #include <iostream>
 #include <acons/ndarray.hpp>
+
+using namespace acons; // For convenience
 
 int main()
 {
@@ -113,6 +119,8 @@ Output:
 #include <iostream>
 #include <acons/ndarray.hpp>
 
+using namespace acons; // For convenience
+
 int main()
 {
     // Construct a 2-dimensional 3 x 4 array 
@@ -139,6 +147,11 @@ Output:
 Row major (C-style) arrays are traversed in memory order by rows.
 
 ```c++
+#include <iostream>
+#include <acons/ndarray.hpp>
+
+using namespace acons; // For convenience
+
 int main()
 {
     typedef ndarray<double,2,row_major> array_t;
@@ -189,6 +202,11 @@ Output:
 Column major (Fortran-style) arrays and views are traversed in memory order by columns.
 
 ```c++
+#include <iostream>
+#include <acons/ndarray.hpp>
+
+using namespace acons; // For convenience
+
 int main()
 {
     typedef ndarray<double,2,column_major> array_t;
@@ -246,7 +264,7 @@ Output:
 #include <acons/ndarray.hpp>
 #include <iostream>
 
-using namespace acons;
+using namespace acons; // For convenience
 
 typedef boost::interprocess::allocator<double,
         boost::interprocess::managed_shared_memory::segment_manager> shmem_allocator;
