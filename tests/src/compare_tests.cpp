@@ -59,7 +59,7 @@ TEST_CASE("compare 2 x 2 ndarray_view on 2 x 3 row major")
 
     CHECK((v == w));
 }
-#if 0
+
 TEST_CASE("compare 2 x 2 ndarray_view on 4 x 4 row major")
 {
     ndarray<double,2,row_major> a = {{0, 1, 2, 3}, {4, 5, 6, 7}, {8, 9, 10, 11}, {12, 13, 14, 15}};
@@ -101,7 +101,6 @@ TEST_CASE("compare 2 x 2 ndarray_view on 4 x 4 row major")
 
     //CHECK((v == w));
 }
-#endif
 
 TEST_CASE("compare 2 x 3 x 4 column major ndarray")
 {

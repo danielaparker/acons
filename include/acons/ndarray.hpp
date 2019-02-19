@@ -252,57 +252,6 @@ struct row_major
             offsets[i] = Base::rebase_to_zero(slices[i].start(Base::origin())) * strides[i]; 
         }
     }
-
-    template <class A, class B>
-    static typename std::enable_if<(A::ndim == B::ndim && 
-        std::is_same<typename A::order_type,typename B::order_type>::value &&
-        std::is_same<typename A::value_type, typename B::value_type>::value &&
-        (A::ndim>1)),bool>::type
-    compare(const A& a, const B& b)
-    {
-        constexpr size_t N = A::ndim;
-        typedef typename A::base_type base_type1;
-        typedef typename B::base_type base_type2;
-
-        if (a.size(0) != b.size(0))
-        {
-            return false;
-        }
-        for (size_t i = 0; i < a.size(0); ++i)
-        {
-            std::array<size_t,1> origin1 = {base_type1::origin() + i};
-            std::array<size_t,1> origin2 = {base_type2::origin() + i};
-
-            typename A::template const_view<N-1> u(a, origin1);
-            typename B::template const_view<N-1> v(b, origin2);
-            if (!compare(u, v))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    template <class A, class B>
-    static typename std::enable_if<(A::ndim == B::ndim && A::ndim == 1),bool>::type
-    compare(const A& a, const B& b)
-    {
-        if (a.size(0) != b.size(0))
-        {
-            return false;
-        }
-        auto it = b.begin();
-        for (auto element : a)
-        {
-            if (element != *it++)
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
 };
 
 struct column_major
@@ -337,59 +286,6 @@ struct column_major
         {
             offsets[i] = Base::rebase_to_zero(slices[i].start(Base::origin())) * strides[i]; 
         }
-    }
-
-    template <class A, class B>
-    static typename std::enable_if<(A::ndim == B::ndim && 
-        std::is_same<typename A::value_type, typename B::value_type>::value &&
-        std::is_same<typename A::order_type,typename B::order_type>::value &&
-                                   (A::ndim>1)),bool>::type
-    compare(const A& a, const B& b)
-    {
-        constexpr size_t N = A::ndim;
-        typedef typename A::base_type base_type1;
-        typedef typename B::base_type base_type2;
-
-        if (a.size(0) != b.size(0))
-        {
-            return false;
-        }
-        for (size_t i = 0; i < a.size(N-1); ++i)
-        {
-            std::array<size_t,1> origin1 = {base_type1::origin() + i};
-            std::array<size_t,1> origin2 = {base_type2::origin() + i};
-
-            std::array<slice,N-1> slices;
-
-            typename A::template const_view<N-1> u(a, slices, origin1);
-            typename B::template const_view<N-1> v(b, slices, origin2);
-            if (!compare(u, v))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    template <class A, class B>
-    static typename std::enable_if<(A::ndim == B::ndim && A::ndim == 1),bool>::type
-    compare(const A& a, const B& b)
-    {
-        if (a.size(0) != b.size(0))
-        {
-            return false;
-        }
-        auto it = b.begin();
-        for (auto element : a)
-        {
-            if (element != *it++)
-            {
-                return false;
-            }
-        }
-
-        return true;
     }
 };
 
@@ -2191,13 +2087,27 @@ bool operator==(const ndarray<T, N, Order, Base, Allocator>& lhs, const ndarray<
         return true;
     }
 
-    std::array<size_t,N> offsets;
-    offsets.fill(0);
+    for (size_t i = 0; i < N; ++i)
+    {
+        if (lhs.size(i) != rhs.size(i))
+        {
+            return false;
+        }
+    }
+    auto it1 = lhs.begin();
+    auto end1 = lhs.end();
+    auto it2 = rhs.begin();
+    while (it1 != end1)
+    {
+        if (*it1 != *it2)
+        {
+            return false;
+        }
+        ++it1;
+        ++it2;
+    }
 
-   return Order::compare(lhs, rhs);
-
-   //return Order::compare(lhs.data(), lhs.shape(), lhs.strides(), offsets,
-   //                       rhs.data(), rhs.shape(), lhs.strides(), offsets);
+    return true;
 }
 
 template <typename T, size_t N, typename Order, typename Base, typename Allocator>
@@ -2216,34 +2126,81 @@ bool operator==(const ndarray_view_base<T, M, Order, Base, TPtr>& lhs,
         return true;
     }
 
-    return Order::compare(lhs, rhs);
+    for (size_t i = 0; i < M; ++i)
+    {
+        if (lhs.size(i) != rhs.size(i))
+        {
+            return false;
+        }
+    }
+    auto it1 = lhs.begin();
+    auto end1 = lhs.end();
+    auto it2 = rhs.begin();
+    while (it1 != end1)
+    {
+        if (*it1 != *it2)
+        {
+            return false;
+        }
+        ++it1;
+        ++it2;
+    }
 
-    //return Order::compare(lhs.data(), lhs.shape(), lhs.strides(), lhs.offsets(),
-    //                      rhs.data(), rhs.shape(), lhs.strides(), rhs.offsets());
+    return true;
 }
 
 template <typename T, size_t M, typename Order, typename Base, typename Allocator, typename TPtr>
 bool operator==(const ndarray<T, M, Order, Base, Allocator>& lhs, 
                 const ndarray_view_base<T, M, Order, Base, TPtr>& rhs)
 {
-    std::array<size_t,M> offsets;
-    offsets.fill(0);
+    for (size_t i = 0; i < M; ++i)
+    {
+        if (lhs.size(i) != rhs.size(i))
+        {
+            return false;
+        }
+    }
+    auto it1 = lhs.begin();
+    auto end1 = lhs.end();
+    auto it2 = rhs.begin();
+    while (it1 != end1)
+    {
+        if (*it1 != *it2)
+        {
+            return false;
+        }
+        ++it1;
+        ++it2;
+    }
 
-    return Order::compare(lhs, rhs);
-    //return Order::compare(lhs.data(), lhs.shape(), lhs.strides(), offsets,
-    //                      rhs.data(), rhs.shape(), lhs.strides(), rhs.offsets());
+    return true;
 }
 
 template <typename T, size_t M, typename Order, typename Base, typename Allocator, typename TPtr>
 bool operator==(const ndarray_view_base<T, M, Order, Base, TPtr>& lhs, 
                 const ndarray<T, M, Order, Base, Allocator>& rhs)
 {
-    std::array<size_t,M> offsets;
-    offsets.fill(0);
+    for (size_t i = 0; i < M; ++i)
+    {
+        if (lhs.size(i) != rhs.size(i))
+        {
+            return false;
+        }
+    }
+    auto it1 = lhs.begin();
+    auto end1 = lhs.end();
+    auto it2 = rhs.begin();
+    while (it1 != end1)
+    {
+        if (*it1 != *it2)
+        {
+            return false;
+        }
+        ++it1;
+        ++it2;
+    }
 
-    return Order::compare(lhs, rhs);
-    //return Order::compare(lhs.data(), lhs.shape(), lhs.strides(), lhs.offsets(),
-    //                      rhs.data(), rhs.shape(), lhs.strides(), offsets);
+    return true;
 }
 
 template <typename T, size_t M, typename Order, typename Base, typename TPtr>
