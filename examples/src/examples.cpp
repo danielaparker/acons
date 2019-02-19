@@ -208,13 +208,13 @@ void row_major_iterator_example()
 
     // Construct a 2-dimensional 3 x 4 row-major array 
     array_t a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
-    std::cout << "a: " << a << "\n\n";
+    std::cout << "(1) " << a << "\n\n";
 
-    // All items from row 1 and rows 0 and 1
+    // All items from row 1 and columns 1 through 2
     array_t::view<2> v(a, {slice(1,2),slice(1,3)});
-    std::cout << "v: " << v << "\n\n";
+    std::cout << "(2) " << v << "\n\n";
 
-    std::cout << "(1) ";
+    std::cout << "(3) ";
     for (auto it = a.begin(); it != a.end(); ++it)
     {
         if (it != a.begin())
@@ -225,7 +225,7 @@ void row_major_iterator_example()
     }
     std::cout << "\n\n";
 
-    std::cout << "(2) ";
+    std::cout << "(4) ";
     for (auto it = v.begin(); it != v.end(); ++it)
     {
         if (it != v.begin())
@@ -243,13 +243,13 @@ void column_major_iterator_example()
 
     // Construct a 2-dimensional 3 x 4 column-major array 
     array_t a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
-    std::cout << "a: " << a << "\n\n";
+    std::cout << "(1) " << a << "\n\n";
 
-    // All items from row 1 and columns 0 and 1
+    // All items from row 2 and columns 0 and 2
     array_t::view<2> v(a, {slice(2,3),slice(0,4,2)});
-    std::cout << "v: " << v << "\n\n";
+    std::cout << "(2) " << v << "\n\n";
 
-    std::cout << "(1) ";
+    std::cout << "(3) ";
     for (auto it = a.begin(); it != a.end(); ++it)
     {
         if (it != a.begin())
@@ -260,7 +260,7 @@ void column_major_iterator_example()
     }
     std::cout << "\n\n";
 
-    std::cout << "(2) ";
+    std::cout << "(4) ";
     for (auto it = v.begin(); it != v.end(); ++it)
     {
         if (it != v.begin())

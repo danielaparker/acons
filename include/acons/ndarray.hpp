@@ -1234,7 +1234,7 @@ class row_major_iterator
     std::array<size_t,N> shape_;
     std::array<size_t,N> strides_;
     std::array<size_t,N> offsets_;
-    std::array<size_t,N-1> indices_;
+    std::array<size_t,N> indices_;
     size_t offset_one_end_;
 
     iterator_one<T,TPtr> it_;
@@ -1319,20 +1319,20 @@ public:
 private:
     void initialize(std::false_type)
     {
-        for (size_t i = 0; i < N-1; ++i)
+        for (size_t i = 0; i < N; ++i)
         {
             indices_[i] = shape_[i]-1;
         }
-        //indices_[N-2] = 0;
-        size_t end_rel = get_offset<N,N-1,zero_based>(strides_,offsets_,indices_);
+        size_t end_rel = get_offset<N,N,zero_based>(strides_,offsets_,indices_);
         //std::cout << "strides: " << strides_ << "\n";
         //std::cout << "offsets: " << offsets_ << "\n";
         //std::cout << "indices: " << indices_ << "\n";
-        //std::cout << "END OFFSET: " << rel << "\n";
-        end_ = iterator_one<T,TPtr>(data_,strides_[N-1],end_rel + strides_[N-1]*shape_[N-1]);
+        //std::cout << "END REL: " << end_rel << "\n";
+        //std::cout << "END OFFSET: " << (end_rel + strides_[N - 1] * shape_[N - 1]) << "\n";
+        end_ = iterator_one<T,TPtr>(data_,strides_[N-1],end_rel + strides_[N-1]);
 
         indices_.fill(0);
-        size_t rel = get_offset<N,N-1,zero_based>(strides_,offsets_,indices_);
+        size_t rel = get_offset<N,N,zero_based>(strides_,offsets_,indices_);
         it_ = iterator_one<T,TPtr>(data_,strides_[N-1],rel);
         last_ = iterator_one<T,TPtr>(data_,strides_[N-1],rel+strides_[N-1]*shape_[N-1]);
     }
@@ -1359,7 +1359,7 @@ private:
                 {
                     ++indices_[i];
 
-                    size_t rel = get_offset<N,N-1,zero_based>(strides_,offsets_,indices_);
+                    size_t rel = get_offset<N,N,zero_based>(strides_,offsets_,indices_);
                     it_ = iterator_one<T,TPtr>(data_,strides_[N-1],rel);
                     last_ = iterator_one<T,TPtr>(data_,strides_[N-1],rel + strides_[N-1]*shape_[N-1]);
                     break;

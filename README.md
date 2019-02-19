@@ -134,6 +134,107 @@ Output:
 (2) [2,6,10]
 ```
 
+#### Iterate over row major arrays and columns
+
+Row major (C-style) arrays are traversed in memory order by rows.
+
+```c++
+int main()
+{
+    typedef ndarray<double,2,row_major> array_t;
+
+    // Construct a 2-dimensional 3 x 4 row-major array 
+    array_t a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
+    std::cout << "(1) " << a << "\n\n";
+
+    // All items from row 1 and columns 1 through 2
+    array_t::view<2> v(a, {slice(1,2),slice(1,3)});
+    std::cout << "(2) " << v << "\n\n";
+
+    std::cout << "(3) ";
+    for (auto it = a.begin(); it != a.end(); ++it)
+    {
+        if (it != a.begin())
+        {
+            std::cout << ",";
+        }
+        std::cout << *it;
+    }
+    std::cout << "\n\n";
+
+    std::cout << "(4) ";
+    for (auto it = v.begin(); it != v.end(); ++it)
+    {
+        if (it != v.begin())
+        {
+            std::cout << ",";
+        }
+        std::cout << *it;
+    }
+    std::cout << "\n\n"; 
+}
+```
+Output:
+```
+(1) [[0,1,2,3],[4,5,6,7],[8,9,10,11]]
+
+(2) [[5,6]]
+
+(3) 0,1,2,3,4,5,6,7,8,9,10,11
+
+(4) 5,6
+```
+#### Iterate over column major array and views
+
+Column major (Fortran-style) arrays and views are traversed in memory order by columns.
+
+```c++
+int main()
+{
+    typedef ndarray<double,2,column_major> array_t;
+
+    // Construct a 2-dimensional 3 x 4 column-major array 
+    array_t a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
+    std::cout << "(1) " << a << "\n\n";
+
+    // All items from row 2 and columns 0 and 2
+    array_t::view<2> v(a, {slice(2,3),slice(0,4,2)});
+    std::cout << "(2) " << v << "\n\n";
+
+    std::cout << "(3) ";
+    for (auto it = a.begin(); it != a.end(); ++it)
+    {
+        if (it != a.begin())
+        {
+            std::cout << ",";
+        }
+        std::cout << *it;
+    }
+    std::cout << "\n\n";
+
+    std::cout << "(4) ";
+    for (auto it = v.begin(); it != v.end(); ++it)
+    {
+        if (it != v.begin())
+        {
+            std::cout << ",";
+        }
+        std::cout << *it;
+    }
+    std::cout << "\n\n";
+}
+```
+Output:
+```
+(1) [[0,1,2,3],[4,5,6,7],[8,9,10,11]]
+
+(2) [[8,10]]
+
+(3) 0,4,8,1,5,9,2,6,10,3,7,11
+
+(4) 8,10
+```
+
 #### Creating ndarrays in managed shared memory with Boost interprocess allocators
 
 ```c++
