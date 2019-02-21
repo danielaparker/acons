@@ -286,7 +286,7 @@ Output:
 (4) 8,10
 ```
 
-#### Other iterators
+#### row_major_iterator and column_major_iterator
 
 A `row_major_iterator` always traverses the elements of an array in row major order regardless of
 the underlying storage. Similarly a `column_major_iterator` always traverses the elements in column major order.
