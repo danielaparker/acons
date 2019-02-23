@@ -52,7 +52,7 @@ Output:
 #include <iostream>
 #include <acons/ndarray.hpp>
 
-namespace ac = acons; // For brevity
+namespace ac = acons;
 
 int main()
 {
