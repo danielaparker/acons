@@ -1604,6 +1604,17 @@ public:
         Order::calculate_strides(shape_, strides_, base_size_);
     }
 
+    template<typename OtherTPtr, typename... Args>
+    ndarray_view_base(OtherTPtr data, 
+                       typename std::enable_if<std::is_convertible<OtherTPtr,TPtr>::value,size_t>::type i, Args... args) 
+        : base_data_(data)
+    {
+        offsets_.fill(0);
+        init_helper<M>::init(shape_, *this, i, args ...);
+
+        Order::calculate_strides(shape_, strides_, base_size_);
+    }
+
     // first_dim
 
     template<size_t N>
@@ -1779,6 +1790,11 @@ public:
         a.strides_.swap(this->strides_);
         a.offsets_.swap(this->offsets_);
     }
+
+    void init()
+    {
+        Order::calculate_strides(shape_, strides_, base_size_);
+    }
 };
 
 template <typename CharT, typename T, size_t M, typename Order, typename Base, typename TPtr>
@@ -1891,6 +1907,12 @@ public:
 
     ndarray_view(T* data, const std::array<size_t,M>& shape) 
         : super_type(data, shape)
+    {
+    }
+
+    template <typename... Args>
+    ndarray_view(T* data, size_t i, Args... args) 
+        : super_type(data, i, args...)
     {
     }
 
@@ -2062,6 +2084,12 @@ public:
 
     const_ndarray_view(const T* data, const std::array<size_t,M>& shape) 
         : super_type(data, shape)
+    {
+    }
+
+    template <typename... Args>
+    const_ndarray_view(const T* data, size_t i, Args... args) 
+        : super_type(data, i, args...)
     {
     }
 

@@ -93,12 +93,12 @@ int main()
 {
     double a[] = {0,1,2,3,4,5,6};
 
-    // Elements of a can be modified through this interface
-    ac::ndarray_view<double,2> v(a,{2,3});
+    // Elements of a can be modified through this 2 x 3 interface
+    ac::ndarray_view<double,2> v(a,2,3); 
     v(0,2) = 9;
 
-    // Elements of a cannot be modified through this interface
-    ac::const_ndarray_view<double,2> cv(a,{2,3});
+    // Elements of a cannot be modified through this 2 x 3 interface
+    ac::const_ndarray_view<double,2> cv(a,2,3);
 
     std::cout << cv << "\n\n";
 }
