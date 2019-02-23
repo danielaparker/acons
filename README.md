@@ -153,7 +153,7 @@ Output:
 
 #### Reduction
 
-Construct a view on an array or another view that has fewer dimensions than the original.
+Construct a view on an array (or another view) that has fewer dimensions than the original.
 
 ```c++
 #include <iostream>
