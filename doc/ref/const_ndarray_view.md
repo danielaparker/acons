@@ -1,8 +1,12 @@
 ### acons::const_ndarray_view
 
 ```c++
-template <typename T, size_t M, typename Order = row_major, typename Base = zero_based>
-class const_ndarray_view;
+template<
+    typename T, 
+    size_t M, 
+    typename Order = row_major, 
+    typename Base = zero_based
+> class const_ndarray_view;
 ```
 The `const_ndarray_view` class represents a const view on an N-dimensional array.
 
