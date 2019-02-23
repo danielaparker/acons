@@ -10,11 +10,12 @@ void wrapping_a_c_array()
 
     // Elements of a can be modified through this interface
     ac::ndarray_view<double,2> v(a,{2,3});
+    v(0,2) = 9;
 
     // Elements of a cannot be modified through this interface
     ac::const_ndarray_view<double,2> cv(a,{2,3});
 
-    std::cout << v << "\n\n";
+    std::cout << cv << "\n\n";
 }
 
 void zeros()
