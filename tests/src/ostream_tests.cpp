@@ -22,7 +22,7 @@ TEST_CASE("print test")
     //print(os1, a);
     //CHECK(os1.str() == expected1);
     print(os2, cv);
-    std::cout << "output: " << os2.str() << "\n";
+    //std::cout << "output: " << os2.str() << "\n";
 
     CHECK(os2.str() == expected2);
     //print(os3, v);
@@ -80,9 +80,9 @@ TEST_CASE("1x2x2 ndarray_view ostream test")
 
     //std::cout << "a: " << a << "\n\n";
     //std::cout << "v: " << v << "\n\n";
-    std::cout << "dimensions: " << v.shape() << "\n\n";
-    std::cout << "strides: " << v.strides() << "\n\n";
-    std::cout << "offsets: " << v.offsets() << "\n\n";
+    //std::cout << "dimensions: " << v.shape() << "\n\n";
+    //std::cout << "strides: " << v.strides() << "\n\n";
+    //std::cout << "offsets: " << v.offsets() << "\n\n";
 
     std::ostringstream os;
     os << v;

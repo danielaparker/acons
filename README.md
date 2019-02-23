@@ -81,6 +81,20 @@ Output:
 [[[0,1],[2,3],[4,5],[6,7]],[[8,9],[10,11],[12,13],[14,15]],[[16,17],[18,19],[20,21],[22,23]]]
 ```
 
+#### Wrap a C-array
+
+```c++
+double a[] = {0,1,2,3,4,5,6};
+
+ac::ndarray_view<double,2> v(a,{2,3});
+
+std::cout << v << "\n\n";
+```
+Output:
+```
+[[0,1,2],[3,4,5]]
+```
+
 #### Slicing a 1-dimensional array
 
 A `slice` object can be constructed with `start`, `stop` and `step` parameters. 
@@ -184,7 +198,9 @@ namespace ac = acons; // For brevity
 
 int main()
 {
-    typedef ac::ndarray<double,2> array_t;
+    // The third template parameter in ndarray indicates row 
+    // major (C-style) storage ordering, this is the default
+    typedef ac::ndarray<double,2,ac::row_major> array_t;
 
     // Construct a 2-dimensional 3 x 4 row-major array 
     array_t a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
@@ -242,6 +258,8 @@ namespace ac = acons; // For brevity
 
 int main()
 {
+    // The third template parameter in ndarray indicates column 
+    // major (FORTRAN-style) storage ordering
     typedef ac::ndarray<double,2,ac::column_major> array_t;
 
     // Construct a 2-dimensional 3 x 4 column-major array 

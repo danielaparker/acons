@@ -114,11 +114,11 @@ TEST_CASE("2-dim 3 x 3 row major iterator tests")
 
     // Construct a 2-dimensional 3 x 3 row-major array 
     array_t a = {{0,1,2},{4,5,6},{8,9,10}};
-    std::cout << "a: " << a << "\n\n";
+    //std::cout << "a: " << a << "\n\n";
 
     // All items from row 1 and columns 0 and 1
     array_t::view<2> v(a, {slice(1,2),slice(0,2)});
-    std::cout << "v: " << v << "\n\n";
+    //std::cout << "v: " << v << "\n\n";
 
     REQUIRE(v.shape(0) == 1);
     REQUIRE(v.shape(1) == 2);
@@ -140,11 +140,11 @@ TEST_CASE("2-dim 3 x 4 row major iterator tests")
 
     // Construct a 2-dimensional 3 x 3 row-major array 
     array_t a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
-    std::cout << "a: " << a << "\n\n";
+    //std::cout << "a: " << a << "\n\n";
 
     // All items from row 1 and columns 0 and 1
     array_t::view<2> v(a, {slice(1,2),slice(1,3)});
-    std::cout << "v: " << v << "\n\n";
+    //std::cout << "v: " << v << "\n\n";
 
     REQUIRE(v.shape(0) == 1);
     REQUIRE(v.shape(1) == 2);

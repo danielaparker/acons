@@ -83,9 +83,9 @@ TEST_CASE("constructor 2b")
     }
 }
 
-/*TEST_CASE("constructor 2c")
+TEST_CASE("constructor 2c")
 {
-    ndarray<double,3> a(1,2,3,std::allocator<double>());
+    ndarray<double,3> a(std::allocator<double>(),1,2,3);
 
     double x = 0;
     for (size_t i = 0; i < a.shape(0); ++i)
@@ -109,11 +109,11 @@ TEST_CASE("constructor 2b")
     {
         CHECK(a.data()[i] == i);
     }
-}*/
+}
 
-/* TEST_CASE("constructor 2d")
+TEST_CASE("constructor 2d")
 {
-    ndarray<double,3> a(1,2,3,10.0,std::allocator<double>());
+    ndarray<double,3> a(std::allocator<double>(), 1,2,3,10.0);
 
     CHECK_FALSE(a.empty());
     CHECK(a.size() == 6);
@@ -125,7 +125,7 @@ TEST_CASE("constructor 2b")
     {
         CHECK(a.data()[i] == 10);
     }
-}*/
+}
 
 TEST_CASE("constructor 3")
 {
@@ -346,7 +346,7 @@ TEST_CASE("assignment 1")
 }
 
 // operator()
-/*
+
 TEST_CASE("indexing operator 1")
 {
     ndarray<double, 3, column_major> a(2,3,4);
@@ -364,9 +364,7 @@ TEST_CASE("indexing operator 1")
     }
     std::cout << "a: " << a << "\n\n";
 } 
-*/ 
-/*
-TEST_CASE("indexing operator 1")
+TEST_CASE("indexing operator 2")
 {
     ndarray<double, 3> a(2,3,4);
 
@@ -383,8 +381,7 @@ TEST_CASE("indexing operator 1")
     }
     std::cout << "a: " << a << "\n\n";
 }
-*/
-TEST_CASE("indexing operator 1")
+TEST_CASE("indexing operator 3")
 {
     ndarray<double, 2> a(2,3);
 

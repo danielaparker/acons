@@ -247,7 +247,7 @@ TEST_CASE("2-dim row_major ndarray ndarray_view column")
     }
 }
 
-TEST_CASE("3-dim 2x3x4 ndarray ndarray_view column")
+TEST_CASE("3-dim 3x3x4 ndarray ndarray_view column")
 {
     typedef ndarray<double,3,row_major> array_t;
     array_t a = { {{0,1,2,3},{4,5,6,7},{8,9,10,11}}, {{12,13,14,15},{16,17,18,19},{20,21,22,23}}, {{24,25,26,27},{28,29,30,31},{32,33,34,35}} };
@@ -293,5 +293,33 @@ TEST_CASE("3-dim 2x3x4 ndarray ndarray_view column")
         w(0, 0, 0) = 34;
 
     }
+
+    SECTION("slices with steps")
+    {
+        ndarray_view<double,3> v(a,{slice(0,3,2),slice(0,3,2),slice(1,4,2)});
+        // { {{1,3},{9,11}}, {{25,27},{33,35}} };
+        REQUIRE(v.shape(0) == 2); 
+        REQUIRE(v.shape(1) == 2); 
+        REQUIRE(v.shape(2) == 2); 
+
+        CHECK(v(0,0,0) == 1.0);
+        CHECK(v(0,0,1) == 3.0);
+        CHECK(v(0,1,0) == 9.0);
+        CHECK(v(0,1,1) == 11.0);
+        CHECK(v(1,0,0) == 25.0);
+        CHECK(v(1,0,1) == 27.0);
+        CHECK(v(1,1,0) == 33.0);
+        CHECK(v(1,1,1) == 35.0);
+
+        ndarray_view<double,3> w(v,{slice(1,2),slice(1,2),slice(1,2)});
+        // {{{35}}};
+        REQUIRE(w.shape(0) == 1);
+        REQUIRE(w.shape(1) == 1); 
+        REQUIRE(w.shape(2) == 1); 
+
+        w(0, 0, 0) = 35;
+
+    }
 }
+
 

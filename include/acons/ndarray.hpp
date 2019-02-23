@@ -1894,6 +1894,12 @@ public:
     {
     }
 
+    template <typename... Args>
+    ndarray_view(T* data, size_t i, Args... args) 
+        : super_type(data, i, args...)
+    {
+    }
+
     template <typename Allocator>
     ndarray_view& operator=(ndarray<T, M, Order, Base, Allocator>& a)
     {

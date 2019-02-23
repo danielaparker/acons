@@ -4,6 +4,15 @@
 
 namespace ac = acons;
 
+void wrapping_a_c_array()
+{
+    double a[] = {0,1,2,3,4,5,6};
+
+    ac::ndarray_view<double,2> v(a,{2,3});
+
+    std::cout << v << "\n\n";
+}
+
 void zeros()
 {
     // Construct an array of dimensions 2 x 3 with zeros
@@ -227,7 +236,9 @@ void create_a_3d_array()
 
 void row_major_iterator_example()
 {
-    typedef ac::ndarray<double,2> array_t;
+    // The third template parameter in ndarray indicates row 
+    // major (C-style) storage ordering, this is the default
+    typedef ac::ndarray<double,2,ac::row_major> array_t;
 
     // Construct a 2-dimensional 3 x 4 row-major array 
     array_t a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
@@ -262,6 +273,8 @@ void row_major_iterator_example()
 
 void column_major_iterator_example()
 {
+    // The third template parameter in ndarray indicates column 
+    // major (FORTRAN-style) storage ordering
     typedef ac::ndarray<double,2,ac::column_major> array_t;
 
     // Construct a 2-dimensional 3 x 4 column-major array 
@@ -360,6 +373,8 @@ int main()
     reduction3();
 
     zeros();
+
+    wrapping_a_c_array();
 
     std::cout << "---\n";
 }
