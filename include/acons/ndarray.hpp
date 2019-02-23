@@ -1894,12 +1894,6 @@ public:
     {
     }
 
-    template <typename... Args>
-    ndarray_view(T* data, size_t i, Args... args) 
-        : super_type(data, i, args...)
-    {
-    }
-
     template <typename Allocator>
     ndarray_view& operator=(ndarray<T, M, Order, Base, Allocator>& a)
     {
@@ -2066,9 +2060,7 @@ public:
     {
     }
 
-    template<typename OtherTPtr>
-    const_ndarray_view(OtherTPtr data, const std::array<size_t,M>& shape,
-                       typename std::enable_if<std::is_convertible<OtherTPtr,const T*>::value>::type* = 0) 
+    const_ndarray_view(const T* data, const std::array<size_t,M>& shape) 
         : super_type(data, shape)
     {
     }

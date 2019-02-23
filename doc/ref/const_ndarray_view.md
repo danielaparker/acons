@@ -84,9 +84,7 @@ Member type                         |Definition
                        const std::array<slice,M>& slices, 
                        const std::array<size_t,N-M>& origin); // (10)
 
-    template<typename OtherTPtr>
-    const_ndarray_view(OtherTPtr data, const std::array<size_t,M>& shape,
-                       typename std::enable_if<std::is_convertible<OtherTPtr,const T*>::value>::type* = 0); // (11)
+    const_ndarray_view(const T* data, const std::array<size_t,M>& shape); // (11)
 
 Constructs a new M-dimensional array view.
 
