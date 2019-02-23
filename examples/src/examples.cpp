@@ -8,7 +8,11 @@ void wrapping_a_c_array()
 {
     double a[] = {0,1,2,3,4,5,6};
 
+    // Elements of a can be modified through this interface
     ac::ndarray_view<double,2> v(a,{2,3});
+
+    // Elements of a cannot be modified through this interface
+    ac::const_ndarray_view<double,2> cv(a,{2,3});
 
     std::cout << v << "\n\n";
 }

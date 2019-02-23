@@ -84,11 +84,23 @@ Output:
 #### Wrap a C-array
 
 ```c++
-double a[] = {0,1,2,3,4,5,6};
+#include <iostream>
+#include <acons/ndarray.hpp>
 
-ac::ndarray_view<double,2> v(a,{2,3});
+namespace ac = acons;
 
-std::cout << v << "\n\n";
+int main()
+{
+    double a[] = {0,1,2,3,4,5,6};
+
+    // Elements of a can be modified through this interface
+    ac::ndarray_view<double,2> v(a,{2,3});
+
+    // Elements of a cannot be modified through this interface
+    ac::const_ndarray_view<double,2> cv(a,{2,3});
+
+    std::cout << v << "\n\n";
+}
 ```
 Output:
 ```
@@ -102,7 +114,7 @@ A `slice` object can be constructed with `start`, `stop` and `step` parameters.
 #include <iostream>
 #include <acons/ndarray.hpp>
 
-namespace ac = acons; // For brevity
+namespace ac = acons;
 
 int main()
 {
@@ -128,7 +140,7 @@ and `step` defaults to 1.
 #include <iostream>
 #include <acons/ndarray.hpp>
 
-namespace ac = acons; // For brevity
+namespace ac = acons;
 
 int main()
 {
@@ -159,7 +171,7 @@ Construct a view on an array (or another view) that has fewer dimensions than th
 #include <iostream>
 #include <acons/ndarray.hpp>
 
-namespace ac = acons; // For brevity
+namespace ac = acons;
 
 int main()
 {
@@ -194,7 +206,7 @@ element in the array or view.
 #include <iostream>
 #include <acons/ndarray.hpp>
 
-namespace ac = acons; // For brevity
+namespace ac = acons;
 
 int main()
 {
@@ -254,7 +266,7 @@ element in the array or view.
 #include <iostream>
 #include <acons/ndarray.hpp>
 
-namespace ac = acons; // For brevity
+namespace ac = acons;
 
 int main()
 {
@@ -313,7 +325,7 @@ the underlying storage. Similarly a `column_major_iterator` always traverses the
 #include <iostream>
 #include <acons/ndarray.hpp>
 
-namespace ac = acons; // For brevity
+namespace ac = acons;
 
 int main()
 {
@@ -374,7 +386,7 @@ Ouput:
 #include <acons/ndarray.hpp>
 #include <iostream>
 
-namespace ac = acons; // For brevity
+namespace ac = acons;
 
 typedef boost::interprocess::allocator<double,
         boost::interprocess::managed_shared_memory::segment_manager> shmem_allocator;
