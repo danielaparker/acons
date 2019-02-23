@@ -86,6 +86,9 @@ Member type                         |Definition
 
     const_ndarray_view(const T* data, const std::array<size_t,M>& shape); // (11)
 
+    template <typename... Args>
+    const_ndarray_view(const T* data, size_t i, Args... args); // (12)
+
 Constructs a new M-dimensional array view.
 
     const_ndarray_view& operator=(const const_ndarray_view& other);

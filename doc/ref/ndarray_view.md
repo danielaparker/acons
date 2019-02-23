@@ -84,6 +84,9 @@ Member type                         |Definition
 
     ndarray_view(T* data, const std::array<size_t,M>& shape); // (11)
 
+    template <typename... Args>
+    ndarray_view(T* data, size_t i, Args... args); // (12)
+
 Constructs a new M-dimensional array view.
 
 Exceptions:
