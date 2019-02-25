@@ -1228,15 +1228,6 @@ public:
         return !(it1 == it2);
     }
 
-    friend row_major_iterator<T,N,TPtr> begin(row_major_iterator<T,N,TPtr> it) noexcept
-    {
-        return it;
-    }
-
-    friend row_major_iterator<T,N,TPtr> end(row_major_iterator<T,N,TPtr> it) noexcept
-    {
-        return row_major_iterator<T,N,TPtr>(it,true);
-    }
 private:
     void initialize(std::false_type)
     {
@@ -1302,6 +1293,18 @@ private:
         return *this;
     }
 };
+
+template <class T, size_t N, typename TPtr>
+row_major_iterator<T,N,TPtr> begin(row_major_iterator<T,N,TPtr> it) noexcept
+{
+    return it;
+}
+
+template <class T, size_t N, typename TPtr>
+row_major_iterator<T,N,TPtr> end(row_major_iterator<T,N,TPtr> it) noexcept
+{
+    return row_major_iterator<T,N,TPtr>(it,true);
+}
 
 template <class T, size_t N, typename TPtr>
 class column_major_iterator
@@ -1404,16 +1407,6 @@ public:
     {
         return !(it1 == it2);
     }
-
-    friend column_major_iterator<T,N,TPtr> begin(column_major_iterator<T,N,TPtr> it) noexcept
-    {
-        return it;
-    }
-
-    friend column_major_iterator<T,N,TPtr> end(column_major_iterator<T,N,TPtr> it) noexcept
-    {
-        return column_major_iterator<T,N,TPtr>(it,true);
-    }
 private:
     void initialize(std::false_type)
     {
@@ -1498,6 +1491,18 @@ private:
         return *this;
     }
 };
+
+template <class T, size_t N, typename TPtr>
+column_major_iterator<T,N,TPtr> begin(column_major_iterator<T,N,TPtr> it) noexcept
+{
+    return it;
+}
+
+template <class T, size_t N, typename TPtr>
+column_major_iterator<T,N,TPtr> end(column_major_iterator<T,N,TPtr> it) noexcept
+{
+    return column_major_iterator<T,N,TPtr>(it,true);
+}
 
 // ndarray_view_base
 
