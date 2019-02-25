@@ -17,12 +17,10 @@
   
 namespace acons {
 
-enum class orientation
+enum class iterate_dir
 {
     begin,
-    rbegin,
-    end,
-    rend
+    rbegin
 };
 
 // Forward declarations
@@ -1161,28 +1159,20 @@ public:
         }
         else
         {
-            initialize(std::integral_constant<bool,N==1>());
+            initialize(iterate_dir::begin, std::integral_constant<bool,N==1>());
         }
-    }
-
-    row_major_iterator(row_major_iterator<T,N,TPtr>& other, const std::array<size_t,N>& origin)
-        : data_(other.data_), num_elements_(other.num_elements_), shape_(other.shape_), strides_(other.strides_), offsets_(other.offsets_),
-          indices_(origin),
-          offset_one_end_(other.shape_[N-1]*other.strides_[N-1])
-    {
-        initialize(std::integral_constant<bool,N==1>());
     }
 
     row_major_iterator(TPtr data,
                        size_t size, 
                        const std::array<size_t,N>& shape, 
                        const std::array<size_t,N>& strides, 
-                       const std::array<size_t,N>& origin)
-        : data_(data), num_elements_(size), shape_(shape), strides_(strides), indices_(origin),
+                       iterate_dir dir)
+        : data_(data), num_elements_(size), shape_(shape), strides_(strides),
           offset_one_end_(shape[N-1]*strides[N-1])
     {
         offsets_.fill(0);
-        initialize(std::integral_constant<bool,N==1>());
+        initialize(dir, std::integral_constant<bool,N==1>());
     }
 
     row_major_iterator(TPtr data,
@@ -1190,11 +1180,11 @@ public:
                        const std::array<size_t,N>& shape, 
                        const std::array<size_t,N>& strides, 
                        const std::array<size_t,N>& offsets, 
-                       const std::array<size_t,N>& origin)
-        : data_(data), num_elements_(size), shape_(shape), strides_(strides), offsets_(offsets), indices_(origin),
+                       iterate_dir dir)
+        : data_(data), num_elements_(size), shape_(shape), strides_(strides), offsets_(offsets),
           offset_one_end_(offsets[N-1]+shape[N-1]*strides[N-1])          
     {
-        initialize(std::integral_constant<bool,N==1>());
+        initialize(dir, std::integral_constant<bool,N==1>());
     }
 
     row_major_iterator(const row_major_iterator&) = default;
@@ -1229,7 +1219,7 @@ public:
     }
 
 private:
-    void initialize(std::false_type)
+    void initialize(iterate_dir dir, std::false_type)
     {
         std::array<size_t,N> origin;
         for (size_t i = 0; i < N; ++i)
@@ -1244,14 +1234,36 @@ private:
         //std::cout << "END OFFSET: " << (end_rel + strides_[N - 1] * shape_[N - 1]) << "\n";
         end_ = iterator_one<T,TPtr>(data_,strides_[N-1],end_rel + strides_[N-1]);
 
+        switch (dir)
+        {
+            case iterate_dir::rbegin:
+                for (size_t i = 0; i < N; ++i)
+                {
+                    indices_[i] = shape_[i]-1;
+                }
+                break;
+            default:
+                indices_.fill(0);
+                break;
+        }
+
         size_t rel = get_offset<N,N,zero_based>(strides_,offsets_,indices_);
         it_ = iterator_one<T,TPtr>(data_,strides_[N-1],rel);
         last_ = iterator_one<T,TPtr>(data_,strides_[N-1],rel+strides_[N-1]*shape_[N-1]);
     }
 
-    void initialize(std::true_type)
+    void initialize(iterate_dir dir, std::true_type)
     {
         //std::cout << "initialize: shape_[0]: " << shape_[0] << ", strides_[0]: " << strides_[0] << ", offsets_[0]: " << offsets_[0]  << ", offset_one_end_: " << offset_one_end_ << "\n"; 
+        switch (dir)
+        {
+            case iterate_dir::rbegin:
+                indices_[0] = shape_[0]-1;
+                break;
+            default:
+                indices_[0] = 0;
+                break;
+        }
 
         size_t rel = get_offset<N,N,zero_based>(strides_,offsets_,indices_);
         end_ = iterator_one<T,TPtr>(data_,strides_[0],rel+strides_[N-1]*shape_[N-1]);
@@ -1341,27 +1353,20 @@ public:
         }
         else
         {
-            initialize(std::integral_constant<bool,N==1>());
+            initialize(iterate_dir::begin, std::integral_constant<bool,N==1>());
         }
-    }
-
-    column_major_iterator(column_major_iterator<T,N,TPtr>& other, const std::array<size_t,N>& origin)
-        : data_(other.data_), num_elements_(other.num_elements_), shape_(other.shape_), strides_(other.strides_), offsets_(other.offsets_),
-          offset_one_end_(other.shape_[N-1]*other.strides_[N-1])
-    {
-        initialize(std::integral_constant<bool,N==1>());
     }
 
     column_major_iterator(TPtr data,
                           size_t size, 
                           const std::array<size_t,N>& shape, 
                           const std::array<size_t,N>& strides, 
-                          const std::array<size_t,N>& origin)
-        : data_(data), num_elements_(size), shape_(shape), strides_(strides), indices_(origin),
+                          iterate_dir dir)
+        : data_(data), num_elements_(size), shape_(shape), strides_(strides),
           offset_one_end_(shape[N-1]*strides[N-1])
     {
         offsets_.fill(0);
-        initialize(std::integral_constant<bool,N==1>());
+        initialize(dir, std::integral_constant<bool,N==1>());
     }
 
     column_major_iterator(TPtr data,
@@ -1369,12 +1374,12 @@ public:
                           const std::array<size_t,N>& shape, 
                           const std::array<size_t,N>& strides, 
                           const std::array<size_t,N>& offsets, 
-                          const std::array<size_t,N>& origin)
-        : data_(data), num_elements_(size), shape_(shape), strides_(strides), offsets_(offsets), indices_(origin),
+                          iterate_dir dir)
+        : data_(data), num_elements_(size), shape_(shape), strides_(strides), offsets_(offsets),
           offset_one_end_(shape[N-1]*strides[N-1])          
     {
         //std::cout << "column_major_iterator 3\n";
-        initialize(std::integral_constant<bool,N==1>());
+        initialize(dir, std::integral_constant<bool,N==1>());
     }
 
     column_major_iterator(const column_major_iterator&) = default;
@@ -1408,7 +1413,7 @@ public:
         return !(it1 == it2);
     }
 private:
-    void initialize(std::false_type)
+    void initialize(iterate_dir dir, std::false_type)
     {
         std::array<size_t,N> origin;
         //std::cout << "initialize false" << N << "\n";
@@ -1426,6 +1431,19 @@ private:
         //std::cout << "END OFFSET: " << (rel + strides_[0]) << "\n";
         end_ = iterator_one<T,TPtr>(data_,strides_[N-1],end_rel + strides_[0]);
 
+        switch (dir)
+        {
+            case iterate_dir::rbegin:
+                for (size_t i = 0; i < N; ++i)
+                {
+                    indices_[i] = shape_[i]-1;
+                }
+                break;
+            default:
+                indices_.fill(0);
+                break;
+        }
+
         //std::cout << "initialize false\n";
         size_t rel = get_offset<N,N,zero_based>(strides_,offsets_,indices_);
         //std::cout << "rel: " << rel << "\n";
@@ -1440,7 +1458,7 @@ private:
         last_ = iterator_one<T,TPtr>(data_,strides_[0],rel+strides_[0]*shape_[0]);
     }
 
-    void initialize(std::true_type)
+    void initialize(iterate_dir dir, std::true_type)
     {
         //std::cout << "initialize true " << N << "\n";
         //return;
@@ -1449,6 +1467,15 @@ private:
         //std::cout << "strides_[0]: " << strides_[0] << "\n";
         //std::cout << "offsets_[0]: " << offsets_[0] << "\n";
         //std::cout << "OFFSET: " << offsets_[0]+strides_[0]*shape_[0] << "\n";
+        switch (dir)
+        {
+            case iterate_dir::rbegin:
+                indices_[0] = shape_[0]-1;
+                break;
+            default:
+                indices_[0] = 0;
+                break;
+        }
         size_t rel = get_offset<N,N,zero_based>(strides_,offsets_,indices_);
         end_ = iterator_one<T,TPtr>(data_,strides_[0],rel+strides_[0]*shape_[0]);
         it_ = iterator_one<T,TPtr>(data_,strides_[0],rel);
@@ -1599,33 +1626,21 @@ public:
 
     const_iterator begin() const
     {
-        std::array<size_t,M> origin;
-        origin.fill(0);
-
-        return const_iterator(base_data(),base_size(),shape(),strides(),offsets(),origin);
+        return const_iterator(base_data(),base_size(),shape(),strides(),offsets(),iterator_dir::begin);
     }
 
     const_iterator end() const
     {
-        std::array<size_t,M> origin;
-        origin.fill(0);
-
-        return acons::end(const_iterator(base_data(),base_size(),shape(),strides(),offsets(),origin));
+        return acons::end(const_iterator(base_data(),base_size(),shape(),strides(),offsets(),iterator_dir::begin));
     }
     const_iterator cbegin() const
     {
-        std::array<size_t,M> origin;
-        origin.fill(0);
-
-        return const_iterator(base_data(),base_size(),shape(),strides(),offsets(),origin);
+        return const_iterator(base_data(),base_size(),shape(),strides(),offsets(),iterator_dir::begin);
     }
 
     const_iterator cend() const
     {
-        std::array<size_t,M> origin;
-        origin.fill(0);
-
-        return acons::end(const_iterator(base_data(),base_size(),shape(),strides(),offsets(),origin));
+        return acons::end(const_iterator(base_data(),base_size(),shape(),strides(),offsets(),iterator_dir::begin));
     }
 protected:
 public:
@@ -2015,18 +2030,12 @@ public:
 
     iterator begin()
     {
-        std::array<size_t,M> origin;
-        origin.fill(0);
-
-        return iterator(this->base_data_,this->base_size(),this->shape(), this->strides(),this->offsets(),origin);
+        return iterator(this->base_data_,this->base_size(),this->shape(), this->strides(),this->offsets(),iterator_dir::begin);
     }
 
     iterator end() 
     {
-        std::array<size_t,M> origin;
-        origin.fill(0);
-
-        return acons::end(iterator(this->base_data_,this->base_size(),this->shape(), this->strides(),this->offsets(),origin));
+        return acons::end(iterator(this->base_data_,this->base_size(),this->shape(), this->strides(),this->offsets(),iterator_dir::begin));
     }
 
     const_iterator begin() const
@@ -2318,37 +2327,25 @@ bool operator!=(const ndarray_view_base<T, M, Order, Base, TPtr>& lhs,
 template <class T, size_t N, class Order, class Base>
 row_major_iterator<T,N,const T*> make_row_major_iterator(const ndarray<T,N,Order,Base>& v)
 {
-    std::array<size_t,N> origin;
-    origin.fill(0);
-
-    return row_major_iterator<T,N,const T*>(v.data(),v.size(),v.shape(),v.strides(),origin);
+    return row_major_iterator<T,N,const T*>(v.data(),v.size(),v.shape(),v.strides(),iterate_dir::begin);
 }
 
 template <class T, size_t N, class Order, class Base>
 row_major_iterator<T,N,T*> make_row_major_iterator(ndarray<T,N,Order,Base>& v)
 {
-    std::array<size_t,N> origin;
-    origin.fill(0);
-
-    return row_major_iterator<T,N,T*>(v.data(),v.size(),v.shape(),v.strides(),origin);
+    return row_major_iterator<T,N,T*>(v.data(),v.size(),v.shape(),v.strides(),iterate_dir::begin);
 }
 
 template <class T, size_t N, class Order, class Base, class TPtr>
 row_major_iterator<T,N,const T*> make_row_major_iterator(const ndarray_view_base<T,N,Order,Base,TPtr>& v)
 {
-    std::array<size_t,N> origin;
-    origin.fill(0);
-
-    return row_major_iterator<T,N,const T*>(v.base_data(),v.base_size(),v.shape(),v.strides(),v.offsets(),origin);
+    return row_major_iterator<T,N,const T*>(v.base_data(),v.base_size(),v.shape(),v.strides(),v.offsets(),iterate_dir::begin);
 }
 
 template <class T, size_t N, class Order, class Base, class TPtr>
 row_major_iterator<T,N,TPtr> make_row_major_iterator(ndarray_view_base<T,N,Order,Base,TPtr>& v)
 {
-    std::array<size_t,N> origin;
-    origin.fill(0);
-
-    return row_major_iterator<T,N,TPtr>(v.base_data(),v.base_size(),v.shape(),v.strides(),v.offsets(),origin);
+    return row_major_iterator<T,N,TPtr>(v.base_data(),v.base_size(),v.shape(),v.strides(),v.offsets(),iterate_dir::begin);
 }
 
 // make_column_major_iterator
@@ -2356,37 +2353,25 @@ row_major_iterator<T,N,TPtr> make_row_major_iterator(ndarray_view_base<T,N,Order
 template <class T, size_t N, class Order, class Base>
 column_major_iterator<T,N,const T*> make_column_major_iterator(const ndarray<T,N,Order,Base>& v)
 {
-    std::array<size_t,N> origin;
-    origin.fill(0);
-
-    return column_major_iterator<T,N,const T*>(v.data(),v.size(),v.shape(),v.strides(),origin);
+    return column_major_iterator<T,N,const T*>(v.data(),v.size(),v.shape(),v.strides(),iterate_dir::begin);
 }
 
 template <class T, size_t N, class Order, class Base>
 column_major_iterator<T,N,T*> make_column_major_iterator(ndarray<T,N,Order,Base>& v)
 {
-    std::array<size_t,N> origin;
-    origin.fill(0);
-
-    return column_major_iterator<T,N,T*>(v.data(),v.size(),v.shape(),v.strides(),origin);
+    return column_major_iterator<T,N,T*>(v.data(),v.size(),v.shape(),v.strides(),iterate_dir::begin);
 }
 
 template <class T, size_t N, class Order, class Base, class TPtr>
 column_major_iterator<T,N,const T*> make_column_major_iterator(const ndarray_view_base<T,N,Order,Base,TPtr>& v)
 {
-    std::array<size_t,N> origin;
-    origin.fill(0);
-
-    return column_major_iterator<T,N,const T*>(v.base_data(),v.base_size(),v.shape(),v.strides(),v.offsets(),origin);
+    return column_major_iterator<T,N,const T*>(v.base_data(),v.base_size(),v.shape(),v.strides(),v.offsets(),iterate_dir::begin);
 }
 
 template <class T, size_t N, class Order, class Base, class TPtr>
 column_major_iterator<T,N,TPtr> make_column_major_iterator(ndarray_view_base<T,N,Order,Base,TPtr>& v)
 {
-    std::array<size_t,N> origin;
-    origin.fill(0);
-
-    return column_major_iterator<T,N,TPtr>(v.base_data(),v.base_size(),v.shape(),v.strides(),v.offsets(),origin);
+    return column_major_iterator<T,N,TPtr>(v.base_data(),v.base_size(),v.shape(),v.strides(),v.offsets(),iterate_dir::begin);
 }
 
 }
