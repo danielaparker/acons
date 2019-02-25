@@ -133,7 +133,6 @@ TEST_CASE("2-dim 3 x 3 row major iterator tests")
         CHECK(it == last);
     }
 }
-#endif
 TEST_CASE("2-dim 3 x 4 row major iterator tests")
 {
     typedef ndarray<double,2,row_major> array_t;
@@ -144,7 +143,6 @@ TEST_CASE("2-dim 3 x 4 row major iterator tests")
 
     // All items from row 1 and columns 0 and 1
     //std::cout << "v: " << v << "\n\n";
-#if 0
     SECTION("test 1")
     {
         array_t::view<2> v(a, {slice(1,2),slice(1,3)});
@@ -162,7 +160,6 @@ TEST_CASE("2-dim 3 x 4 row major iterator tests")
         CHECK(*it++ == 6);
         CHECK(it == last);
     }
-#endif
     SECTION("test 2")
     {
         array_t::view<2> v(a, {slice(1,3),slice(1,3)});
@@ -183,7 +180,6 @@ TEST_CASE("2-dim 3 x 4 row major iterator tests")
         CHECK(it == last);
     }
 }
-#if 0
 TEST_CASE("2-dim 3 x 3 column major iterator tests")
 {
     typedef ndarray<double,2,column_major> array_t;
@@ -246,14 +242,19 @@ TEST_CASE("3-dim 2x3x4 ndarray iterator tests")
 {
     typedef ndarray<double,3,row_major> an_array;
     an_array a = { {{0,1,2,3},{4,5,6,7},{8,9,10,11}}, {{12,13,14,15},{16,17,18,19},{20,21,22,23}} };
-    ndarray_view<double,3> v(a);
-
-    REQUIRE(v.shape(0) == 2);
-    REQUIRE(v.shape(1) == 3);
-    REQUIRE(v.shape(2) == 4);
 
     SECTION("row_major_iterator test")
     {
+        an_array::view<3> v(a);
+
+        REQUIRE(v.shape(0) == 2);
+        REQUIRE(v.shape(1) == 3);
+        REQUIRE(v.shape(2) == 4);
+
+        std::cout << "shape: " << v.shape() << "\n";
+        std::cout << "strides: " << v.strides() << "\n";
+        std::cout << "offsets: " << v.offsets() << "\n";
+
         auto it = make_row_major_iterator(v);
         auto last = end(it);
 
@@ -285,3 +286,40 @@ TEST_CASE("3-dim 2x3x4 ndarray iterator tests")
     }
 }
 #endif
+
+TEST_CASE("3-dim 3x3x4 ndarray iterator tests")
+{
+    typedef ndarray<double,3,row_major> array_t;
+    array_t a = { {{0,1,2,3},{4,5,6,7},{8,9,10,11}}, {{12,13,14,15},{16,17,18,19},{20,21,22,23}}, {{24,25,26,27},{28,29,30,31},{32,33,34,35}} };
+    REQUIRE(a.shape(0) == 3);
+    REQUIRE(a.shape(1) == 3);
+    REQUIRE(a.shape(2) == 4);
+
+    SECTION("row_major_iterator test")
+    {
+        ndarray_view<double,3> v(a,{slice(1,3),slice(1,3),slice(1,3)});
+        // { {{17,18},{21,22}}, {{29,30},{33,34}} };
+
+        REQUIRE(v.shape(0) == 2); 
+        REQUIRE(v.shape(1) == 2); 
+        REQUIRE(v.shape(2) == 2); 
+
+        std::cout << "shape: " << v.shape() << "\n";
+        std::cout << "strides: " << v.strides() << "\n";
+        std::cout << "offsets: " << v.offsets() << "\n";
+
+        auto it = make_row_major_iterator(v);
+        auto last = end(it);
+
+        CHECK(*it++ == 17);
+        CHECK(*it++ == 18);
+        CHECK(*it++ == 21);
+        CHECK(*it++ == 22);
+        CHECK(*it++ == 29);
+        CHECK(*it++ == 30);
+        CHECK(*it++ == 33);
+        CHECK(*it++ == 34);
+        CHECK(it == last);
+    }
+}
+
