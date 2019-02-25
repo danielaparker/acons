@@ -1626,21 +1626,21 @@ public:
 
     const_iterator begin() const
     {
-        return const_iterator(base_data(),base_size(),shape(),strides(),offsets(),iterator_dir::begin);
+        return const_iterator(base_data(),base_size(),shape(),strides(),offsets(),iterate_dir::begin);
     }
 
     const_iterator end() const
     {
-        return acons::end(const_iterator(base_data(),base_size(),shape(),strides(),offsets(),iterator_dir::begin));
+        return acons::end(const_iterator(base_data(),base_size(),shape(),strides(),offsets(),iterate_dir::begin));
     }
     const_iterator cbegin() const
     {
-        return const_iterator(base_data(),base_size(),shape(),strides(),offsets(),iterator_dir::begin);
+        return const_iterator(base_data(),base_size(),shape(),strides(),offsets(),iterate_dir::begin);
     }
 
     const_iterator cend() const
     {
-        return acons::end(const_iterator(base_data(),base_size(),shape(),strides(),offsets(),iterator_dir::begin));
+        return acons::end(const_iterator(base_data(),base_size(),shape(),strides(),offsets(),iterate_dir::begin));
     }
 protected:
 public:
@@ -2030,12 +2030,12 @@ public:
 
     iterator begin()
     {
-        return iterator(this->base_data_,this->base_size(),this->shape(), this->strides(),this->offsets(),iterator_dir::begin);
+        return iterator(this->base_data_,this->base_size(),this->shape(), this->strides(),this->offsets(),iterate_dir::begin);
     }
 
     iterator end() 
     {
-        return acons::end(iterator(this->base_data_,this->base_size(),this->shape(), this->strides(),this->offsets(),iterator_dir::begin));
+        return acons::end(iterator(this->base_data_,this->base_size(),this->shape(), this->strides(),this->offsets(),iterate_dir::begin));
     }
 
     const_iterator begin() const
