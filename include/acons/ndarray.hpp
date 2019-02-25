@@ -726,7 +726,7 @@ public:
         return *this;
     }
 
-    void swap(ndarray<T,N,Order,Base,Allocator>& other) noexcept
+    void swap(ndarray& other) noexcept
     {
         swap_allocator(other, is_stateless<Allocator>(), 
                        typename std::allocator_traits<allocator_type>::propagate_on_container_swap());
@@ -869,23 +869,23 @@ private:
 #endif
     }
 
-    void swap_allocator(ndarray<T,N,Order,Base,Allocator>& other, std::true_type, std::true_type) noexcept
+    void swap_allocator(ndarray& other, std::true_type, std::true_type) noexcept
     {
         // allocator is stateless, no need to swap it
     }
 
-    void swap_allocator(ndarray<T,N,Order,Base,Allocator>& other, std::false_type, std::true_type) noexcept
+    void swap_allocator(ndarray& other, std::false_type, std::true_type) noexcept
     {
         using std::swap;
         swap(this->allocator_,other.allocator_);
     }
 
-    void swap_allocator(ndarray<T,N,Order,Base,Allocator>& other, std::true_type, std::false_type) noexcept
+    void swap_allocator(ndarray& other, std::true_type, std::false_type) noexcept
     {
         // allocator is stateless, no need to swap it
     }
 
-    void swap_allocator(ndarray<T,N,Order,Base,Allocator>&, std::false_type, std::false_type) noexcept
+    void swap_allocator(ndarray&, std::false_type, std::false_type) noexcept
     {
         // Undefined behavior
     }
@@ -1782,7 +1782,7 @@ public:
         offsets_ = offsets;
     }
 
-    void swap(ndarray_view_base<T, M, Order, Base, TPtr>& a)
+    void swap(ndarray_view_base& a)
     {
         std::swap(a.base_data_,this->base_data_);
         std::swap(a.base_size_,this->base_size_);

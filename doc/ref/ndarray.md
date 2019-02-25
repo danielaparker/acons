@@ -175,7 +175,7 @@ to allow elements to be accessed with high locality.
 
 ##### Modifiers
 
-    void swap(ndarray<T,N,Order,Base,Allocator>& other) noexcept
+    void swap(ndarray& other) noexcept
 Swaps the contents of the two N-dimensional arrays
 
     void resize(const std::array<size_t,N>& dim, T value = T());
