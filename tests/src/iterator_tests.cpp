@@ -4,7 +4,7 @@
 #include <sstream>
 
 using namespace acons;
-
+#if 0
 TEST_CASE("1-dim row_major ndarray iterator tests")
 {
     ndarray<double,1> a = {0,1,2,3,4,5,6,7};
@@ -133,7 +133,7 @@ TEST_CASE("2-dim 3 x 3 row major iterator tests")
         CHECK(it == last);
     }
 }
-
+#endif
 TEST_CASE("2-dim 3 x 4 row major iterator tests")
 {
     typedef ndarray<double,2,row_major> array_t;
@@ -143,14 +143,18 @@ TEST_CASE("2-dim 3 x 4 row major iterator tests")
     //std::cout << "a: " << a << "\n\n";
 
     // All items from row 1 and columns 0 and 1
-    array_t::view<2> v(a, {slice(1,2),slice(1,3)});
     //std::cout << "v: " << v << "\n\n";
-
-    REQUIRE(v.shape(0) == 1);
-    REQUIRE(v.shape(1) == 2);
-
+#if 0
     SECTION("test 1")
     {
+        array_t::view<2> v(a, {slice(1,2),slice(1,3)});
+        REQUIRE(v.shape(0) == 1);
+        REQUIRE(v.shape(1) == 2);
+
+        std::cout << "shape: " << v.shape() << "\n";
+        std::cout << "strides: " << v.strides() << "\n";
+        std::cout << "offsets: " << v.offsets() << "\n";
+
         auto it = make_row_major_iterator(v);
         auto last = end(it);
 
@@ -158,8 +162,28 @@ TEST_CASE("2-dim 3 x 4 row major iterator tests")
         CHECK(*it++ == 6);
         CHECK(it == last);
     }
-}
+#endif
+    SECTION("test 2")
+    {
+        array_t::view<2> v(a, {slice(1,3),slice(1,3)});
+        REQUIRE(v.shape(0) == 2);
+        REQUIRE(v.shape(1) == 2);
 
+        std::cout << "shape: " << v.shape() << "\n";
+        std::cout << "strides: " << v.strides() << "\n";
+        std::cout << "offsets: " << v.offsets() << "\n";
+
+        auto it = make_row_major_iterator(v);
+        auto last = end(it);
+
+        CHECK(*it++ == 5);
+        CHECK(*it++ == 6);
+        CHECK(*it++ == 9);
+        CHECK(*it++ == 10);
+        CHECK(it == last);
+    }
+}
+#if 0
 TEST_CASE("2-dim 3 x 3 column major iterator tests")
 {
     typedef ndarray<double,2,column_major> array_t;
@@ -260,4 +284,4 @@ TEST_CASE("3-dim 2x3x4 ndarray iterator tests")
         CHECK(it == last);
     }
 }
-
+#endif

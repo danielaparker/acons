@@ -17,6 +17,14 @@
   
 namespace acons {
 
+enum class orientation
+{
+    begin,
+    rbegin,
+    end,
+    rend
+};
+
 // Forward declarations
 
 template <typename T, typename TPtr>
@@ -172,7 +180,6 @@ get_offset(const std::array<size_t,n>& strides,
            size_t index) 
 {
     size_t i = Base::rebase_to_zero(index)*strides[m] + offsets[m];
-    //std::cout << "get_offset m: " << m  << ", index: " << index << ", stride " << strides[m] << ", offset " << offsets[m] << ", i: " << i << "\n";
     return i;
 }
 
@@ -184,9 +191,6 @@ get_offset(const std::array<size_t,n>& strides,
 {
     const size_t mplus1 = m + 1;
     size_t i = offsets[m] + Base::rebase_to_zero(index)*strides[m] + get_offset<n, Base, mplus1>(strides,offsets,indices...);
-
-    //std::cout << "get_offset m: " << m << ", index: " << index << ", stride " << strides[m] << ", offset " << offsets[m] << ", rest: " << get_offset<n, Base, mplus1>(strides,offsets,indices...) << ", i: " << i << "\n";
-
     return i;
 }
 
@@ -227,16 +231,17 @@ struct row_major
     }
 
     template <size_t N, typename Base>
-    static void calculate_offsets(size_t rel,
-                                  const std::array<size_t,N>& strides, 
-                                  const std::array<slice,N>& slices, 
-                                  std::array<size_t,N>& offsets)
+    static std::array<size_t,N> calculate_offsets(size_t rel,
+                                                  const std::array<size_t,N>& strides, 
+                                                  const std::array<slice,N>& slices)
     {
+        std::array<size_t,N> offsets;
         offsets[N-1] = rel + Base::rebase_to_zero(slices[N-1].start(Base::origin())) * strides[N-1];
         for (size_t i = 0; i+1 < N; ++i)
         {
             offsets[i] = Base::rebase_to_zero(slices[i].start(Base::origin())) * strides[i]; 
         }
+        return offsets;
     }
 };
 
@@ -262,16 +267,17 @@ struct column_major
     }
 
     template <size_t N, typename Base>
-    static void calculate_offsets(size_t rel,
-                                  const std::array<size_t,N>& strides, 
-                                  const std::array<slice,N>& slices, 
-                                  std::array<size_t,N>& offsets)
+    static std::array<size_t,N> calculate_offsets(size_t rel,
+                                                  const std::array<size_t,N>& strides, 
+                                                  const std::array<slice,N>& slices)
     {
+        std::array<size_t,N> offsets;
         offsets[0] = rel + Base::rebase_to_zero(slices[0].start(Base::origin())) * strides[0];
         for (size_t i = 1; i < N; ++i)
         {
             offsets[i] = Base::rebase_to_zero(slices[i].start(Base::origin())) * strides[i]; 
         }
+        return offsets;
     }
 };
 
@@ -1159,6 +1165,14 @@ public:
         }
     }
 
+    row_major_iterator(row_major_iterator<T,N,TPtr>& other, const std::array<size_t,N>& origin)
+        : data_(other.data_), num_elements_(other.num_elements_), shape_(other.shape_), strides_(other.strides_), offsets_(other.offsets_),
+          indices_(origin),
+          offset_one_end_(other.shape_[N-1]*other.strides_[N-1])
+    {
+        initialize(std::integral_constant<bool,N==1>());
+    }
+
     row_major_iterator(TPtr data,
                        size_t size, 
                        const std::array<size_t,N>& shape, 
@@ -1212,6 +1226,16 @@ public:
     friend bool operator!=(const row_major_iterator& it1, const row_major_iterator& it2)
     {
         return !(it1 == it2);
+    }
+
+    friend row_major_iterator<T,N,TPtr> begin(row_major_iterator<T,N,TPtr> it) noexcept
+    {
+        return it;
+    }
+
+    friend row_major_iterator<T,N,TPtr> end(row_major_iterator<T,N,TPtr> it) noexcept
+    {
+        return row_major_iterator<T,N,TPtr>(it,true);
     }
 private:
     void initialize(std::false_type)
@@ -1318,6 +1342,13 @@ public:
         }
     }
 
+    column_major_iterator(column_major_iterator<T,N,TPtr>& other, const std::array<size_t,N>& origin)
+        : data_(other.data_), num_elements_(other.num_elements_), shape_(other.shape_), strides_(other.strides_), offsets_(other.offsets_),
+          offset_one_end_(other.shape_[N-1]*other.strides_[N-1])
+    {
+        initialize(std::integral_constant<bool,N==1>());
+    }
+
     column_major_iterator(TPtr data,
                           size_t size, 
                           const std::array<size_t,N>& shape, 
@@ -1372,6 +1403,16 @@ public:
     friend bool operator!=(const column_major_iterator& it1, const column_major_iterator& it2)
     {
         return !(it1 == it2);
+    }
+
+    friend column_major_iterator<T,N,TPtr> begin(column_major_iterator<T,N,TPtr> it) noexcept
+    {
+        return it;
+    }
+
+    friend column_major_iterator<T,N,TPtr> end(column_major_iterator<T,N,TPtr> it) noexcept
+    {
+        return column_major_iterator<T,N,TPtr>(it,true);
     }
 private:
     void initialize(std::false_type)
@@ -1457,30 +1498,6 @@ private:
         return *this;
     }
 };
-
-template <class T, size_t N, class TPtr>
-row_major_iterator<T,N,TPtr> begin(row_major_iterator<T,N,TPtr> it) noexcept
-{
-    return it;
-}
-
-template <class T, size_t N, class TPtr>
-row_major_iterator<T,N,TPtr> end(row_major_iterator<T,N,TPtr> it) noexcept
-{
-    return row_major_iterator<T,N,TPtr>(it,true);
-}
-
-template <class T, size_t N, class TPtr>
-column_major_iterator<T,N,TPtr> begin(column_major_iterator<T,N,TPtr> it) noexcept
-{
-    return it;
-}
-
-template <class T, size_t N, class TPtr>
-column_major_iterator<T,N,TPtr> end(column_major_iterator<T,N,TPtr> it) noexcept
-{
-    return column_major_iterator<T,N,TPtr>(it,true);
-}
 
 // ndarray_view_base
 
@@ -1706,7 +1723,7 @@ public:
             shape_[i] = slices[i].length(Base::origin(), shape[K+i]);
             strides_[i] = strides[K+i];
         }
-        Order::template calculate_offsets<M,Base>(rel, strides_, slices, offsets_);
+        offsets_ = Order::template calculate_offsets<M,Base>(rel, strides_, slices);
         for (size_t i = 0; i < M; ++i)
         {
             strides_[i] *= slices[i].step();
@@ -1727,7 +1744,7 @@ public:
             shape_[i] = slices[i].length(Base::origin(), shape[K+i]);
             strides_[i] = strides[K+i];
         }
-        Order::template calculate_offsets<M,Base>(rel, strides_, slices, offsets_);
+        offsets_ = Order::template calculate_offsets<M,Base>(rel, strides_, slices);
         for (size_t i = 0; i < M; ++i)
         {
             strides_[i] *= slices[i].step();
@@ -1756,7 +1773,7 @@ public:
             shape_[i] = slices[i].length(Base::origin(), shape[i]);
             strides_[i] = strides[i];
         }
-        Order::template calculate_offsets<M,Base>(rel, strides_, slices, offsets_);
+        offsets_ = Order::template calculate_offsets<M,Base>(rel, strides_, slices);
         for (size_t i = 0; i < M; ++i)
         {
             strides_[i] *= slices[i].step();
@@ -1784,7 +1801,7 @@ public:
             shape_[i] = slices[i].length(Base::origin(), shape[i]);
             strides_[i] = strides[i];
         }
-        Order::template calculate_offsets<M,Base>(rel, strides_, slices, offsets_);
+        offsets_ = Order::template calculate_offsets<M,Base>(rel, strides_, slices);
         for (size_t i = 0; i < M; ++i)
         {
             strides_[i] *= slices[i].step();
