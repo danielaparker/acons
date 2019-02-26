@@ -4,7 +4,7 @@
 #include <sstream>
 
 using namespace acons;
-#if 0
+
 TEST_CASE("1-dim row_major ndarray iterator tests")
 {
     ndarray<double,1> a = {0,1,2,3,4,5,6,7};
@@ -149,9 +149,9 @@ TEST_CASE("2-dim 3 x 4 row major iterator tests")
         REQUIRE(v.shape(0) == 1);
         REQUIRE(v.shape(1) == 2);
 
-        std::cout << "shape: " << v.shape() << "\n";
-        std::cout << "strides: " << v.strides() << "\n";
-        std::cout << "offsets: " << v.offsets() << "\n";
+        //std::cout << "shape: " << v.shape() << "\n";
+        //std::cout << "strides: " << v.strides() << "\n";
+        //std::cout << "offsets: " << v.offsets() << "\n";
 
         auto it = make_row_major_iterator(v);
         auto last = end(it);
@@ -166,9 +166,9 @@ TEST_CASE("2-dim 3 x 4 row major iterator tests")
         REQUIRE(v.shape(0) == 2);
         REQUIRE(v.shape(1) == 2);
 
-        std::cout << "shape: " << v.shape() << "\n";
-        std::cout << "strides: " << v.strides() << "\n";
-        std::cout << "offsets: " << v.offsets() << "\n";
+        //std::cout << "shape: " << v.shape() << "\n";
+        //std::cout << "strides: " << v.strides() << "\n";
+        //std::cout << "offsets: " << v.offsets() << "\n";
 
         auto it = make_row_major_iterator(v);
         auto last = end(it);
@@ -186,11 +186,11 @@ TEST_CASE("2-dim 3 x 3 column major iterator tests")
 
     // Construct a 2-dimensional 3 x 3 column-major array 
     array_t a = {{0,1,2},{4,5,6},{8,9,10}};
-    std::cout << "a: " << a << "\n\n";
+    //std::cout << "a: " << a << "\n\n";
 
     // All items from row 1 and columns 0 and 1
     ndarray_view<double,2,column_major> v(a, {slice(1,2),slice(0,2)});
-    std::cout << "v: " << v << "\n\n";
+    //std::cout << "v: " << v << "\n\n";
 
     REQUIRE(v.shape(0) == 1);
     REQUIRE(v.shape(1) == 2);
@@ -251,9 +251,9 @@ TEST_CASE("3-dim 2x3x4 ndarray iterator tests")
         REQUIRE(v.shape(1) == 3);
         REQUIRE(v.shape(2) == 4);
 
-        std::cout << "shape: " << v.shape() << "\n";
-        std::cout << "strides: " << v.strides() << "\n";
-        std::cout << "offsets: " << v.offsets() << "\n";
+        //std::cout << "shape: " << v.shape() << "\n";
+        //std::cout << "strides: " << v.strides() << "\n";
+        //std::cout << "offsets: " << v.offsets() << "\n";
 
         auto it = make_row_major_iterator(v);
         auto last = end(it);
@@ -285,7 +285,6 @@ TEST_CASE("3-dim 2x3x4 ndarray iterator tests")
         CHECK(it == last);
     }
 }
-#endif
 
 TEST_CASE("3-dim 3x3x4 ndarray iterator tests")
 {
@@ -304,9 +303,9 @@ TEST_CASE("3-dim 3x3x4 ndarray iterator tests")
         REQUIRE(v.shape(1) == 2); 
         REQUIRE(v.shape(2) == 2); 
 
-        std::cout << "shape: " << v.shape() << "\n";
-        std::cout << "strides: " << v.strides() << "\n";
-        std::cout << "offsets: " << v.offsets() << "\n";
+        //std::cout << "shape: " << v.shape() << "\n";
+        //std::cout << "strides: " << v.strides() << "\n";
+        //std::cout << "offsets: " << v.offsets() << "\n";
 
         auto it = make_row_major_iterator(v);
         auto last = end(it);
@@ -320,6 +319,83 @@ TEST_CASE("3-dim 3x3x4 ndarray iterator tests")
         CHECK(*it++ == 33);
         CHECK(*it++ == 34);
         CHECK(it == last);
+    }
+
+    SECTION("bidirectional test")
+    {
+        ndarray_view<double,3> v(a,{slice(1,3),slice(1,3),slice(1,3)});
+        // { {{17,18},{21,22}}, {{29,30},{33,34}} };
+
+        REQUIRE(v.shape(0) == 2); 
+        REQUIRE(v.shape(1) == 2); 
+        REQUIRE(v.shape(2) == 2); 
+
+        //std::cout << "shape: " << v.shape() << "\n";
+        //std::cout << "strides: " << v.strides() << "\n";
+        //std::cout << "offsets: " << v.offsets() << "\n";
+
+        auto first = make_row_major_iterator(v);
+        auto last = end(first);
+        auto it = first;
+
+        CHECK(*it++ == 17);
+        CHECK(*it++ == 18);
+        CHECK(*it++ == 21);
+        CHECK(*it++ == 22);
+        CHECK(*it++ == 29);
+        CHECK(*it++ == 30);
+        CHECK(*it++ == 33);
+        CHECK(*it++ == 34);
+        CHECK(it == last);
+        /*--it;
+        CHECK(*it-- == 34);
+        CHECK(*it-- == 33);
+        CHECK(*it-- == 30);
+        CHECK(*it-- == 29);
+        CHECK(*it-- == 22);
+        CHECK(*it-- == 21);
+        CHECK(*it-- == 18);
+        CHECK(*it-- == 17);*/
+    }
+    SECTION("bidirectional test 2")
+    {
+        ndarray_view<double,3> v(a,{slice(1,3),slice(1,3),slice(1,4)});
+        // { {{17,18,19},{21,22,23}}, {{29,30,31},{33,34,35}} };
+
+        REQUIRE(v.shape(0) == 2); 
+        REQUIRE(v.shape(1) == 2); 
+        REQUIRE(v.shape(2) == 3); 
+
+        //std::cout << "shape: " << v.shape() << "\n";
+        //std::cout << "strides: " << v.strides() << "\n";
+        //std::cout << "offsets: " << v.offsets() << "\n";
+
+        auto first = make_row_major_iterator(v);
+        auto last = end(first);
+        auto it = first;
+
+        CHECK(*it++ == 17);
+        CHECK(*it++ == 18);
+        CHECK(*it++ == 19);
+        CHECK(*it++ == 21);
+        CHECK(*it++ == 22);
+        CHECK(*it++ == 23);
+        CHECK(*it++ == 29);
+        CHECK(*it++ == 30);
+        CHECK(*it++ == 31);
+        CHECK(*it++ == 33);
+        CHECK(*it++ == 34);
+        CHECK(*it++ == 35);
+        CHECK(it == last);
+        /*--it;
+        CHECK(*it-- == 34);
+        CHECK(*it-- == 33);
+        CHECK(*it-- == 30);
+        CHECK(*it-- == 29);
+        CHECK(*it-- == 22);
+        CHECK(*it-- == 21);
+        CHECK(*it-- == 18);
+        CHECK(*it-- == 17);*/
     }
 }
 
