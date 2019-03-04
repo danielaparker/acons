@@ -58,23 +58,25 @@ void iterate_n(const std::array<size_t,N>& shape,
                size_t n,
                std::array<state,N>& stack)
 {
-    std::cout << "iterate_n stack: " << stack << "\n\n";
-    if (n+1 < N)
+    std::cout << "iterate_n stack 1: " << stack << "\n\n";
+    if (n+1 < N) 
     { 
         stack[n + 1].first = stack[n].first + offsets[n+1];
         stack[n + 1].last = stack[n + 1].first + strides[n+1]*shape[n+1];
-        stack[n].current = stack[n].first;
+        stack[n + 1].current = stack[n].current + offsets[n+1];
+
+        std::cout << "iterate_n stack 2: " << stack << "\n\n";
         while (stack[n].current != stack[n].last)
         {
             iterate_n(shape, strides, offsets, n+1, stack);
             stack[n + 1].first += strides[n];
             stack[n + 1].last += strides[n];
             stack[n].current += strides[n];
+            stack[n + 1].current = stack[n].current + offsets[n+1];
         }
     }
     else
     {
-        stack[n].current = stack[n].first;
         for (; stack[n].current != stack[n].last; stack[n].current += strides[n])
         {
             std::cout << stack[n].current << " ";
