@@ -1125,7 +1125,7 @@ public:
         return !(it1 == it2);
     }
 };
-
+/*
 template <class T, size_t N, typename TPtr>
 class row_major_iterator
 {
@@ -1150,7 +1150,7 @@ public:
     typedef typename std::conditional<std::is_const<typename std::remove_pointer<TPtr>::type>::value,const T&,T&>::type reference;
     typedef std::input_iterator_tag iterator_category;
 
-    row_major_iterator(row_major_iterator<T,N,TPtr>& other, bool end)
+    row_major_iterator(const row_major_iterator<T,N,TPtr>& other, bool end)
         : data_(other.data_), num_elements_(other.num_elements_), shape_(other.shape_), strides_(other.strides_), offsets_(other.offsets_),
           offset_one_end_(other.shape_[N-1]*other.strides_[N-1])
     {
@@ -1361,6 +1361,236 @@ private:
         return *this;
     }
 };
+*/
+
+struct iterator_state
+{
+    size_t first;
+    size_t last;
+    size_t current;
+    size_t n;
+
+    iterator_state()
+        : first(0), last(0), current(0), n(0)
+    {
+    }
+
+    iterator_state(size_t first, size_t last, size_t current)
+        : first(first), last(last), current(current), n(0)
+    {
+    }
+
+    iterator_state(size_t first, size_t last, size_t current, size_t n)
+        : first(first), last(last), current(current), n(n)
+    {
+    }
+
+    iterator_state(const iterator_state&) = default;
+
+    friend std::ostream& operator<<(std::ostream& os, const iterator_state& s)
+    {
+        os << "first: " << s.first << ", last: " << s.last << ", current: " << s.current << ", n: " << s.n;
+        return os;
+    }
+};
+
+template <class T, size_t N, typename TPtr>
+class row_major_iterator
+{
+    TPtr data_;
+    size_t num_elements_;
+
+    std::array<size_t,N> shape_;
+    std::array<size_t,N> strides_;
+    std::array<size_t,N> offsets_;
+
+    std::vector<iterator_state> stack_; 
+
+    iterator_one<T,TPtr> first_;
+    iterator_one<T,TPtr> last_;
+    iterator_one<T,TPtr> it_;
+public:
+    typedef T value_type;
+    static constexpr size_t ndim = N;
+    typedef std::ptrdiff_t difference_type;
+    typedef TPtr pointer;
+    typedef typename std::conditional<std::is_const<typename std::remove_pointer<TPtr>::type>::value,const T&,T&>::type reference;
+    typedef std::input_iterator_tag iterator_category;
+
+    row_major_iterator(const row_major_iterator<T,N,TPtr>& other, bool end)
+        : data_(other.data_), num_elements_(other.num_elements_), shape_(other.shape_), strides_(other.strides_), offsets_(other.offsets_)
+    {
+        if (end)
+        {
+            std::array<size_t,N> origin;
+            for (size_t i = 0; i < N; ++i)
+            {
+                origin[i] = shape_[i]-1;
+            }
+            size_t end_rel = get_offset<N,N,zero_based>(strides_,offsets_,origin);
+            first_ = iterator_one<T,TPtr>(data_,strides_[N-1],end_rel + strides_[N-1]);
+            last_ = first_;
+            it_ = first_;
+        }
+        else
+        {
+            initialize(iterator_position::begin, std::integral_constant<bool,N==1>());
+        }
+    }
+
+    row_major_iterator(TPtr data,
+                       size_t size, 
+                       const std::array<size_t,N>& shape, 
+                       const std::array<size_t,N>& strides, 
+                       iterator_position dir)
+        : data_(data), num_elements_(size), shape_(shape), strides_(strides)
+    {
+        offsets_.fill(0);
+        initialize(dir, std::integral_constant<bool,N==1>());
+    }
+
+    row_major_iterator(TPtr data,
+                       size_t size, 
+                       const std::array<size_t,N>& shape, 
+                       const std::array<size_t,N>& strides, 
+                       const std::array<size_t,N>& offsets, 
+                       iterator_position dir)
+        : data_(data), num_elements_(size), shape_(shape), strides_(strides), offsets_(offsets)
+    {
+        initialize(dir, std::integral_constant<bool,N==1>());
+    }
+
+    row_major_iterator(const row_major_iterator&) = default;
+    row_major_iterator(row_major_iterator&&) = default;
+    row_major_iterator& operator=(const row_major_iterator&) = default;
+    row_major_iterator& operator=(row_major_iterator&&) = default;
+
+    row_major_iterator& operator++()
+    {
+        return increment(std::integral_constant<bool,N==1>());
+    }
+
+    row_major_iterator operator++(int) // postfix increment
+    {
+        row_major_iterator temp(*this);
+        ++(*this);
+        return temp;
+    }
+/*
+    row_major_iterator& operator--()
+    {
+        return decrement(std::integral_constant<bool,N==1>());
+    }
+
+    row_major_iterator operator--(int) // postfix increment
+    {
+        row_major_iterator temp(*this);
+        --(*this);
+        return temp;
+    }
+*/
+    reference operator*() const
+    {
+        return *it_;
+    }
+
+    friend bool operator==(const row_major_iterator& it1, const row_major_iterator& it2)
+    {
+        return it1.it_ == it2.it_;
+    }
+    friend bool operator!=(const row_major_iterator& it1, const row_major_iterator& it2)
+    {
+        return !(it1 == it2);
+    }
+
+private:
+    void initialize(iterator_position dir, std::false_type)
+    {
+        switch (dir)
+        {
+            case iterator_position::rbegin:
+                //for (size_t i = 0; i < N; ++i)
+                //{
+                //    indices_[i] = shape_[i]-1;
+                //}
+                break;
+            default:
+                stack_.emplace_back(offsets_[0], offsets_[0]+strides_[0]*shape_[0], offsets_[0]);
+                break;
+        }
+
+        increment(std::false_type());
+    }
+
+    void initialize(iterator_position dir, std::true_type)
+    {
+        //std::cout << "initialize: shape_[0]: " << shape_[0] << ", strides_[0]: " << strides_[0] << ", offsets_[0]: " << offsets_[0]  << ", offset_one_end_: " << offset_one_end_ << "\n"; 
+        switch (dir)
+        {
+            case iterator_position::rbegin:
+                //indices_[0] = shape_[0]-1;
+                break;
+            default:
+                //indices_[0] = 0;
+                break;
+        }
+
+        std::array<size_t,1> indices;
+        indices[0] = 0;
+
+        size_t rel = get_offset<1,1,zero_based>(strides_,offsets_,indices);
+        first_ = iterator_one<T,TPtr>(data_,strides_[0],rel);
+        last_ = iterator_one<T,TPtr>(data_,strides_[0],rel+strides_[N-1]*shape_[N-1]);
+        it_ = first_;
+    }
+
+    row_major_iterator& increment(std::false_type)
+    {
+        if (it_ != last_)
+        {
+            ++it_;
+        }
+        if (it_ == last_ && !stack_.empty())
+        {
+            bool done = false;
+            while (!stack_.empty() && !done)
+            {
+                iterator_state top = stack_.back();
+                stack_.pop_back();
+                if (top.n+1 < N)
+                {
+                    if (top.current != top.last)
+                    {
+                        iterator_state state(top.first,top.last,top.current+strides_[top.n],top.n);
+                        stack_.push_back(state);
+                        top.n = top.n+1;
+                        top.first = top.current + offsets_[top.n];
+                        top.last = top.first + strides_[top.n]*shape_[top.n];
+                        top.current = top.first;
+                        stack_.push_back(top);
+                    }
+                }
+                else
+                {
+                    if (top.current != top.last)
+                    {
+                        first_ = iterator_one<T,TPtr>(data_,strides_[N-1],top.first);
+                        last_ = iterator_one<T,TPtr>(data_,strides_[N-1],top.last);
+                        it_ = first_;
+                    }
+                    done = true;
+                }
+            }
+        }
+        return *this;
+    }
+
+    row_major_iterator& increment(std::true_type)
+    {
+        ++it_;
+        return *this;
+    }
+};
 
 template <class T, size_t N, typename TPtr>
 row_major_iterator<T,N,TPtr> begin(row_major_iterator<T,N,TPtr> it) noexcept
@@ -1369,7 +1599,7 @@ row_major_iterator<T,N,TPtr> begin(row_major_iterator<T,N,TPtr> it) noexcept
 }
 
 template <class T, size_t N, typename TPtr>
-row_major_iterator<T,N,TPtr> end(row_major_iterator<T,N,TPtr> it) noexcept
+row_major_iterator<T,N,TPtr> end(const row_major_iterator<T,N,TPtr>& it) noexcept
 {
     return row_major_iterator<T,N,TPtr>(it,true);
 }
@@ -1398,7 +1628,7 @@ public:
     typedef typename std::conditional<std::is_const<typename std::remove_pointer<TPtr>::type>::value,const T&,T&>::type reference;
     typedef std::input_iterator_tag iterator_category;
 
-    column_major_iterator(column_major_iterator<T,N,TPtr>& other, bool end)
+    column_major_iterator(const column_major_iterator<T,N,TPtr>& other, bool end)
         : data_(other.data_), num_elements_(other.num_elements_), shape_(other.shape_), strides_(other.strides_), offsets_(other.offsets_),
           offset_one_end_(other.shape_[N-1]*other.strides_[N-1])
     {
@@ -1636,7 +1866,7 @@ column_major_iterator<T,N,TPtr> begin(column_major_iterator<T,N,TPtr> it) noexce
 }
 
 template <class T, size_t N, typename TPtr>
-column_major_iterator<T,N,TPtr> end(column_major_iterator<T,N,TPtr> it) noexcept
+column_major_iterator<T,N,TPtr> end(const column_major_iterator<T,N,TPtr>& it) noexcept
 {
     return column_major_iterator<T,N,TPtr>(it,true);
 }
