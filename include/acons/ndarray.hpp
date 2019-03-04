@@ -440,7 +440,7 @@ private:
     friend class ndarray_view_base<T, N, Order, Base, const T*>;
 
     pointer data_;
-    size_t num_elements_;
+    size_t size_;
     size_t capacity_;
     std::array<size_t,N> shape_;
     std::array<size_t,N> strides_;
@@ -449,7 +449,7 @@ public:
 
     ndarray()
         : super_type(allocator_type()),
-          data_(nullptr), num_elements_(0), capacity_(0)
+          data_(nullptr), size_(0), capacity_(0)
     {
         shape_.fill(0);
         strides_.fill(0);
@@ -473,41 +473,41 @@ public:
         : super_type(allocator_type()), 
           data_(nullptr), shape_(shape)
     {
-        Order::calculate_strides(shape_, strides_, num_elements_);
-        capacity_ = num_elements_;
+        Order::calculate_strides(shape_, strides_, size_);
+        capacity_ = size_;
         data_ = create(capacity_, get_allocator());
-        std::fill(data_, data_+num_elements_, T());
+        std::fill(data_, data_+size_, T());
     }
 
     ndarray(const std::array<size_t,N>& shape, const Allocator& alloc)
         : super_type(alloc), 
           data_(nullptr), shape_(shape)
     {
-        Order::calculate_strides(shape_, strides_, num_elements_);
-        capacity_ = num_elements_;
+        Order::calculate_strides(shape_, strides_, size_);
+        capacity_ = size_;
         data_ = create(capacity_, get_allocator());
-        std::fill(data_, data_+num_elements_, T());
+        std::fill(data_, data_+size_, T());
     }
 
     ndarray(const std::array<size_t,N>& shape, T val)
         : super_type(allocator_type()), 
           data_(nullptr), shape_(shape)
     {
-        Order::calculate_strides(shape_, strides_, num_elements_);
-        capacity_ = num_elements_;
+        Order::calculate_strides(shape_, strides_, size_);
+        capacity_ = size_;
         data_ = create(capacity_, get_allocator());
-        std::fill(data_, data_+num_elements_,val);
+        std::fill(data_, data_+size_,val);
     }
 
     ndarray(const std::array<size_t,N>& shape, T val, const Allocator& alloc)
         : super_type(alloc), 
           data_(nullptr), shape_(shape)
     {
-        Order::calculate_strides(shape_, strides_, num_elements_);
+        Order::calculate_strides(shape_, strides_, size_);
 
-        capacity_ = num_elements_;
+        capacity_ = size_;
         data_ = create(capacity_, get_allocator());
-        std::fill(data_, data_+num_elements_, val);
+        std::fill(data_, data_+size_, val);
     }
 
     ndarray(std::initializer_list<array_item<T>> list) 
@@ -515,8 +515,8 @@ public:
     {
         dim_from_initializer_list(list, 0);
 
-        Order::calculate_strides(shape_, strides_, num_elements_);
-        capacity_ = num_elements_;
+        Order::calculate_strides(shape_, strides_, size_);
+        capacity_ = size_;
         data_ = create(capacity_, get_allocator());
         std::array<size_t,N> indices;
         data_from_initializer_list(list,indices,0);
@@ -528,8 +528,8 @@ public:
         dim_from_initializer_list(list, 0);
 
         // Initialize multipliers and size
-        Order::calculate_strides(shape_, strides_, num_elements_);
-        capacity_ = num_elements_;
+        Order::calculate_strides(shape_, strides_, size_);
+        capacity_ = size_;
         data_ = create(capacity_, get_allocator());
         std::array<size_t,N> indices;
         data_from_initializer_list(list,indices,0);
@@ -537,38 +537,38 @@ public:
 
     ndarray(const ndarray& other)
         : super_type(std::allocator_traits<allocator_type>::select_on_container_copy_construction(other.get_allocator())), 
-          data_(nullptr), num_elements_(other.size()), capacity_(0), shape_(other.shape_), strides_(other.strides_)          
+          data_(nullptr), size_(other.size()), capacity_(0), shape_(other.shape_), strides_(other.strides_)          
     {
-        capacity_ = num_elements_;
+        capacity_ = size_;
         data_ = create(capacity_, get_allocator());
 
 #if defined(_MSC_VER)
-        std::copy(other.data_, other.data_+other.num_elements_,stdext::make_checked_array_iterator(data_,num_elements_));
+        std::copy(other.data_, other.data_+other.size_,stdext::make_checked_array_iterator(data_,size_));
 #else 
-        std::copy(other.data_,other.data_+other.num_elements_,data_);
+        std::copy(other.data_,other.data_+other.size_,data_);
 #endif
     }
 
     ndarray(const ndarray& other, const Allocator& alloc)
         : super_type(alloc), 
-          data_(nullptr), num_elements_(other.size()), shape_(other.shape_), strides_(other.strides_)          
+          data_(nullptr), size_(other.size()), shape_(other.shape_), strides_(other.strides_)          
     {
-        capacity_ = num_elements_;
+        capacity_ = size_;
         data_ = create(capacity_, get_allocator());
 
 #if defined(_MSC_VER)
-        std::copy(other.data_, other.data_+other.num_elements_,stdext::make_checked_array_iterator(data_,num_elements_));
+        std::copy(other.data_, other.data_+other.size_,stdext::make_checked_array_iterator(data_,size_));
 #else 
-        std::copy(other.data_,other.data_+other.num_elements_,data_);
+        std::copy(other.data_,other.data_+other.size_,data_);
 #endif
     }
 
     ndarray(ndarray&& other)
         : super_type(other.get_allocator()), 
-          data_(other.data_), num_elements_(other.num_elements_), capacity_(other.capacity_), shape_(other.shape_), strides_(other.strides_)          
+          data_(other.data_), size_(other.size_), capacity_(other.capacity_), shape_(other.shape_), strides_(other.strides_)          
     {
         other.data_ = nullptr;
-        other.num_elements_ = 0;
+        other.size_ = 0;
         other.capacity_ = 0;
         other.shape_.fill(0);
         other.strides_.fill(0);
@@ -576,25 +576,25 @@ public:
 
     ndarray(ndarray&& other, const Allocator& alloc)
         : super_type(alloc), 
-          data_(nullptr), num_elements_(other.size()), capacity_(other.capacity_), shape_(other.shape_), strides_(other.strides_)          
+          data_(nullptr), size_(other.size()), capacity_(other.capacity_), shape_(other.shape_), strides_(other.strides_)          
     {
         if (alloc == other.get_allocator())
         {
             data_ = other.data_;
             other.data_ = nullptr;
-            other.num_elements_ = 0;
+            other.size_ = 0;
             other.capacity_ = 0;
             other.shape_.fill(0);
             other.strides_.fill(0);
         }
         else
         {
-            capacity_ = num_elements_;
+            capacity_ = size_;
             data_ = create(capacity_, get_allocator());
 #if defined(_MSC_VER)
-            std::copy(other.data_, other.data_+other.num_elements_,stdext::make_checked_array_iterator(data_,num_elements_));
+            std::copy(other.data_, other.data_+other.size_,stdext::make_checked_array_iterator(data_,size_));
 #else 
-            std::copy(other.data_,other.data_+other.num_elements_,data_);
+            std::copy(other.data_,other.data_+other.size_,data_);
 #endif
         }
     }
@@ -602,14 +602,14 @@ public:
     template <typename TPtr>
     ndarray(const ndarray_view_base<T,N,Order,Base,TPtr>& av)
         : super_type(allocator_type()), 
-          data_(nullptr), num_elements_(0), capacity_(0), shape_(av.shape()), strides_(av.strides())          
+          data_(nullptr), size_(0), capacity_(0), shape_(av.shape()), strides_(av.strides())          
     {
-        num_elements_ = av.size();
-        capacity_ = num_elements_;
+        size_ = av.size();
+        capacity_ = size_;
         data_ = create(capacity_, get_allocator());
 
 #if defined(_MSC_VER)
-        std::copy(av.data(), av.data()+av.size(),stdext::make_checked_array_iterator(data_,num_elements_));
+        std::copy(av.data(), av.data()+av.size(),stdext::make_checked_array_iterator(data_,size_));
 #else 
         std::copy(av.data(),av.data()+av.size(),data_);
 #endif
@@ -619,14 +619,14 @@ public:
     ndarray(const ndarray_view_base<T,N,Order,Base,TPtr>& av, 
             const Allocator& alloc)
         : super_type(alloc), 
-          data_(nullptr), num_elements_(0), capacity_(0), shape_(av.shape_), strides_(av.strides_)          
+          data_(nullptr), size_(0), capacity_(0), shape_(av.shape_), strides_(av.strides_)          
     {
-        num_elements_ = av.size();
-        capacity_ = num_elements_;
+        size_ = av.size();
+        capacity_ = size_;
         data_ = create(capacity_, get_allocator());
 
 #if defined(_MSC_VER)
-        std::copy(av.data(), av.data()+av.size(),stdext::make_checked_array_iterator(data_,num_elements_));
+        std::copy(av.data(), av.data()+av.size(),stdext::make_checked_array_iterator(data_,size_));
 #else 
         std::copy(av.data(),av.data()+av.size(),data_);
 #endif
@@ -644,7 +644,7 @@ public:
 
     iterator end()
     {
-        return to_plain_pointer(data_) + num_elements_;
+        return to_plain_pointer(data_) + size_;
     }
 
     const_iterator begin() const
@@ -654,7 +654,7 @@ public:
 
     const_iterator end() const
     {
-        return to_plain_pointer(data_) + num_elements_;
+        return to_plain_pointer(data_) + size_;
     }
 
     const_iterator cbegin() const
@@ -664,7 +664,7 @@ public:
 
     const_iterator cend() const
     {
-        return to_plain_pointer(data_) + num_elements_;
+        return to_plain_pointer(data_) + size_;
     }
 
     void resize(const std::array<size_t,N>& shape, T value = T())
@@ -673,27 +673,27 @@ public:
         size_t old_size = size();
 
         shape_ = shape;
-        Order::calculate_strides(shape_, strides_, num_elements_);
+        Order::calculate_strides(shape_, strides_, size_);
 
-        if (num_elements_ > capacity_)
+        if (size_ > capacity_)
         {
-            capacity_ = num_elements_;
+            capacity_ = size_;
             data_ = create(capacity_, get_allocator());
         }
 
-        size_t len = (std::min)(old_size,num_elements_);
+        size_t len = (std::min)(old_size,size_);
 
 #if defined(_MSC_VER)
-        std::copy(old_data, old_data+len,stdext::make_checked_array_iterator(data_,num_elements_));
+        std::copy(old_data, old_data+len,stdext::make_checked_array_iterator(data_,size_));
 #else 
         std::copy(old_data, old_data+len,data_);
 #endif
-        if (len < num_elements_)
+        if (len < size_)
         {
-            std::fill(data_ + len, data_+num_elements_, value);
+            std::fill(data_ + len, data_+size_, value);
         }
 
-        if (num_elements_ > old_size)
+        if (size_ > old_size)
         {
             get_allocator().deallocate(to_plain_pointer(old_data), old_size);
         }
@@ -724,8 +724,8 @@ public:
         get_allocator().deallocate(to_plain_pointer(data_),capacity_);
         dim_from_initializer_list(list, 0);
 
-        Order::calculate_strides(shape_, strides_, num_elements_);
-        capacity_ = num_elements_;
+        Order::calculate_strides(shape_, strides_, size_);
+        capacity_ = size_;
         data_ = create(capacity_, get_allocator());
         std::array<size_t,N> indices;
         data_from_initializer_list(list,indices,0);
@@ -737,7 +737,7 @@ public:
         swap_allocator(other, is_stateless<Allocator>(), 
                        typename std::allocator_traits<allocator_type>::propagate_on_container_swap());
         std::swap(data_,other.data_);
-        std::swap(num_elements_,other.num_elements_);
+        std::swap(size_,other.size_);
         std::swap(capacity_,other.capacity_);
         std::swap(shape_,other.shape_);
         std::swap(strides_,other.strides_);
@@ -746,12 +746,12 @@ public:
 
     bool empty() const noexcept
     {
-        return num_elements_ == 0;
+        return size_ == 0;
     }
 
     size_t size() const noexcept
     {
-        return num_elements_;
+        return size_;
     }
 
     size_t capacity() const noexcept
@@ -828,16 +828,16 @@ private:
         if (size() != other.size())
         {
             get_allocator().deallocate(to_plain_pointer(data_),capacity_);
-            num_elements_ = other.size();
-            capacity_ = num_elements_;
+            size_ = other.size();
+            capacity_ = size_;
             data_ = create(capacity_, get_allocator());
         }
         shape_ = other.shape();
         strides_ = other.strides();
 #if defined(_MSC_VER)
-        std::copy(other.data_, other.data_+other.num_elements_,stdext::make_checked_array_iterator(data_,num_elements_));
+        std::copy(other.data_, other.data_+other.size_,stdext::make_checked_array_iterator(data_,size_));
 #else 
-        std::copy(other.data_,other.data_+other.num_elements_,data_);
+        std::copy(other.data_,other.data_+other.size_,data_);
 #endif
     }
 
@@ -845,15 +845,15 @@ private:
     {
         this->allocator_ = other.get_allocator();
         get_allocator().deallocate(to_plain_pointer(data_),capacity_);
-        num_elements_ = other.size();
-        capacity_ = num_elements_;
+        size_ = other.size();
+        capacity_ = size_;
         data_ = create(capacity_, get_allocator());
         shape_ = other.shape();
         strides_ = other.strides();
 #if defined(_MSC_VER)
-        std::copy(other.data_, other.data_+other.num_elements_,stdext::make_checked_array_iterator(data_,num_elements_));
+        std::copy(other.data_, other.data_+other.size_,stdext::make_checked_array_iterator(data_,size_));
 #else 
-        std::copy(other.data_,other.data_+other.num_elements_,data_);
+        std::copy(other.data_,other.data_+other.size_,data_);
 #endif
     }
 
@@ -862,16 +862,16 @@ private:
         if (size() != other.size())
         {
             get_allocator().deallocate(to_plain_pointer(data_),capacity_);
-            num_elements_ = other.size();
-            capacity_ = num_elements_;
+            size_ = other.size();
+            capacity_ = size_;
             data_ = create(capacity_, get_allocator());
         }
         shape_ = other.shape();
         strides_ = other.strides();
 #if defined(_MSC_VER)
-        std::copy(other.data_, other.data_+other.num_elements_,stdext::make_checked_array_iterator(data_,num_elements_));
+        std::copy(other.data_, other.data_+other.size_,stdext::make_checked_array_iterator(data_,size_));
 #else 
-        std::copy(other.data_,other.data_+other.num_elements_,data_);
+        std::copy(other.data_,other.data_+other.size_,data_);
 #endif
     }
 
@@ -898,17 +898,17 @@ private:
 
     void init()
     {
-        Order::calculate_strides(shape_, strides_, num_elements_);
-        capacity_ = num_elements_;
+        Order::calculate_strides(shape_, strides_, size_);
+        capacity_ = size_;
         data_ = create(capacity_, get_allocator());
     }
 
     void init(const T& val)
     {
-        Order::calculate_strides(shape_, strides_, num_elements_);
-        capacity_ = num_elements_;
+        Order::calculate_strides(shape_, strides_, size_);
+        capacity_ = size_;
         data_ = create(capacity_, get_allocator());
-        std::fill(data_, data_+num_elements_,val);
+        std::fill(data_, data_+size_,val);
     }
 
     void dim_from_initializer_list(const array_item<T>& init, size_t shape)
@@ -1161,7 +1161,7 @@ template <class T, size_t N, typename TPtr>
 class row_major_iterator
 {
     TPtr data_;
-    size_t num_elements_;
+    size_t size_;
 
     std::array<size_t,N> shape_;
     std::array<size_t,N> strides_;
@@ -1181,7 +1181,7 @@ public:
     typedef std::input_iterator_tag iterator_category;
 
     row_major_iterator(const row_major_iterator<T,N,TPtr>& other, bool end)
-        : data_(other.data_), num_elements_(other.num_elements_), shape_(other.shape_), strides_(other.strides_), offsets_(other.offsets_)
+        : data_(other.data_), size_(other.size_), shape_(other.shape_), strides_(other.strides_), offsets_(other.offsets_)
     {
         if (end)
         {
@@ -1206,7 +1206,7 @@ public:
                        const std::array<size_t,N>& shape, 
                        const std::array<size_t,N>& strides, 
                        iterator_position dir)
-        : data_(data), num_elements_(size), shape_(shape), strides_(strides)
+        : data_(data), size_(size), shape_(shape), strides_(strides)
     {
         offsets_.fill(0);
         initialize(dir, std::integral_constant<bool,N==1>());
@@ -1218,7 +1218,7 @@ public:
                        const std::array<size_t,N>& strides, 
                        const std::array<size_t,N>& offsets, 
                        iterator_position dir)
-        : data_(data), num_elements_(size), shape_(shape), strides_(strides), offsets_(offsets)
+        : data_(data), size_(size), shape_(shape), strides_(strides), offsets_(offsets)
     {
         initialize(dir, std::integral_constant<bool,N==1>());
     }
@@ -1379,7 +1379,7 @@ template <class T, size_t N, typename TPtr>
 class column_major_iterator
 {
     TPtr data_;
-    size_t num_elements_;
+    size_t size_;
 
     std::array<size_t,N> shape_;
     std::array<size_t,N> strides_;
@@ -1399,7 +1399,7 @@ public:
     typedef std::input_iterator_tag iterator_category;
 
     column_major_iterator(const column_major_iterator<T,N,TPtr>& other, bool end)
-        : data_(other.data_), num_elements_(other.num_elements_), shape_(other.shape_), strides_(other.strides_), offsets_(other.offsets_)
+        : data_(other.data_), size_(other.size_), shape_(other.shape_), strides_(other.strides_), offsets_(other.offsets_)
     {
         if (end)
         {
@@ -1424,7 +1424,7 @@ public:
                        const std::array<size_t,N>& shape, 
                        const std::array<size_t,N>& strides, 
                        iterator_position dir)
-        : data_(data), num_elements_(size), shape_(shape), strides_(strides)
+        : data_(data), size_(size), shape_(shape), strides_(strides)
     {
         offsets_.fill(0);
         initialize(dir, std::integral_constant<bool,N==1>());
@@ -1436,7 +1436,7 @@ public:
                        const std::array<size_t,N>& strides, 
                        const std::array<size_t,N>& offsets, 
                        iterator_position dir)
-        : data_(data), num_elements_(size), shape_(shape), strides_(strides), offsets_(offsets)
+        : data_(data), size_(size), shape_(shape), strides_(strides), offsets_(offsets)
     {
         initialize(dir, std::integral_constant<bool,N==1>());
     }
