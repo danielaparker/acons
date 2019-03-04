@@ -1160,6 +1160,7 @@ struct iterator_state
 template <class T, size_t N, typename TPtr>
 class row_major_iterator
 {
+    static constexpr size_t npos = -1;
     TPtr data_;
     size_t size_;
 
@@ -1243,7 +1244,8 @@ public:
 
     row_major_iterator& operator--()
     {
-        return decrement(std::integral_constant<bool,N==1>());
+        decrement(std::integral_constant<bool,N==1>());
+        return *this;
     }
 
     row_major_iterator operator--(int) // postfix decrement
@@ -1355,6 +1357,42 @@ private:
 
     void decrement(std::false_type)
     {
+        if (it_ != first_)
+        {
+            --it_;
+        }
+        else if (!stack_.empty())
+        {
+            bool done = false;
+            while (!stack_.empty() && !done)
+            {
+                iterator_state top = stack_.back();
+                stack_.pop_back();
+                if (top.n+1 < N)
+                {
+                    if (top.current != top.first)
+                    {
+                        iterator_state state(top.first,top.last,top.current-strides_[top.n],top.n);
+                        stack_.push_back(state);
+                        top.n = top.n+1;
+                        top.first = top.current - offsets_[top.n];
+                        top.last = top.first - strides_[top.n]*shape_[top.n];
+                        top.current = top.last - strides_[top.n];
+                        stack_.push_back(top);
+                    }
+                }
+                else
+                {
+                    if (top.current != top.first)
+                    {
+                        first_ = iterator_one<T,TPtr>(data_,strides_[N-1],top.first);
+                        last_ = iterator_one<T,TPtr>(data_,strides_[N-1],top.last);
+                        it_ = first_;
+                    }
+                    done = true;
+                }
+            }
+        }
     }
 
     void decrement(std::true_type)

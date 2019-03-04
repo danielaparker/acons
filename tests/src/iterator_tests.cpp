@@ -4,7 +4,7 @@
 #include <sstream>
 
 using namespace acons;
-
+#if 0
 TEST_CASE("1-dim row_major ndarray iterator tests")
 {
     ndarray<double,1> a = {0,1,2,3,4,5,6,7};
@@ -285,7 +285,7 @@ TEST_CASE("3-dim 2x3x4 ndarray iterator tests")
         CHECK(it == last);
     }
 }
-
+#endif
 TEST_CASE("3-dim 3x3x4 ndarray iterator tests")
 {
     typedef ndarray<double,3,row_major> array_t;
@@ -293,7 +293,7 @@ TEST_CASE("3-dim 3x3x4 ndarray iterator tests")
     REQUIRE(a.shape(0) == 3);
     REQUIRE(a.shape(1) == 3);
     REQUIRE(a.shape(2) == 4);
-
+#if 0
     SECTION("row_major_iterator test")
     {
         ndarray_view<double,3> v(a,{slice(1,3),slice(1,3),slice(1,3)});
@@ -320,7 +320,7 @@ TEST_CASE("3-dim 3x3x4 ndarray iterator tests")
         CHECK(*it++ == 34);
         CHECK(it == last);
     }
-
+#endif
     SECTION("bidirectional test")
     {
         ndarray_view<double,3> v(a,{slice(1,3),slice(1,3),slice(1,3)});
@@ -347,16 +347,17 @@ TEST_CASE("3-dim 3x3x4 ndarray iterator tests")
         CHECK(*it++ == 33);
         CHECK(*it++ == 34);
         CHECK(it == last);
-        /*--it;
+        --it;
         CHECK(*it-- == 34);
         CHECK(*it-- == 33);
         CHECK(*it-- == 30);
-        CHECK(*it-- == 29);
-        CHECK(*it-- == 22);
-        CHECK(*it-- == 21);
-        CHECK(*it-- == 18);
-        CHECK(*it-- == 17);*/
+        //CHECK(*it-- == 29);
+        //CHECK(*it-- == 22);
+        //CHECK(*it-- == 21);
+        //CHECK(*it-- == 18);
+        //CHECK(*it-- == 17);
     }
+#if 0
     SECTION("bidirectional test 2")
     {
         ndarray_view<double,3> v(a,{slice(1,3),slice(1,3),slice(1,4)});
@@ -397,5 +398,6 @@ TEST_CASE("3-dim 3x3x4 ndarray iterator tests")
         CHECK(*it-- == 18);
         CHECK(*it-- == 17);*/
     }
+#endif
 }
 
