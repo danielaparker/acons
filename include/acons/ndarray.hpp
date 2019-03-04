@@ -1364,7 +1364,7 @@ private:
 };
 
 template <class T, size_t N, typename TPtr>
-row_major_iterator<T,N,TPtr> begin(row_major_iterator<T,N,TPtr> it) noexcept
+row_major_iterator<T,N,TPtr>& begin(row_major_iterator<T,N,TPtr>& it) noexcept
 {
     return it;
 }
@@ -1581,7 +1581,7 @@ private:
 };
 
 template <class T, size_t N, typename TPtr>
-column_major_iterator<T,N,TPtr> begin(column_major_iterator<T,N,TPtr> it) noexcept
+column_major_iterator<T,N,TPtr>& begin(column_major_iterator<T,N,TPtr>& it) noexcept
 {
     return it;
 }
