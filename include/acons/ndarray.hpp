@@ -1104,7 +1104,7 @@ public:
         return *this;
     }
 
-    iterator_one operator--(int) // postfix increment
+    iterator_one operator--(int) // postfix decrement
     {
         iterator_one temp(*this);
         --(*this);
@@ -1125,243 +1125,6 @@ public:
         return !(it1 == it2);
     }
 };
-/*
-template <class T, size_t N, typename TPtr>
-class row_major_iterator
-{
-    TPtr data_;
-    size_t num_elements_;
-
-    std::array<size_t,N> shape_;
-    std::array<size_t,N> strides_;
-    std::array<size_t,N> offsets_;
-    std::array<size_t,N> indices_;
-    size_t offset_one_end_;
-
-    iterator_one<T,TPtr> first_;
-    iterator_one<T,TPtr> last_;
-    iterator_one<T,TPtr> it_;
-    iterator_one<T,TPtr> end_;
-public:
-    typedef T value_type;
-    static constexpr size_t ndim = N;
-    typedef std::ptrdiff_t difference_type;
-    typedef TPtr pointer;
-    typedef typename std::conditional<std::is_const<typename std::remove_pointer<TPtr>::type>::value,const T&,T&>::type reference;
-    typedef std::input_iterator_tag iterator_category;
-
-    row_major_iterator(const row_major_iterator<T,N,TPtr>& other, bool end)
-        : data_(other.data_), num_elements_(other.num_elements_), shape_(other.shape_), strides_(other.strides_), offsets_(other.offsets_),
-          offset_one_end_(other.shape_[N-1]*other.strides_[N-1])
-    {
-        if (end)
-        {
-            first_ = other.end_;
-            it_ = other.end_;
-            last_ = other.end_;
-            end_ = other.end_;
-        }
-        else
-        {
-            initialize(iterator_position::begin, std::integral_constant<bool,N==1>());
-        }
-    }
-
-    row_major_iterator(TPtr data,
-                       size_t size, 
-                       const std::array<size_t,N>& shape, 
-                       const std::array<size_t,N>& strides, 
-                       iterator_position dir)
-        : data_(data), num_elements_(size), shape_(shape), strides_(strides),
-          offset_one_end_(shape[N-1]*strides[N-1])
-    {
-        offsets_.fill(0);
-        initialize(dir, std::integral_constant<bool,N==1>());
-    }
-
-    row_major_iterator(TPtr data,
-                       size_t size, 
-                       const std::array<size_t,N>& shape, 
-                       const std::array<size_t,N>& strides, 
-                       const std::array<size_t,N>& offsets, 
-                       iterator_position dir)
-        : data_(data), num_elements_(size), shape_(shape), strides_(strides), offsets_(offsets),
-          offset_one_end_(offsets[N-1]+shape[N-1]*strides[N-1])          
-    {
-        initialize(dir, std::integral_constant<bool,N==1>());
-    }
-
-    row_major_iterator(const row_major_iterator&) = default;
-    row_major_iterator(row_major_iterator&&) = default;
-    row_major_iterator& operator=(const row_major_iterator&) = default;
-    row_major_iterator& operator=(row_major_iterator&&) = default;
-
-    row_major_iterator& operator++()
-    {
-        return increment(std::integral_constant<bool,N==1>());
-    }
-
-    row_major_iterator operator++(int) // postfix increment
-    {
-        row_major_iterator temp(*this);
-        ++(*this);
-        return temp;
-    }
-
-    row_major_iterator& operator--()
-    {
-        return decrement(std::integral_constant<bool,N==1>());
-    }
-
-    row_major_iterator operator--(int) // postfix increment
-    {
-        row_major_iterator temp(*this);
-        --(*this);
-        return temp;
-    }
-
-    reference operator*() const
-    {
-        return *it_;
-    }
-
-    friend bool operator==(const row_major_iterator& it1, const row_major_iterator& it2)
-    {
-        return it1.it_ == it2.it_;
-    }
-    friend bool operator!=(const row_major_iterator& it1, const row_major_iterator& it2)
-    {
-        return !(it1 == it2);
-    }
-
-private:
-    void initialize(iterator_position dir, std::false_type)
-    {
-        std::array<size_t,N> origin;
-        for (size_t i = 0; i < N; ++i)
-        {
-            origin[i] = shape_[i]-1;
-        }
-        size_t end_rel = get_offset<N,N,zero_based>(strides_,offsets_,origin);
-        //std::cout << "strides: " << strides_ << "\n";
-        //std::cout << "offsets: " << offsets_ << "\n";
-        //std::cout << "indices: " << indices_ << "\n";
-        //std::cout << "END REL: " << end_rel << "\n";
-        //std::cout << "END OFFSET: " << (end_rel + strides_[N - 1] * shape_[N - 1]) << "\n";
-        end_ = iterator_one<T,TPtr>(data_,strides_[N-1],end_rel + strides_[N-1]);
-
-        switch (dir)
-        {
-            case iterator_position::rbegin:
-                for (size_t i = 0; i < N; ++i)
-                {
-                    indices_[i] = shape_[i]-1;
-                }
-                break;
-            default:
-                indices_.fill(0);
-                break;
-        }
-
-        size_t rel = get_offset<N,N,zero_based>(strides_,offsets_,indices_);
-        first_ = iterator_one<T,TPtr>(data_,strides_[N-1],rel);
-        last_ = iterator_one<T,TPtr>(data_,strides_[N-1],rel+strides_[N-1]*shape_[N-1]);
-        it_ = first_;
-    }
-
-    void initialize(iterator_position dir, std::true_type)
-    {
-        //std::cout << "initialize: shape_[0]: " << shape_[0] << ", strides_[0]: " << strides_[0] << ", offsets_[0]: " << offsets_[0]  << ", offset_one_end_: " << offset_one_end_ << "\n"; 
-        switch (dir)
-        {
-            case iterator_position::rbegin:
-                indices_[0] = shape_[0]-1;
-                break;
-            default:
-                indices_[0] = 0;
-                break;
-        }
-
-        size_t rel = get_offset<N,N,zero_based>(strides_,offsets_,indices_);
-        end_ = iterator_one<T,TPtr>(data_,strides_[0],rel+strides_[N-1]*shape_[N-1]);
-        first_ = iterator_one<T,TPtr>(data_,strides_[0],rel);
-        last_ = end_;
-        it_ = first_;
-    }
-
-    row_major_iterator& increment(std::false_type)
-    {
-        if (it_ != last_)
-        {
-            ++it_;
-        }
-        if (it_ == last_ && it_ != end_)
-        {
-            //std::cout << "indices 3: " << indices_ << "\n";
-            for (size_t i = N-1; i-- > 0;)
-            {
-                if (indices_[i]+1 < shape_[i])
-                {
-                    ++indices_[i];
-                    size_t rel = get_offset<N,N,zero_based>(strides_,offsets_,indices_);
-                    first_ = iterator_one<T,TPtr>(data_,strides_[N-1],rel);
-                    last_ = iterator_one<T,TPtr>(data_,strides_[N-1],rel + strides_[N-1]*shape_[N-1]);
-                    it_ = first_;
-                    break;
-                }
-                else if (i > 0)
-                {
-                    indices_[i] = 0;
-                }
-            }
-            //std::cout << "indices 4: " << indices_ << "\n";
-        }
-        return *this;
-    }
-
-    row_major_iterator& increment(std::true_type)
-    {
-        ++it_;
-        return *this;
-    }
-
-    row_major_iterator& decrement(std::false_type)
-    {
-        if (it_ != first_)
-        {
-            --it_;
-        }
-        if (it_ == first_ && it_ != end_)
-        {
-            //std::cout << "indices 1: " << indices_ << "\n";
-            for (size_t i = N-1; i-- > 0;)
-            {
-                if (indices_[i] > 0)
-                {
-                    --indices_[i];
-                    size_t rel = get_offset<N,N-1,zero_based>(strides_,offsets_,indices_);
-                    first_ = iterator_one<T,TPtr>(data_,strides_[N-1],rel);
-                    last_ = iterator_one<T,TPtr>(data_,strides_[N-1],rel + strides_[N-1]*shape_[N-1]);
-                    it_ = first_;
-                    break;
-                }
-                else if (i > 0)
-                {
-                    indices_[i] = shape_[i] - 1;
-                }
-            }
-            //std::cout << "indices 2: " << indices_ << "\n";
-        }
-        return *this;
-    }
-
-    row_major_iterator& decrement(std::true_type)
-    {
-        --it_;
-        return *this;
-    }
-};
-*/
 
 struct iterator_state
 {
@@ -1467,28 +1230,29 @@ public:
 
     row_major_iterator& operator++()
     {
-        return increment(std::integral_constant<bool,N==1>());
+        increment(std::integral_constant<bool,N==1>());
+        return *this;
     }
 
     row_major_iterator operator++(int) // postfix increment
     {
         row_major_iterator temp(*this);
-        ++(*this);
+        increment(std::integral_constant<bool,N==1>());
         return temp;
     }
-/*
+
     row_major_iterator& operator--()
     {
         return decrement(std::integral_constant<bool,N==1>());
     }
 
-    row_major_iterator operator--(int) // postfix increment
+    row_major_iterator operator--(int) // postfix decrement
     {
         row_major_iterator temp(*this);
-        --(*this);
+        decrement(std::integral_constant<bool,N==1>());
         return temp;
     }
-*/
+
     reference operator*() const
     {
         return *it_;
@@ -1544,7 +1308,7 @@ private:
         it_ = first_;
     }
 
-    row_major_iterator& increment(std::false_type)
+    void increment(std::false_type)
     {
         if (it_ != last_)
         {
@@ -1582,13 +1346,20 @@ private:
                 }
             }
         }
-        return *this;
     }
 
-    row_major_iterator& increment(std::true_type)
+    void increment(std::true_type)
     {
         ++it_;
-        return *this;
+    }
+
+    void decrement(std::false_type)
+    {
+    }
+
+    void decrement(std::true_type)
+    {
+        ++it_;
     }
 };
 
@@ -1603,262 +1374,6 @@ row_major_iterator<T,N,TPtr> end(const row_major_iterator<T,N,TPtr>& it) noexcep
 {
     return row_major_iterator<T,N,TPtr>(it,true);
 }
-#if 0
-template <class T, size_t N, typename TPtr>
-class column_major_iterator
-{
-    TPtr data_;
-    size_t num_elements_;
-
-    std::array<size_t,N> shape_;
-    std::array<size_t,N> strides_;
-    std::array<size_t,N> offsets_;
-    std::array<size_t,N> indices_;
-    size_t offset_one_end_;
-
-    iterator_one<T,TPtr> first_;
-    iterator_one<T,TPtr> last_;
-    iterator_one<T,TPtr> it_;
-    iterator_one<T,TPtr> end_;
-public:
-    typedef T value_type;
-    static constexpr size_t ndim = N;
-    typedef std::ptrdiff_t difference_type;
-    typedef TPtr pointer;
-    typedef typename std::conditional<std::is_const<typename std::remove_pointer<TPtr>::type>::value,const T&,T&>::type reference;
-    typedef std::input_iterator_tag iterator_category;
-
-    column_major_iterator(const column_major_iterator<T,N,TPtr>& other, bool end)
-        : data_(other.data_), num_elements_(other.num_elements_), shape_(other.shape_), strides_(other.strides_), offsets_(other.offsets_),
-          offset_one_end_(other.shape_[N-1]*other.strides_[N-1])
-    {
-        if (end)
-        {
-            first_ = other.end_;
-            last_ = other.end_;
-            end_ = other.end_;
-            it_ = first_;
-        }
-        else
-        {
-            initialize(iterator_position::begin, std::integral_constant<bool,N==1>());
-        }
-    }
-
-    column_major_iterator(TPtr data,
-                          size_t size, 
-                          const std::array<size_t,N>& shape, 
-                          const std::array<size_t,N>& strides, 
-                          iterator_position dir)
-        : data_(data), num_elements_(size), shape_(shape), strides_(strides),
-          offset_one_end_(shape[N-1]*strides[N-1])
-    {
-        offsets_.fill(0);
-        initialize(dir, std::integral_constant<bool,N==1>());
-    }
-
-    column_major_iterator(TPtr data,
-                          size_t size, 
-                          const std::array<size_t,N>& shape, 
-                          const std::array<size_t,N>& strides, 
-                          const std::array<size_t,N>& offsets, 
-                          iterator_position dir)
-        : data_(data), num_elements_(size), shape_(shape), strides_(strides), offsets_(offsets),
-          offset_one_end_(shape[N-1]*strides[N-1])          
-    {
-        //std::cout << "column_major_iterator 3\n";
-        initialize(dir, std::integral_constant<bool,N==1>());
-    }
-
-    column_major_iterator(const column_major_iterator&) = default;
-    column_major_iterator(column_major_iterator&&) = default;
-    column_major_iterator& operator=(const column_major_iterator&) = default;
-    column_major_iterator& operator=(column_major_iterator&&) = default;
-
-    column_major_iterator& operator++()
-    {
-        return increment(std::integral_constant<bool,N==1>());
-    }
-
-    column_major_iterator operator++(int) // postfix increment
-    {
-        column_major_iterator temp(*this);
-        ++(*this);
-        return temp;
-    }
-
-    column_major_iterator& operator--()
-    {
-        return decrement(std::integral_constant<bool,N==1>());
-    }
-
-    column_major_iterator operator--(int) // postfix increment
-    {
-        column_major_iterator temp(*this);
-        --(*this);
-        return temp;
-    }
-
-    reference operator*() const
-    {
-        return *it_;
-    }
-
-    friend bool operator==(const column_major_iterator& it1, const column_major_iterator& it2)
-    {
-        return it1.it_ == it2.it_;
-    }
-    friend bool operator!=(const column_major_iterator& it1, const column_major_iterator& it2)
-    {
-        return !(it1 == it2);
-    }
-private:
-    void initialize(iterator_position dir, std::false_type)
-    {
-        std::array<size_t,N> origin;
-        //std::cout << "initialize false" << N << "\n";
-        for (size_t i = 0; i < N; ++i)
-        {
-            origin[i] = shape_[i]-1;
-        }
-
-        //indices_[N-1] = 0;
-        size_t end_rel = get_offset<N,N,zero_based>(strides_,offsets_,origin);
-        //std::cout << "strides: " << strides_ << "\n";
-        //std::cout << "offsets: " << offsets_ << "\n";
-        //std::cout << "indices: " << indices_ << "\n";
-        //std::cout << "INIT END REL: " << rel << "\n";
-        //std::cout << "END OFFSET: " << (rel + strides_[0]) << "\n";
-        end_ = iterator_one<T,TPtr>(data_,strides_[N-1],end_rel + strides_[0]);
-
-        switch (dir)
-        {
-            case iterator_position::rbegin:
-                for (size_t i = 0; i < N; ++i)
-                {
-                    indices_[i] = shape_[i]-1;
-                }
-                break;
-            default:
-                indices_.fill(0);
-                break;
-        }
-
-        //std::cout << "initialize false\n";
-        size_t rel = get_offset<N,N,zero_based>(strides_,offsets_,indices_);
-        //std::cout << "rel: " << rel << "\n";
-        //std::cout << "shape_[0]: " << shape_[0] << "\n";
-        //std::cout << "strides_[0]: " << strides_[0] << "\n";
-        //std::cout << "offsets_[0]: " << offsets_[0] << "\n";
-        //std::cout << "offset_one_end_: " << offset_one_end_ << "\n";
-        //std::cout << "INIT REL: " << rel << "\n";
-        //std::cout << "OFFSET: " << (rel + shape_[0]*strides_[0]) << "\n";
-        //std::cout << "\n\n";
-        first_ = iterator_one<T,TPtr>(data_,strides_[0],rel);
-        last_ = iterator_one<T,TPtr>(data_,strides_[0],rel+strides_[0]*shape_[0]);
-        it_ = first_;
-    }
-
-    void initialize(iterator_position dir, std::true_type)
-    {
-        //std::cout << "initialize true " << N << "\n";
-        //return;
-        //std::cout << "initialize true\n";
-        //std::cout << "shape_[0]: " << shape_[0] << "\n";
-        //std::cout << "strides_[0]: " << strides_[0] << "\n";
-        //std::cout << "offsets_[0]: " << offsets_[0] << "\n";
-        //std::cout << "OFFSET: " << offsets_[0]+strides_[0]*shape_[0] << "\n";
-        switch (dir)
-        {
-            case iterator_position::rbegin:
-                indices_[0] = shape_[0]-1;
-                break;
-            default:
-                indices_[0] = 0;
-                break;
-        }
-        size_t rel = get_offset<N,N,zero_based>(strides_,offsets_,indices_);
-        end_ = iterator_one<T,TPtr>(data_,strides_[0],rel+strides_[0]*shape_[0]);
-        first_ = iterator_one<T,TPtr>(data_,strides_[0],rel);
-        last_ = end_;
-        it_ = first_;
-    }
-
-    column_major_iterator& increment(std::false_type)
-    {
-        if (it_ != last_)
-        {
-            ++it_;
-        }
-        if (it_ == last_ && it_ != end_)
-        {
-            for (size_t i = 1; i < N; ++i)
-            {
-                if (indices_[i]+1 < shape_[i])
-                {
-                    ++indices_[i];
-                    size_t rel = get_offset<N,N,zero_based>(strides_,offsets_,indices_);
-                    //std::cout << "increment END REL: " << rel << "\n";
-                    //std::cout << "END OFFSET: " << (rel + shape_[0]*strides_[0]) << "\n";
-                    first_ = iterator_one<T,TPtr>(data_,strides_[0],rel);
-                    last_ = iterator_one<T,TPtr>(data_,strides_[0],rel + strides_[0]*shape_[0]);
-                    it_ = first_;
-                    break;
-                }
-                else if (i+1 < N)
-                {
-                    indices_[i] = 0;
-                }
-            }
-        }
-        return *this;
-    }
-
-    column_major_iterator& increment(std::true_type)
-    {
-        //std::cout << "increment?\n";
-        ++it_;
-        return *this;
-    }
-
-    column_major_iterator& decrement(std::false_type)
-    {
-        if (it_ != first_)
-        {
-            --it_;
-        }
-        if (it_ == first_/* && it_ != end_*/)
-        {
-            for (size_t i = 1; i < N; ++i)
-            {
-                if (indices_[i] > 0)
-                {
-                    --indices_[i];
-                    size_t rel = get_offset<N,N,zero_based>(strides_,offsets_,indices_);
-                    //std::cout << "increment END REL: " << rel << "\n";
-                    //std::cout << "END OFFSET: " << (rel + shape_[0]*strides_[0]) << "\n";
-                    first_ = iterator_one<T,TPtr>(data_,strides_[0],rel);
-                    last_ = iterator_one<T,TPtr>(data_,strides_[0],rel + strides_[0]*shape_[0]);
-                    it_ = first_;
-                    break;
-                }
-                else if (i+1 < N)
-                {
-                    indices_[i] = 0;
-                }
-            }
-        }
-        return *this;
-    }
-
-    column_major_iterator& deccrement(std::true_type)
-    {
-        //std::cout << "increment?\n";
-        ++it_;
-        return *this;
-    }
-};
-#endif
 
 template <class T, size_t N, typename TPtr>
 class column_major_iterator
@@ -1933,13 +1448,14 @@ public:
 
     column_major_iterator& operator++()
     {
-        return increment(std::integral_constant<bool,N==1>());
+        increment(std::integral_constant<bool,N==1>());
+        return *this;
     }
 
     column_major_iterator operator++(int) // postfix increment
     {
         column_major_iterator temp(*this);
-        ++(*this);
+        increment(std::integral_constant<bool,N==1>());
         return temp;
     }
 
@@ -1947,11 +1463,10 @@ public:
     {
         return decrement(std::integral_constant<bool,N==1>());
     }
-
-    column_major_iterator operator--(int) // postfix increment
+    column_major_iterator operator--(int) // postfix decrement
     {
         column_major_iterator temp(*this);
-        --(*this);
+        decrement(std::integral_constant<bool,N==1>());
         return temp;
     }
 
@@ -2010,7 +1525,7 @@ private:
         it_ = first_;
     }
 
-    column_major_iterator& increment(std::false_type)
+    void increment(std::false_type)
     {
         if (it_ != last_)
         {
@@ -2048,13 +1563,20 @@ private:
                 }
             }
         }
-        return *this;
     }
 
-    column_major_iterator& increment(std::true_type)
+    void increment(std::true_type)
     {
         ++it_;
-        return *this;
+    }
+
+    void decrement(std::false_type)
+    {
+    }
+
+    void decrement(std::true_type)
+    {
+        ++it_;
     }
 };
 
