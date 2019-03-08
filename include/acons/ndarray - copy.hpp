@@ -1128,22 +1128,23 @@ public:
 
 struct iterator_state
 {
-    size_t current;
+    size_t first;
     size_t last;
+    size_t current;
     size_t n;
 
     iterator_state()
-        : current(0), last(0), n(0)
+        : first(0), last(0), current(0), n(0)
     {
     }
 
-    iterator_state(size_t current, size_t last)
-        : current(current), last(last), n(0)
+    iterator_state(size_t first, size_t last, size_t current)
+        : first(first), last(last), current(current), n(0)
     {
     }
 
-    iterator_state(size_t current, size_t last, size_t n)
-        : current(current), last(last), n(n)
+    iterator_state(size_t first, size_t last, size_t current, size_t n)
+        : first(first), last(last), current(current), n(n)
     {
     }
 
@@ -1151,7 +1152,7 @@ struct iterator_state
 
     friend std::ostream& operator<<(std::ostream& os, const iterator_state& s)
     {
-        os << "current: " << s.current << ", last: " << s.last << ", n: " << s.n;
+        os << "first: " << s.first << ", last: " << s.last << ", current: " << s.current << ", n: " << s.n;
         return os;
     }
 };
@@ -1159,6 +1160,7 @@ struct iterator_state
 template <class T, size_t N, typename TPtr>
 class row_major_iterator
 {
+    static constexpr size_t npos = -1;
     TPtr data_;
     size_t size_;
 
@@ -1270,6 +1272,10 @@ public:
 private:
     void initialize(iterator_position dir, std::false_type)
     {
+        std::cout << "shape: " << shape_ << "\n";
+        std::cout << "strides: " << strides_ << "\n";
+        std::cout << "offsets: " << offsets_ << "\n";
+
         switch (dir)
         {
             case iterator_position::rbegin:
@@ -1279,7 +1285,7 @@ private:
                 //}
                 break;
             default:
-                stack_.emplace_back(offsets_[0], offsets_[0]+strides_[0]*shape_[0]);
+                stack_.emplace_back(offsets_[0], offsets_[0]+strides_[0]*shape_[0], offsets_[0]);
                 break;
         }
 
@@ -1320,16 +1326,18 @@ private:
             while (!stack_.empty() && !done)
             {
                 iterator_state top = stack_.back();
+                std::cout << "top: " << top << "\n";
                 stack_.pop_back();
                 if (top.n+1 < N)
                 {
                     if (top.current != top.last)
                     {
-                        iterator_state state(top.current+strides_[top.n], top.last, top.n);
+                        iterator_state state(top.first,top.last,top.current+strides_[top.n],top.n);
                         stack_.push_back(state);
                         top.n = top.n+1;
-                        top.current = top.current + offsets_[top.n];
-                        top.last = top.current + strides_[top.n]*shape_[top.n];
+                        top.first = top.current + offsets_[top.n];
+                        top.last = top.first + strides_[top.n]*shape_[top.n];
+                        top.current = top.first;
                         stack_.push_back(top);
                     }
                 }
@@ -1337,7 +1345,7 @@ private:
                 {
                     if (top.current != top.last)
                     {
-                        first_ = iterator_one<T,TPtr>(data_,strides_[N-1],top.current);
+                        first_ = iterator_one<T,TPtr>(data_,strides_[N-1],top.first);
                         last_ = iterator_one<T,TPtr>(data_,strides_[N-1],top.last);
                         it_ = first_;
                     }
@@ -1370,11 +1378,12 @@ private:
                 { 
                     if (top.current != top.first)
                     {
-                        iterator_state state(top.last,top.current-strides_[top.n],top.n);
+                        iterator_state state(top.first,top.last,top.current-strides_[top.n],top.n);
                         stack_.push_back(state);
                         top.n = top.n+1;
-                        top.current = state.current + offsets_[top.n] - strides_[top.n];
-                        top.last = top.current + strides_[top.n]*shape_[top.n];
+                        top.first = state.current + offsets_[top.n] - strides_[top.n];
+                        top.last = top.first + strides_[top.n]*shape_[top.n];
+                        top.current = top.last - strides_[top.n];
                         stack_.push_back(top);
                     }
                 }
@@ -1382,7 +1391,7 @@ private:
                 {
                     //if (top.current != top.first)
                     {
-                        first_ = iterator_one<T,TPtr>(data_,strides_[N-1],top.current);
+                        first_ = iterator_one<T,TPtr>(data_,strides_[N-1],top.first);
                         last_ = iterator_one<T,TPtr>(data_,strides_[N-1],top.last);
                         it_ = iterator_one<T, TPtr>(data_, strides_[N - 1], top.last - strides_[N - 1]);
                     }
@@ -1393,14 +1402,14 @@ private:
         else
         {
             std::cout << "stack is empty\n";
-            stack_.emplace_back(offsets_[0]+strides_[0]*shape_[0], offsets_[0]+strides_[0]*shape_[0],0);
+            stack_.emplace_back(offsets_[0], offsets_[0]+strides_[0]*shape_[0], offsets_[0]+strides_[0]*shape_[0],0);
             decrement(std::false_type());
         }
     }
 
     void decrement(std::true_type)
     {
-        --it_;
+        ++it_;
     }
 };
 
@@ -1537,7 +1546,7 @@ private:
                 //}
                 break;
             default:
-                stack_.emplace_back(offsets_[N-1], offsets_[N-1]+strides_[N-1]*shape_[N-1], N-1);
+                stack_.emplace_back(offsets_[N-1], offsets_[N-1]+strides_[N-1]*shape_[N-1], offsets_[N-1], N-1);
                 break;
         }
 
@@ -1583,11 +1592,12 @@ private:
                 {
                     if (top.current != top.last)
                     {
-                        iterator_state state(top.current+strides_[top.n], top.last, top.n);
+                        iterator_state state(top.first,top.last,top.current+strides_[top.n],top.n);
                         stack_.push_back(state);
                         top.n = top.n-1;
-                        top.current = top.current + offsets_[top.n];
-                        top.last = top.current + strides_[top.n]*shape_[top.n];
+                        top.first = top.current + offsets_[top.n];
+                        top.last = top.first + strides_[top.n]*shape_[top.n];
+                        top.current = top.first;
                         stack_.push_back(top);
                     }
                 }
@@ -1595,7 +1605,7 @@ private:
                 {
                     if (top.current != top.last)
                     {
-                        first_ = iterator_one<T,TPtr>(data_,strides_[0],top.current);
+                        first_ = iterator_one<T,TPtr>(data_,strides_[0],top.first);
                         last_ = iterator_one<T,TPtr>(data_,strides_[0],top.last);
                         it_ = first_;
                     }
