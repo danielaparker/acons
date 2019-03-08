@@ -520,8 +520,8 @@ TEST_CASE("2-dim 2x3 ndarray iterator tests")
         CHECK(*it++ == 0);
         CHECK(*it++ == 1);
         CHECK(*it++ == 2);
-        //--it;
-        //CHECK(*it == 2);
+        --it;
+        CHECK(*it == 2);
         /*++it;
         CHECK(*it++ == 3);
         CHECK(*it++ == 4);

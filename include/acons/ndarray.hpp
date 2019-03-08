@@ -1409,7 +1409,7 @@ private:
 
     void decrement(std::true_type)
     {
-        ++it_;
+        --it_;
     }
 };
 
