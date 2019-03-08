@@ -425,20 +425,20 @@ TEST_CASE("3-dim 3x3x4 ndarray iterator tests")
 }
 #endif
 
-TEST_CASE("2-dim 2x3 ndarray iterator tests")
+/*TEST_CASE("2-dim 3x4 ndarray iterator tests")
 {
     typedef ndarray<double,2> array_t;
-    array_t a = {{0,1,2},{3,4,5}};
-    REQUIRE(a.shape(0) == 2);
-    REQUIRE(a.shape(1) == 3);
+    array_t a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
+    REQUIRE(a.shape(0) == 3);
+    REQUIRE(a.shape(1) == 4);
 
     SECTION("bidirectional test")
     {
-        array_t::view<2> v(a, { slice(0,2),slice(0,3) });
+        array_t::view<2> v(a, { slice(0,3),slice(0,4) });
         // {{0,1,2},{3,4,5}}
 
-        REQUIRE(v.shape(0) == 2); 
-        REQUIRE(v.shape(1) == 3); 
+        REQUIRE(v.shape(0) == 3); 
+        REQUIRE(v.shape(1) == 4); 
 
         std::cout << "shape: " << v.shape() << "\n";
         std::cout << "strides: " << v.strides() << "\n";
@@ -458,17 +458,75 @@ TEST_CASE("2-dim 2x3 ndarray iterator tests")
         CHECK(*it++ == 3);
         CHECK(*it++ == 4);
         CHECK(*it++ == 5);
+        CHECK(*it++ == 6);
+        std::cout << "Increment\n";
+        CHECK(*it++ == 7);
+        CHECK(*it == 8);
+        std::cout << "Decrement 1\n";
+        --it;
+        CHECK(*it == 7);
+        std::cout << "Decrement 2\n";
+
+        ++it;
+        CHECK(*it++ == 8);
+        CHECK(*it++ == 9);
+        CHECK(*it++ == 10);
+        CHECK(*it++ == 11);
         CHECK(it == last);
         --it;
+        CHECK(*it-- == 11);
+        CHECK(*it-- == 10);
+        std::cout << "Decrement 3\n";
+        CHECK(*it-- == 9);
+        std::cout << "Decrement 4\n";
+        CHECK(*it-- == 8);
+        CHECK(*it == 7);
+        CHECK(*it-- == 6);
         CHECK(*it-- == 5);
         CHECK(*it-- == 4);
-        std::cout << "Decrement 1\n";
         CHECK(*it-- == 3);
-        std::cout << "Decrement 2\n";
         CHECK(*it-- == 2);
         CHECK(*it-- == 1);
         CHECK(*it == 0);
         CHECK(it == first);
+
+    }
+}*/
+
+TEST_CASE("2-dim 2x3 ndarray iterator tests")
+{
+    typedef ndarray<double,2> array_t;
+    array_t a = {{0,1,2},{3,4,5}};
+    REQUIRE(a.shape(0) == 2);
+    REQUIRE(a.shape(1) == 3);
+
+    SECTION("bidirectional test")
+    {
+        array_t::view<2> v(a);
+        // {{0,1,2},{3,4,5}}
+
+        REQUIRE(v.shape(0) == 2); 
+        REQUIRE(v.shape(1) == 3); 
+
+        std::cout << "shape: " << v.shape() << "\n";
+        std::cout << "strides: " << v.strides() << "\n";
+        std::cout << "offsets: " << v.offsets() << "\n";
+
+        auto first = make_row_major_iterator(v);
+        auto last = end(first);
+        auto it = first;
+
+        std::cout << "Increment\n";
+        CHECK(*it++ == 0);
+        CHECK(*it++ == 1);
+        CHECK(*it++ == 2);
+        --it;
+        CHECK(*it == 2);
+        /*++it;
+        CHECK(*it++ == 3);
+        CHECK(*it++ == 4);
+        CHECK(*it++ == 5);
+        CHECK(it == last)*/;
     }
 }
 

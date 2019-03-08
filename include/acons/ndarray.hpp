@@ -1365,48 +1365,23 @@ private:
         if (it_ != first_)
         {
             --it_;
-            std::cout << "decrement and it_ != first_\n";
         }
         else if (!stack_.empty())
         {
-            // Print stack
-            std::cout << "stack\n";
-            for (auto x : stack_)
-            {
-                std::cout << x << "\n";
-            }
-            std::cout << "\n\n";
             bool done = false;
             while (!stack_.empty() && !done)
             {
                 iterator_state top = stack_.back();
+                std::cout << "n: " << top.n << ", top: " << top << "\n";
                 stack_.pop_back();
-                std::cout << "top: " << top << "\n";
                 if (top.n+1 < N)
-                {
-                    if (top.current == top.last)
+                { 
+                    if (top.current != top.first)
                     {
-                        std::cout << "top.current == top.last\n";
                         iterator_state state(top.first,top.last,top.current-strides_[top.n],top.n);
-                        //std::cout << "state: " << top << "\n";
                         stack_.push_back(state);
                         top.n = top.n+1;
-                        top.first = top.first + offsets_[top.n];
-                        //top.first += offsets_[top.n];
-                        top.last = top.first + strides_[top.n]*shape_[top.n];
-                        top.current = top.last - strides_[top.n];
-                        stack_.push_back(top);
-                        //std::cout << "new top: " << top << "\n";
-                    }
-                    else if (top.current != top.first)
-                    {
-                        std::cout << "top.current != top.last\n";
-                        iterator_state state(top.first,top.last,top.current-strides_[top.n],top.n);
-                        //std::cout << "state: " << top << "\n";
-                        stack_.push_back(state);
-                        top.n = top.n+1;
-                        top.first = top.current + offsets_[top.n];
-                        //top.first += offsets_[top.n];
+                        top.first = state.current + offsets_[top.n] - strides_[top.n];
                         top.last = top.first + strides_[top.n]*shape_[top.n];
                         top.current = top.last - strides_[top.n];
                         stack_.push_back(top);
@@ -1414,15 +1389,11 @@ private:
                 }
                 else
                 {
-                    if (top.current != top.first)
+                    //if (top.current != top.first)
                     {
                         first_ = iterator_one<T,TPtr>(data_,strides_[N-1],top.first);
                         last_ = iterator_one<T,TPtr>(data_,strides_[N-1],top.last);
-                        it_ = iterator_one<T,TPtr>(data_,strides_[N-1],top.last - strides_[N-1]);
-                    }
-                    else
-                    {
-                        std::cout << "!!!top.current == top.first\n";
+                        it_ = iterator_one<T, TPtr>(data_, strides_[N - 1], top.last - strides_[N - 1]);
                     }
                     done = true;
                 }
