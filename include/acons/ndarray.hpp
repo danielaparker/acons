@@ -1242,7 +1242,8 @@ public:
 
     row_major_iterator& operator--()
     {
-        return decrement(std::integral_constant<bool,N==1>());
+        decrement(std::integral_constant<bool,N==1>());
+        return *this;
     }
 
     row_major_iterator operator--(int) // postfix decrement
@@ -1353,11 +1354,53 @@ private:
 
     void decrement(std::false_type)
     {
+        if (it_ != first_)
+        {
+            --it_;
+        }
+        else if (!stack_.empty())
+        {
+            bool done = false;
+            while (!stack_.empty() && !done)
+            {
+                iterator_state top = stack_.back();
+                std::cout << "n: " << top.n << ", top: " << top << "\n";
+                stack_.pop_back();
+                if (top.n+1 < N)
+                { 
+                    if (top.current != top.first)
+                    {
+                        iterator_state state(top.last,top.current-strides_[top.n],top.n);
+                        stack_.push_back(state);
+                        top.n = top.n+1;
+                        top.current = state.current + offsets_[top.n] - strides_[top.n];
+                        top.last = top.current + strides_[top.n]*shape_[top.n];
+                        stack_.push_back(top);
+                    }
+                }
+                else
+                {
+                    //if (top.current != top.first)
+                    {
+                        first_ = iterator_one<T,TPtr>(data_,strides_[N-1],top.current);
+                        last_ = iterator_one<T,TPtr>(data_,strides_[N-1],top.last);
+                        it_ = iterator_one<T, TPtr>(data_, strides_[N - 1], top.last - strides_[N - 1]);
+                    }
+                    done = true;
+                }
+            }
+        }
+        else
+        {
+            std::cout << "stack is empty\n";
+            stack_.emplace_back(offsets_[0]+strides_[0]*shape_[0], offsets_[0]+strides_[0]*shape_[0],0);
+            decrement(std::false_type());
+        }
     }
 
     void decrement(std::true_type)
     {
-        ++it_;
+        --it_;
     }
 };
 
@@ -1427,7 +1470,7 @@ public:
         offsets_.fill(0);
         initialize(dir, std::integral_constant<bool,N==1>());
     }
-
+ 
     column_major_iterator(TPtr data,
                        size_t size, 
                        const std::array<size_t,N>& shape, 
