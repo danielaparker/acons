@@ -1326,7 +1326,7 @@ private:
             while (!stack_.empty() && !done)
             {
                 iterator_state top = stack_.back();
-                std::cout << "top: " << top << "\n";
+                std::cout << "n: " << top.n << ", top: " << top << "\n";
                 stack_.pop_back();
                 if (top.n+1 < N)
                 {
@@ -1381,20 +1381,19 @@ private:
                         iterator_state state(top.first,top.last,top.current-strides_[top.n],top.n);
                         stack_.push_back(state);
                         top.n = top.n+1;
-                        top.first = state.current + offsets_[top.n] - strides_[top.n];
-                        top.last = top.first + strides_[top.n]*shape_[top.n];
+                        //top.first = state.current + offsets_[top.n] - strides_[top.n];
+                        //top.last = top.first + strides_[top.n]*shape_[top.n];
+                        top.last = top.last + offsets_[top.n] - strides_[top.n-1];
+                        top.first = top.last - strides_[top.n]*shape_[top.n];
                         top.current = top.last - strides_[top.n];
                         stack_.push_back(top);
                     }
                 }
                 else
                 {
-                    //if (top.current != top.first)
-                    {
-                        first_ = iterator_one<T,TPtr>(data_,strides_[N-1],top.first);
-                        last_ = iterator_one<T,TPtr>(data_,strides_[N-1],top.last);
-                        it_ = iterator_one<T, TPtr>(data_, strides_[N - 1], top.last - strides_[N - 1]);
-                    }
+                    first_ = iterator_one<T,TPtr>(data_,strides_[N-1],top.first);
+                    last_ = iterator_one<T,TPtr>(data_,strides_[N-1],top.last);
+                    it_ = iterator_one<T, TPtr>(data_, strides_[N - 1], top.last - strides_[N - 1]);
                     done = true;
                 }
             }

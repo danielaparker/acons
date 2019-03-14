@@ -4,7 +4,7 @@
 #include <sstream>
 
 using namespace acons;
-
+#if 0
 TEST_CASE("1-dim row_major ndarray iterator tests")
 {
     ndarray<double,1> a = {0,1,2,3,4,5,6,7};
@@ -492,7 +492,7 @@ TEST_CASE("3-dim 3x3x4 ndarray iterator tests")
 
     }
 }*/
-
+#endif
 TEST_CASE("2-dim 2x3 ndarray iterator tests")
 {
     typedef ndarray<double,2> array_t;
