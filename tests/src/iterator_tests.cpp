@@ -541,7 +541,7 @@ TEST_CASE("2-dim 3x4 ndarray iterator tests")
     array_t a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
     REQUIRE(a.shape(0) == 3);
     REQUIRE(a.shape(1) == 4);
-
+#if 0
     SECTION("No offsets")
     {
         array_t::view<2> v(a, { slice(0,3),slice(0,4) });
@@ -699,6 +699,58 @@ TEST_CASE("2-dim 3x4 ndarray iterator tests")
         CHECK(*it-- == 2);
         CHECK(*it == 1);
         CHECK(it == first); 
+    }
+#endif
+    SECTION("Short dim 2")
+    {
+        array_t::view<2> v(a, { slice(0,3),slice(0,3) });
+        // {{0,1,2},{3,4,5}}
+
+        REQUIRE(v.shape(0) == 3); 
+        REQUIRE(v.shape(1) == 3); 
+
+        std::cout << "shape: " << v.shape() << "\n";
+        std::cout << "strides: " << v.strides() << "\n";
+        std::cout << "offsets: " << v.offsets() << "\n";
+
+        auto first = make_row_major_iterator(v);
+        auto last = end(first);
+        auto it = first;
+
+        std::cout << "Increment\n";
+        CHECK(*it++ == 0);
+        CHECK(*it++ == 1);
+        CHECK(*it++ == 2);
+        std::cout << "Increment\n";
+        CHECK(*it++ == 4);
+        CHECK(*it == 5);
+        std::cout << "Decrement 1\n";
+        --it;
+        CHECK(*it == 4);
+        std::cout << "Decrement 2\n";
+
+        ++it;
+        CHECK(*it++ == 5);
+        CHECK(*it++ == 6);
+        CHECK(*it++ == 8);
+        CHECK(*it++ == 9);
+        CHECK(*it++ == 10);
+        CHECK(it == last);
+        --it;
+        CHECK(*it-- == 10);
+        CHECK(*it-- == 9);
+        std::cout << "Decrement 3\n";
+        CHECK(*it-- == 8);
+        CHECK(*it == 6);
+        /* --it;
+        std::cout << "Decrement 4\n";
+        CHECK(*it == 5);
+        --it;
+        CHECK(*it-- == 4);
+        CHECK(*it-- == 2);
+        CHECK(*it-- == 1);
+        CHECK(*it == 0);
+        CHECK(it == first); */
     }
 }
 

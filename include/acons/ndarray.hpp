@@ -1167,6 +1167,7 @@ class row_major_iterator
     std::array<size_t,N> shape_;
     std::array<size_t,N> strides_;
     std::array<size_t,N> offsets_;
+    std::array<size_t,N> roffsets_;
 
     std::vector<iterator_state> stack_; 
 
