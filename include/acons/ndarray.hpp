@@ -1381,7 +1381,7 @@ private:
                         iterator_state state(top.first,top.last,top.current-strides_[top.n],top.n);
                         stack_.push_back(state);
                         top.n = top.n+1;
-                        top.last = top.current + offsets_[top.n] - strides_[top.n-1];
+                        top.last = top.current /* + offsets_[top.n]*/ - strides_[top.n-1];
                         top.first = top.last - strides_[top.n]*shape_[top.n];
                         top.current = top.last - strides_[top.n];
                         stack_.push_back(top);

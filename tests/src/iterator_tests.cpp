@@ -600,7 +600,105 @@ TEST_CASE("2-dim 3x4 ndarray iterator tests")
         CHECK(*it-- == 1);
         CHECK(*it == 0);
         CHECK(it == first);
+    }
 
+    SECTION("Dim 0 offsets")
+    {
+        array_t::view<2> v(a, { slice(1,3),slice(0,4) });
+        // {{0,1,2},{3,4,5}}
+
+        REQUIRE(v.shape(0) == 2); 
+        REQUIRE(v.shape(1) == 4); 
+
+        std::cout << "shape: " << v.shape() << "\n";
+        std::cout << "strides: " << v.strides() << "\n";
+        std::cout << "offsets: " << v.offsets() << "\n";
+
+        auto first = make_row_major_iterator(v);
+        auto last = end(first);
+        auto it = first;
+
+        std::cout << "Increment\n";
+        CHECK(*it++ == 4);
+        CHECK(*it++ == 5);
+        CHECK(*it++ == 6);
+        std::cout << "Increment\n";
+        CHECK(*it++ == 7);
+        CHECK(*it == 8);
+        std::cout << "Decrement 1\n";
+        --it;
+        CHECK(*it == 7);
+        std::cout << "Decrement 2\n";
+
+        ++it;
+        CHECK(*it++ == 8);
+        CHECK(*it++ == 9);
+        CHECK(*it++ == 10);
+        CHECK(*it++ == 11);
+        CHECK(it == last);
+        --it;
+        CHECK(*it-- == 11);
+        CHECK(*it-- == 10);
+        std::cout << "Decrement 3\n";
+        CHECK(*it-- == 9);
+        std::cout << "Decrement 4\n";
+        CHECK(*it-- == 8);
+        CHECK(*it-- == 7);
+        CHECK(*it-- == 6);
+        CHECK(*it-- == 5);
+        CHECK(*it == 4);
+        CHECK(it == first);
+    }
+
+    SECTION("Dim 1 offsets")
+    {
+        array_t::view<2> v(a, { slice(0,3),slice(1,4) });
+        // {{0,1,2},{3,4,5}}
+
+        REQUIRE(v.shape(0) == 3); 
+        REQUIRE(v.shape(1) == 3); 
+
+        std::cout << "shape: " << v.shape() << "\n";
+        std::cout << "strides: " << v.strides() << "\n";
+        std::cout << "offsets: " << v.offsets() << "\n";
+
+        auto first = make_row_major_iterator(v);
+        auto last = end(first);
+        auto it = first;
+
+        std::cout << "Increment\n";
+        CHECK(*it++ == 1);
+        CHECK(*it++ == 2);
+        CHECK(*it++ == 3);
+        std::cout << "Increment\n";
+        CHECK(*it++ == 5);
+        CHECK(*it == 6);
+        std::cout << "Decrement 1\n";
+        --it;
+        CHECK(*it == 5);
+        std::cout << "Decrement 2\n";
+
+        ++it;
+        CHECK(*it++ == 6);
+        CHECK(*it++ == 7);
+        CHECK(*it++ == 9);
+        CHECK(*it++ == 10);
+        CHECK(*it++ == 11);
+        CHECK(it == last);
+        --it;
+        CHECK(*it-- == 11);
+        CHECK(*it-- == 10);
+        std::cout << "Decrement 3\n";
+        CHECK(*it-- == 9);
+        std::cout << "Decrement 4\n";
+        CHECK(*it == 7);
+        --it;
+        CHECK(*it-- == 6);
+        CHECK(*it-- == 5);
+        CHECK(*it-- == 3);
+        CHECK(*it-- == 2);
+        CHECK(*it == 1);
+        CHECK(it == first); 
     }
 }
 
