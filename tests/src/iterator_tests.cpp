@@ -534,7 +534,7 @@ TEST_CASE("2-dim 2x3 ndarray iterator tests")
     }
 }
 #endif
-
+#if 0
 TEST_CASE("2-dim 3x4 ndarray iterator tests")
 {
     typedef ndarray<double,2> array_t;
@@ -753,4 +753,29 @@ TEST_CASE("2-dim 3x4 ndarray iterator tests")
         CHECK(it == first); */
     }
 }
+#endif
 
+TEST_CASE("Calculate roffsets")
+{
+    typedef ndarray<double,2> array_t;
+    array_t a = {{0,1,2,3},{4,5,6,7},{8,9,10,11},{12,13,14,15}};
+
+    REQUIRE(a.shape(0) == 4);
+    REQUIRE(a.shape(1) == 4);
+
+    SECTION("offsets")
+    {
+        array_t::view<2> v(a, { slice(1,3),slice(1,3) });
+        // {{5,6},{9,10}}
+
+        REQUIRE(v.shape(0) == 2); 
+        REQUIRE(v.shape(1) == 2); 
+
+        std::cout << "v: " << v << "\n";
+
+        std::cout << "shape: " << v.shape() << "\n";
+        std::cout << "strides: " << v.strides() << "\n";
+        std::cout << "offsets: " << v.offsets() << "\n";
+
+    }
+}
