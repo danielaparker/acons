@@ -40,7 +40,7 @@ class iterator_one
 public:
     typedef T value_type;
     typedef std::ptrdiff_t difference_type;
-    typedef TPtr pointer;
+    typedef typename std::conditional<std::is_const<typename std::remove_pointer<TPtr>::type>::value,const T*,T*>::type pointer;
     typedef typename std::conditional<std::is_const<typename std::remove_pointer<TPtr>::type>::value,const T&,T&>::type reference;
     typedef std::input_iterator_tag iterator_category;
 
@@ -118,8 +118,8 @@ private:
     value_type v_;
 public:
     typedef std::ptrdiff_t difference_type;
-    typedef value_type* pointer;
-    typedef value_type& reference;
+    typedef typename std::conditional<std::is_const<typename std::remove_pointer<TPtr>::type>::value,const value_type*,value_type*>::type pointer;
+    typedef typename std::conditional<std::is_const<typename std::remove_pointer<TPtr>::type>::value,const value_type&,value_type&>::type reference;
     typedef std::input_iterator_tag iterator_category;
 
     iterator_n_minus_1()
@@ -605,7 +605,6 @@ public:
     {
         init_helper<N>::init(shape_, *this, i, args ...);
     }
-
     template <typename... Args>
     ndarray(std::allocator_arg_t, const Allocator& alloc, size_t i, Args... args)
         : super_type(std::allocator_arg, alloc) 
@@ -680,7 +679,7 @@ public:
     }
 
     ndarray(const ndarray& other)
-        : super_type(std::allocator_traits<allocator_type>::select_on_container_copy_construction(other.get_allocator())), 
+        : super_type(std::allocator_arg,std::allocator_traits<allocator_type>::select_on_container_copy_construction(other.get_allocator())), 
           data_(nullptr), num_elements_(other.size()), capacity_(0), shape_(other.shape_), strides_(other.strides_)          
     {
         capacity_ = num_elements_;
@@ -819,22 +818,22 @@ public:
     typename std::enable_if<m == 1,const_iterator>::type
     begin() const
     {
-        return iterator(this->data(),this->strides_[0],0);
+        return const_iterator(this->data(),this->strides_[0],0);
     }
 
     template <size_t m = N>
     typename std::enable_if<m == 1,const_iterator>::type
     end() const
     {
-        return iterator(this->data(),this->strides_[0],this->strides_[0]*this->shape_[0]);
+        return const_iterator(this->data(),this->strides_[0],this->strides_[0]*this->shape_[0]);
     }
 
     template <size_t m = N>
     typename std::enable_if<1 < m,const_iterator>::type
     begin() const
     {
-        return const_iterator(this->base_data(),
-                        this->base_size(),
+        return const_iterator(this->data(),
+                        this->size(),
                         this->shape(),
                         this->strides());
     }
@@ -843,8 +842,8 @@ public:
     typename std::enable_if<1 < m,const_iterator>::type
     end() const
     {
-        return const_iterator(this->base_data(),
-                        this->base_size(),
+        return const_iterator(this->data(),
+                        this->size(),
                         this->shape(),
                         this->strides(),
                         shape(0));
@@ -855,14 +854,14 @@ public:
     typename std::enable_if<m == 1,const_iterator>::type
     cbegin() const
     {
-        return iterator(this->data(),this->strides_[0],0);
+        return const_iterator(this->data(),this->strides_[0],0);
     }
 
     template <size_t m = N>
     typename std::enable_if<m == 1,const_iterator>::type
     cend() const
     {
-        return iterator(this->data(),this->strides_[0],this->strides_[0]*this->shape_[0]);
+        return const_iterator(this->data(),this->strides_[0],this->strides_[0]*this->shape_[0]);
     }
 
     template <size_t m = N>
@@ -1409,14 +1408,14 @@ public:
     typename std::enable_if<m == 1,const_iterator>::type
     begin() const
     {
-        return iterator(this->data(),this->strides_[0],0);
+        return const_iterator(this->data(),this->strides_[0],0);
     }
 
     template <size_t m = M>
     typename std::enable_if<m == 1,const_iterator>::type
     end() const
     {
-        return iterator(this->data(),this->strides_[0],this->strides_[0]*this->shape_[0]);
+        return const_iterator(this->data(),this->strides_[0],this->strides_[0]*this->shape_[0]);
     }
 
     template <size_t m = M>
@@ -1447,14 +1446,14 @@ public:
     typename std::enable_if<m == 1,const_iterator>::type
     cbegin() const
     {
-        return iterator(this->data(),this->strides_[0],0);
+        return const_iterator(this->data(),this->strides_[0],0);
     }
 
     template <size_t m = M>
     typename std::enable_if<m == 1,const_iterator>::type
     cend() const
     {
-        return iterator(this->data(),this->strides_[0],this->strides_[0]*this->shape_[0]);
+        return const_iterator(this->data(),this->strides_[0],this->strides_[0]*this->shape_[0]);
     }
 
     template <size_t m = M>
