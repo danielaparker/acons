@@ -22,6 +22,9 @@ namespace acons {
 template <typename T, typename TPtr>
 class iterator_one;
 
+template <typename T, size_t N, typename Order, typename Base, typename TPtr>
+class iterator_n_minus_1;
+
 struct zero_based
 {
     static constexpr size_t origin() {return 0;}
@@ -411,8 +414,8 @@ public:
     typedef T& reference;
     typedef const T& const_reference;
     static constexpr size_t ndim = N;
-    typedef T* iterator;
-    typedef const T* const_iterator;
+    typedef typename std::conditional<N==1,iterator_one<T,T*>,iterator_n_minus_1<T,N,Order,Base,T*>>::type iterator;
+    typedef typename std::conditional<N==1,iterator_one<T,const T*>,iterator_n_minus_1<T,N,Order,Base,const T*>>::type const_iterator;
     typedef Order order_type;
     typedef Base base_type;
 
@@ -621,34 +624,110 @@ public:
         get_allocator().deallocate(to_plain_pointer(data_), capacity_);
     }
 
-    iterator begin()
+    template <size_t m = N>
+    typename std::enable_if<m == 1,const_iterator>::type
+    begin()
     {
-        return to_plain_pointer(data_);
+        return iterator(this->data(),this->strides_[0],0);
     }
 
-    iterator end()
+    template <size_t m = N>
+    typename std::enable_if<m == 1,const_iterator>::type
+    end() 
     {
-        return to_plain_pointer(data_) + num_elements_;
+        return iterator(this->data(),this->strides_[0],this->strides_[0]*this->shape_[0]);
     }
 
-    const_iterator begin() const
+    template <size_t m = N>
+    typename std::enable_if<1 < m,const_iterator>::type
+    begin()
     {
-        return to_plain_pointer(data_);
+        return iterator(this->base_data(),
+                        this->base_size(),
+                        this->shape(),
+                        this->strides());
     }
 
-    const_iterator end() const
+    template <size_t m = N>
+    typename std::enable_if<1 < m,const_iterator>::type
+    end() 
     {
-        return to_plain_pointer(data_) + num_elements_;
+        return iterator(this->base_data(),
+                        this->base_size(),
+                        this->shape(),
+                        this->strides(),
+                        shape(0));
     }
 
-    const_iterator cbegin() const
+    template <size_t m = N>
+    typename std::enable_if<m == 1,const_iterator>::type
+    begin() const
     {
-        return to_plain_pointer(data_);
+        return iterator(this->data(),this->strides_[0],0);
     }
 
-    const_iterator cend() const
+    template <size_t m = N>
+    typename std::enable_if<m == 1,const_iterator>::type
+    end() const
     {
-        return to_plain_pointer(data_) + num_elements_;
+        return iterator(this->data(),this->strides_[0],this->strides_[0]*this->shape_[0]);
+    }
+
+    template <size_t m = N>
+    typename std::enable_if<1 < m,const_iterator>::type
+    begin() const
+    {
+        return const_iterator(this->base_data(),
+                        this->base_size(),
+                        this->shape(),
+                        this->strides());
+    }
+
+    template <size_t m = N>
+    typename std::enable_if<1 < m,const_iterator>::type
+    end() const
+    {
+        return const_iterator(this->base_data(),
+                        this->base_size(),
+                        this->shape(),
+                        this->strides(),
+                        shape(0));
+    }
+
+
+    template <size_t m = N>
+    typename std::enable_if<m == 1,const_iterator>::type
+    cbegin() const
+    {
+        return iterator(this->data(),this->strides_[0],0);
+    }
+
+    template <size_t m = N>
+    typename std::enable_if<m == 1,const_iterator>::type
+    cend() const
+    {
+        return iterator(this->data(),this->strides_[0],this->strides_[0]*this->shape_[0]);
+    }
+
+    template <size_t m = N>
+    typename std::enable_if<1 < m,const_iterator>::type
+    cbegin() const
+    {
+        return const_iterator(this->base_data(),
+                        this->base_size(),
+                        this->shape(),
+                        this->strides());
+    }
+
+    template <size_t m = N>
+    typename std::enable_if<1 < m,const_iterator>::type
+    cend() const
+    {
+        return const_iterator(this->base_data(),
+                        this->base_size(),
+                        this->shape(),
+                        this->strides(),
+                        shape(0));
     }
 
     void resize(const std::array<size_t,N>& shape, T value = T())
