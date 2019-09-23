@@ -74,9 +74,7 @@ TEST_CASE("1-dim ndarray ndarray_view iterator tests")
         CHECK((*it++ == 9));
         CHECK((it == v.end()));
     }
-
 }
-
 TEST_CASE("2-dim ndarray ndarray_view iterator tests")
 {
     ndarray<double,2> a = {{1.0,2.0,3.0,4.0},{5.0,6.0,7.0,8.0},{9.0,10.0,11.0,12.0}};
@@ -149,6 +147,53 @@ TEST_CASE("2-dim column_major ndarray ndarray_view iterator tests")
         CHECK((*it++ == 2.0));
         CHECK((*it++ == 4.0));
         CHECK((it == v.end()));
+    }
+}
+
+TEST_CASE("1-dim row_major ndarray iterator tests")
+{
+    ndarray<double,1> a = {0,1,2,3,4,5,6,7};
+    ndarray_view<double,1> v(a);
+
+    REQUIRE(v.shape(0) == 8);
+
+    SECTION("test 1")
+    {
+        auto it = v.begin();
+        auto last = v.end();
+
+        CHECK(*it++ == 0.0);
+        CHECK(*it++ == 1.0);
+        CHECK(*it++ == 2.0);
+        CHECK(*it++ == 3.0);
+        CHECK(*it++ == 4.0);
+        CHECK(*it++ == 5.0);
+        CHECK(*it++ == 6.0);
+        CHECK(*it++ == 7.0);
+        CHECK(it == last);
+    }   
+}
+TEST_CASE("1-dim column_major ndarray iterator tests")
+{
+    ndarray<double,1,column_major> a = {0,1,2,3,4,5,6,7};
+    ndarray_view<double,1,column_major> v(a);
+
+    REQUIRE(v.shape(0) == 8);
+
+    SECTION("test 1")
+    {
+        auto it = v.begin();
+        auto last = v.end();
+
+        CHECK(*it++ == 0.0);
+        CHECK(*it++ == 1.0);
+        CHECK(*it++ == 2.0);
+        CHECK(*it++ == 3.0);
+        CHECK(*it++ == 4.0);
+        CHECK(*it++ == 5.0);
+        CHECK(*it++ == 6.0);
+        CHECK(*it++ == 7.0);
+        CHECK(it == last);
     }
 }
 

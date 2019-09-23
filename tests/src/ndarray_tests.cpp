@@ -5,14 +5,50 @@
 
 using namespace acons;
 
-TEST_CASE("2D Array 3")
+template <class T>
+struct MyAlloc
+{
+    using value_type = T;
+    using size_type = std::size_t;
+    using propagate_on_container_move_assignment = std::true_type;
+
+    MyAlloc(int) {}
+
+    template< class U >
+    MyAlloc(const MyAlloc<U>&) noexcept {}
+
+    T* allocate(size_type n)
+    {
+        return static_cast<T*>(::operator new(n * sizeof(T)));
+    }
+
+    void deallocate(T* ptr, size_type) noexcept
+    {
+        ::operator delete(ptr);
+    }
+
+    bool operator==(const MyAlloc&) const { return true; }
+    bool operator!=(const MyAlloc&) const { return false; }
+};
+
+TEST_CASE("Array constructor tests")
 {
     ndarray<size_t, 2> a(3, 2, 7);
+    ndarray<size_t, 2, row_major, zero_based, MyAlloc<size_t>> b(std::allocator_arg, MyAlloc<size_t>(1), 3, 2);
 
-    a(1,0) = 6;
-    CHECK(a(0, 0) == 7);
-    CHECK(a(1, 0) == 6);
+    SECTION("initial value")
+    {
+        CHECK(a(0, 0) == 7);
+        CHECK(a(1, 0) == 7);
+        CHECK(a(2, 0) == 7);
+        CHECK(a(0, 1) == 7);
+        CHECK(a(1, 1) == 7);
+        CHECK(a(2, 1) == 7);
+    }
 
+    SECTION("Allocator")
+    {
+    }
 }
 
 TEST_CASE("2D Array 4")
