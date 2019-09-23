@@ -19,11 +19,181 @@ namespace acons {
 
 // Forward declarations
 
+template <typename T, size_t M, typename Order = row_major, typename Base = zero_based, typename TPtr = const T*>
+class ndarray_view_base;
+
+template <typename T, size_t N, typename Order = row_major, typename Base = zero_based, typename Allocator = std::allocator<T>>
+class ndarray;
+
+template <typename T, size_t M, typename Order = row_major, typename Base = zero_based>
+class const_ndarray_view;
+
+template <typename T, size_t M, typename Order = row_major, typename Base = zero_based>
+class ndarray_view;
+
 template <typename T, typename TPtr>
-class iterator_one;
+class iterator_one
+{
+    TPtr data_;
+    size_t stride_;
+    size_t offset_;
+public:
+    typedef T value_type;
+    typedef std::ptrdiff_t difference_type;
+    typedef TPtr pointer;
+    typedef typename std::conditional<std::is_const<typename std::remove_pointer<TPtr>::type>::value,const T&,T&>::type reference;
+    typedef std::input_iterator_tag iterator_category;
+
+    iterator_one()
+        : data_(nullptr), stride_(0), offset_(0)
+    {
+    }
+
+    iterator_one(TPtr data, size_t stride, size_t offset)
+        : data_(data), stride_(stride), offset_(offset)
+    {
+    }
+
+    iterator_one(const iterator_one&) = default;
+    iterator_one(iterator_one&&) = default;
+    iterator_one& operator=(const iterator_one&) = default;
+    iterator_one& operator=(iterator_one&&) = default;
+
+    iterator_one& operator++()
+    {
+        //std::cout << "offset 1: " << offset_ << ", stride: " << stride_<< "\n";
+        offset_ += stride_;
+        //std::cout << "offset 2: " << offset_ << "\n";
+        return *this;
+    }
+
+    iterator_one operator++(int) // postfix increment
+    {
+        iterator_one temp(*this);
+        ++(*this);
+        return temp;
+    }
+
+    iterator_one& operator--()
+    {
+        offset_ -= stride_;
+        return *this;
+    }
+
+    iterator_one operator--(int) // postfix decrement
+    {
+        iterator_one temp(*this);
+        --(*this);
+        return temp;
+    }
+
+    reference operator*() const
+    {
+        return *(data_+offset_);
+    }
+
+    friend bool operator==(const iterator_one& it1, const iterator_one& it2)
+    {
+        return (it1.data_ == it2.data_) && (it1.offset_ == it2.offset_);
+    }
+    friend bool operator!=(const iterator_one& it1, const iterator_one& it2)
+    {
+        return !(it1 == it2);
+    }
+};
 
 template <typename T, size_t N, typename Order, typename Base, typename TPtr>
-class iterator_n_minus_1;
+class iterator_n_minus_1
+{
+public:
+    static constexpr size_t ndim = N-1;
+    typedef ndarray_view_base<T,ndim,Order,Base,TPtr> value_type;
+private:
+    TPtr base_data_;
+    size_t base_size_;
+    std::array<size_t,N> shape_;
+    std::array<size_t,N> strides_;
+    std::array<size_t,N> offsets_;
+    std::array<size_t, 1> index_;
+    value_type v_;
+public:
+    typedef std::ptrdiff_t difference_type;
+    typedef value_type* pointer;
+    typedef value_type& reference;
+    typedef std::input_iterator_tag iterator_category;
+
+    iterator_n_minus_1()
+        : base_data_(nullptr), base_size_(0), index_{0}
+    {
+        shape_.fill(0);
+        strides_.fill(0);
+        offsets_.fill(0);
+    }
+
+    iterator_n_minus_1(TPtr data, size_t size, const std::array<size_t,N>& shape, const std::array<size_t,N>& strides, size_t index = 0)
+        : base_data_(data), base_size_(size), shape_(shape), strides_(strides), 
+          index_{index},
+          v_(data,size,shape,strides, index_)
+    {
+        offsets_.fill(0);
+    }
+
+    iterator_n_minus_1(TPtr data, size_t size, const std::array<size_t,N>& shape, const std::array<size_t,N>& strides, const std::array<size_t,N>& offsets, size_t index = 0)
+        : base_data_(data), base_size_(size), shape_(shape), strides_(strides), offsets_(offsets), 
+        index_{index},
+          v_(data, size, shape, strides, offsets, index_)
+    {
+    }
+
+    iterator_n_minus_1(const iterator_n_minus_1&) = default;
+    iterator_n_minus_1(iterator_n_minus_1&&) = default;
+    iterator_n_minus_1& operator=(const iterator_n_minus_1&) = default;
+    iterator_n_minus_1& operator=(iterator_n_minus_1&&) = default;
+
+    iterator_n_minus_1& operator++()
+    {
+        //std::cout << "offset 1: " << offset_ << ", stride: " << stride_<< "\n";
+        ++index_[0];
+        v_ = value_type(base_data_,base_size_,shape_,strides_,offsets_,index_);
+        //std::cout << "offset 2: " << offset_ << "\n";
+        return *this;
+    }
+
+    iterator_n_minus_1 operator++(int) // postfix increment
+    {
+        iterator_n_minus_1 temp(*this);
+        ++(*this);
+        return temp;
+    }
+
+    iterator_n_minus_1& operator--()
+    {
+        --index_[0];
+        v_ = value_type(base_data_,base_size_,shape_,strides_,offsets_,index_);
+        return *this;
+    }
+
+    iterator_n_minus_1 operator--(int) // postfix decrement
+    {
+        iterator_n_minus_1 temp(*this);
+        --(*this);
+        return temp;
+    }
+
+    reference operator*() const
+    {
+        return v_;
+    }
+
+    friend bool operator==(const iterator_n_minus_1& it1, const iterator_n_minus_1& it2)
+    {
+        return (it1.base_data_ == it2.base_data_) && (it1.index_[0] == it2.index_[0]);
+    }
+    friend bool operator!=(const iterator_n_minus_1& it1, const iterator_n_minus_1& it2)
+    {
+        return !(it1 == it2);
+    }
+};
 
 struct zero_based
 {
@@ -129,21 +299,21 @@ struct is_stateless
        std::is_empty<T>::value)>
 {};
 
-template <size_t n, typename Base, size_t m>
-typename std::enable_if<m+1 == n, size_t>::type
-get_offset(const std::array<size_t,n>& strides, 
+template <size_t N, typename Base, size_t M>
+typename std::enable_if<M+1 == N, size_t>::type
+get_offset(const std::array<size_t,N>& strides, 
            size_t index) 
 {
-    return Base::rebase_to_zero(index)*strides[n-1];
+    return Base::rebase_to_zero(index)*strides[N-1];
 }
 
-template <size_t n, typename Base, size_t m, typename... Indices>
-typename std::enable_if<(m+1 < n), size_t>::type
-get_offset(const std::array<size_t,n>& strides, 
+template <size_t N, typename Base, size_t M, typename... Indices>
+typename std::enable_if<(M+1 < N), size_t>::type
+get_offset(const std::array<size_t,N>& strides, 
            size_t index, Indices... indices)
 {
-    const size_t mplus1 = m + 1;
-    size_t i = Base::rebase_to_zero(index)*strides[m] + get_offset<n, Base, mplus1>(strides,indices...);
+    static constexpr size_t mplus1 = M + 1;
+    size_t i = Base::rebase_to_zero(index)*strides[M] + get_offset<N, Base, mplus1>(strides,indices...);
 
     return i;
 }
@@ -162,24 +332,24 @@ get_offset(const std::array<size_t,N>& strides,
     return offset;
 }
 
-template <size_t n, typename Base, size_t m>
-typename std::enable_if<m+1 == n, size_t>::type
-get_offset(const std::array<size_t,n>& strides,
-           const std::array<size_t,n>& offsets, 
+template <size_t N, typename Base, size_t M>
+typename std::enable_if<M+1 == N, size_t>::type
+get_offset(const std::array<size_t,N>& strides,
+           const std::array<size_t,N>& offsets, 
            size_t index) 
 {
-    size_t i = Base::rebase_to_zero(index)*strides[m] + offsets[m];
+    size_t i = Base::rebase_to_zero(index)*strides[M] + offsets[M];
     return i;
 }
 
-template <size_t n, typename Base, size_t m, typename... Indices>
-typename std::enable_if<(m+1 < n), size_t>::type
-get_offset(const std::array<size_t,n>& strides, 
-           const std::array<size_t, n>& offsets, 
+template <size_t N, typename Base, size_t M, typename... Indices>
+typename std::enable_if<(M+1 < N), size_t>::type
+get_offset(const std::array<size_t,N>& strides, 
+           const std::array<size_t, N>& offsets, 
            size_t index, Indices... indices)
 {
-    const size_t mplus1 = m + 1;
-    size_t i = offsets[m] + Base::rebase_to_zero(index)*strides[m] + get_offset<n, Base, mplus1>(strides,offsets,indices...);
+    static constexpr size_t mplus1 = M + 1;
+    size_t i = offsets[M] + Base::rebase_to_zero(index)*strides[M] + get_offset<N, Base, mplus1>(strides,offsets,indices...);
     return i;
 }
 
@@ -265,20 +435,6 @@ struct column_major
         return offsets;
     }
 };
-
-// Forward declarations
-
-template <typename T, size_t M, typename Order = row_major, typename Base = zero_based, typename TPtr = const T*>
-class ndarray_view_base;
-
-template <typename T, size_t N, typename Order = row_major, typename Base = zero_based, typename Allocator = std::allocator<T>>
-class ndarray;
-
-template <typename T, size_t M, typename Order = row_major, typename Base = zero_based>
-class const_ndarray_view;
-
-template <typename T, size_t M, typename Order = row_major, typename Base = zero_based>
-class ndarray_view;
 
 // ndarray
 
@@ -1118,170 +1274,6 @@ std::basic_ostream<CharT>& operator<<(std::basic_ostream<CharT>& os, ndarray<T, 
     return os;
 }
 
-template <typename T, typename TPtr>
-class iterator_one
-{
-    TPtr data_;
-    size_t stride_;
-    size_t offset_;
-public:
-    typedef T value_type;
-    typedef std::ptrdiff_t difference_type;
-    typedef TPtr pointer;
-    typedef typename std::conditional<std::is_const<typename std::remove_pointer<TPtr>::type>::value,const T&,T&>::type reference;
-    typedef std::input_iterator_tag iterator_category;
-
-    iterator_one()
-        : data_(nullptr), stride_(0), offset_(0)
-    {
-    }
-
-    iterator_one(TPtr data, size_t stride, size_t offset)
-        : data_(data), stride_(stride), offset_(offset)
-    {
-    }
-
-    iterator_one(const iterator_one&) = default;
-    iterator_one(iterator_one&&) = default;
-    iterator_one& operator=(const iterator_one&) = default;
-    iterator_one& operator=(iterator_one&&) = default;
-
-    iterator_one& operator++()
-    {
-        //std::cout << "offset 1: " << offset_ << ", stride: " << stride_<< "\n";
-        offset_ += stride_;
-        //std::cout << "offset 2: " << offset_ << "\n";
-        return *this;
-    }
-
-    iterator_one operator++(int) // postfix increment
-    {
-        iterator_one temp(*this);
-        ++(*this);
-        return temp;
-    }
-
-    iterator_one& operator--()
-    {
-        offset_ -= stride_;
-        return *this;
-    }
-
-    iterator_one operator--(int) // postfix decrement
-    {
-        iterator_one temp(*this);
-        --(*this);
-        return temp;
-    }
-
-    reference operator*() const
-    {
-        return *(data_+offset_);
-    }
-
-    friend bool operator==(const iterator_one& it1, const iterator_one& it2)
-    {
-        return (it1.data_ == it2.data_) && (it1.offset_ == it2.offset_);
-    }
-    friend bool operator!=(const iterator_one& it1, const iterator_one& it2)
-    {
-        return !(it1 == it2);
-    }
-};
-
-template <typename T, size_t N, typename Order, typename Base, typename TPtr>
-class iterator_n_minus_1
-{
-public:
-    static constexpr size_t ndim = N-1;
-    typedef ndarray_view_base<T,ndim,Order,Base,TPtr> value_type;
-private:
-    TPtr base_data_;
-    size_t base_size_;
-    std::array<size_t,N> shape_;
-    std::array<size_t,N> strides_;
-    std::array<size_t,N> offsets_;
-    std::array<size_t, 1> index_;
-    value_type v_;
-public:
-    typedef std::ptrdiff_t difference_type;
-    typedef value_type* pointer;
-    typedef value_type& reference;
-    typedef std::input_iterator_tag iterator_category;
-
-    iterator_n_minus_1()
-        : base_data_(nullptr), base_size_(0), index_{0}
-    {
-        shape_.fill(0);
-        strides_.fill(0);
-        offsets_.fill(0);
-    }
-
-    iterator_n_minus_1(TPtr data, size_t size, const std::array<size_t,N>& shape, const std::array<size_t,N>& strides, size_t index = 0)
-        : base_data_(data), base_size_(size), shape_(shape), strides_(strides), 
-          index_{index},
-          v_(data,size,shape,strides, index_)
-    {
-        offsets_.fill(0);
-    }
-
-    iterator_n_minus_1(TPtr data, size_t size, const std::array<size_t,N>& shape, const std::array<size_t,N>& strides, const std::array<size_t,N>& offsets, size_t index = 0)
-        : base_data_(data), base_size_(size), shape_(shape), strides_(strides), offsets_(offsets), 
-        index_{index},
-          v_(data, size, shape, strides, offsets, index_)
-    {
-    }
-
-    iterator_n_minus_1(const iterator_n_minus_1&) = default;
-    iterator_n_minus_1(iterator_n_minus_1&&) = default;
-    iterator_n_minus_1& operator=(const iterator_n_minus_1&) = default;
-    iterator_n_minus_1& operator=(iterator_n_minus_1&&) = default;
-
-    iterator_n_minus_1& operator++()
-    {
-        //std::cout << "offset 1: " << offset_ << ", stride: " << stride_<< "\n";
-        ++index_[0];
-        v_ = value_type(base_data_,base_size_,shape_,strides_,offsets_,index_);
-        //std::cout << "offset 2: " << offset_ << "\n";
-        return *this;
-    }
-
-    iterator_n_minus_1 operator++(int) // postfix increment
-    {
-        iterator_n_minus_1 temp(*this);
-        ++(*this);
-        return temp;
-    }
-
-    iterator_n_minus_1& operator--()
-    {
-        --index_[0];
-        v_ = value_type(base_data_,base_size_,shape_,strides_,offsets_,index_);
-        return *this;
-    }
-
-    iterator_n_minus_1 operator--(int) // postfix decrement
-    {
-        iterator_n_minus_1 temp(*this);
-        --(*this);
-        return temp;
-    }
-
-    reference operator*() const
-    {
-        return v_;
-    }
-
-    friend bool operator==(const iterator_n_minus_1& it1, const iterator_n_minus_1& it2)
-    {
-        return (it1.base_data_ == it2.base_data_) && (it1.index_[0] == it2.index_[0]);
-    }
-    friend bool operator!=(const iterator_n_minus_1& it1, const iterator_n_minus_1& it2)
-    {
-        return !(it1 == it2);
-    }
-};
-
 // ndarray_view_base
 
 template <typename T, size_t M, typename Order, typename Base, typename TPtr>
@@ -1332,8 +1324,8 @@ public:
         return base_data_;
     }
 
-    template <typename TPtr2=TPtr>
-    typename std::enable_if<!is_pointer_to_const<TPtr2>::value,T*>::type
+    template <typename tptr=TPtr>
+    typename std::enable_if<!is_pointer_to_const<tptr>::value,T*>::type
     base_data()
     {
         return base_data_;
@@ -1344,8 +1336,8 @@ public:
         return base_data_ + std::accumulate(offsets_.begin(), offsets_.end(), size_t(0));
     }
 
-    template <typename TPtr2=TPtr>
-    typename std::enable_if<!is_pointer_to_const<TPtr2>::value,T*>::type
+    template <typename tptr=TPtr>
+    typename std::enable_if<!is_pointer_to_const<tptr>::value,T*>::type
     data()
     {
         return base_data_ + std::accumulate(offsets_.begin(), offsets_.end(), size_t(0));
@@ -1376,22 +1368,22 @@ public:
         return base_data_[off];
     }
 
-    template <size_t m = M, typename TPtr2=TPtr>
-    typename std::enable_if<m == 1 && !std::is_const<typename std::remove_pointer<TPtr2>::type>::value,iterator>::type
+    template <size_t m = M, typename tptr=TPtr>
+    typename std::enable_if<m == 1 && !std::is_const<typename std::remove_pointer<tptr>::type>::value,iterator>::type
     begin()
     {
         return iterator(this->data(),this->strides_[0],0);
     }
 
-    template <size_t m = M, typename TPtr2=TPtr>
-    typename std::enable_if<m == 1 && !std::is_const<typename std::remove_pointer<TPtr2>::type>::value,iterator>::type
+    template <size_t m = M, typename tptr=TPtr>
+    typename std::enable_if<m == 1 && !std::is_const<typename std::remove_pointer<tptr>::type>::value,iterator>::type
     end() 
     {
         return iterator(this->data(),this->strides_[0],this->strides_[0]*this->shape_[0]);
     }
 
-    template <size_t m = M, typename TPtr2=TPtr>
-    typename std::enable_if<1 < m && !std::is_const<typename std::remove_pointer<TPtr2>::type>::value,iterator>::type
+    template <size_t m = M, typename tptr=TPtr>
+    typename std::enable_if<1 < m && !std::is_const<typename std::remove_pointer<tptr>::type>::value,iterator>::type
     begin()
     {
         return iterator(this->base_data(),
@@ -1401,8 +1393,8 @@ public:
                         this->offsets());
     }
 
-    template <size_t m = M, typename TPtr2=TPtr>
-    typename std::enable_if<1 < m && !std::is_const<typename std::remove_pointer<TPtr2>::type>::value,iterator>::type
+    template <size_t m = M, typename tptr=TPtr>
+    typename std::enable_if<1 < m && !std::is_const<typename std::remove_pointer<tptr>::type>::value,iterator>::type
     end() 
     {
         return iterator(this->base_data(),
