@@ -1297,32 +1297,116 @@ public:
         return base_data_[off];
     }
 
+    template <size_t m = M, typename TPtr2=TPtr>
+    typename std::enable_if<m == 1 && !std::is_const<typename std::remove_pointer<TPtr2>::type>::value,iterator>::type
+    begin()
+    {
+        return iterator(this->data(),this->strides_[0],0);
+    }
+
+    template <size_t m = M, typename TPtr2=TPtr>
+    typename std::enable_if<m == 1 && !std::is_const<typename std::remove_pointer<TPtr2>::type>::value,iterator>::type
+    end() 
+    {
+        return iterator(this->data(),this->strides_[0],this->strides_[0]*this->shape_[0]);
+    }
+
+    template <size_t m = M, typename TPtr2=TPtr>
+    typename std::enable_if<1 < m && !std::is_const<typename std::remove_pointer<TPtr2>::type>::value,iterator>::type
+    begin()
+    {
+        return iterator(this->base_data(),
+                        this->base_size(),
+                        this->shape(),
+                        this->strides(),
+                        this->offsets());
+    }
+
+    template <size_t m = M, typename TPtr2=TPtr>
+    typename std::enable_if<1 < m && !std::is_const<typename std::remove_pointer<TPtr2>::type>::value,iterator>::type
+    end() 
+    {
+        return iterator(this->base_data(),
+                        this->base_size(),
+                        this->shape(),
+                        this->strides(),
+                        this->offsets(),
+                        shape(0));
+    }
+
     template <size_t m = M>
     typename std::enable_if<m == 1,const_iterator>::type
     begin() const
     {
-        return const_iterator(data(),strides()[0],0);
+        return iterator(this->data(),this->strides_[0],0);
     }
 
     template <size_t m = M>
     typename std::enable_if<m == 1,const_iterator>::type
     end() const
     {
-        return const_iterator(data(),strides_[0],strides_[0]*shape_[0]);
+        return iterator(this->data(),this->strides_[0],this->strides_[0]*this->shape_[0]);
     }
+
+    template <size_t m = M>
+    typename std::enable_if<1 < m,const_iterator>::type
+    begin() const
+    {
+        return const_iterator(this->base_data(),
+                        this->base_size(),
+                        this->shape(),
+                        this->strides(),
+                        this->offsets());
+    }
+
+    template <size_t m = M>
+    typename std::enable_if<1 < m,const_iterator>::type
+    end() const
+    {
+        return const_iterator(this->base_data(),
+                        this->base_size(),
+                        this->shape(),
+                        this->strides(),
+                        this->offsets(),
+                        shape(0));
+    }
+
 
     template <size_t m = M>
     typename std::enable_if<m == 1,const_iterator>::type
     cbegin() const
     {
-        return const_iterator(data(),strides()[0],0);
+        return iterator(this->data(),this->strides_[0],0);
     }
 
     template <size_t m = M>
     typename std::enable_if<m == 1,const_iterator>::type
     cend() const
     {
-        return const_iterator(data(),strides_[0],strides_[0]*shape_[0]);
+        return iterator(this->data(),this->strides_[0],this->strides_[0]*this->shape_[0]);
+    }
+
+    template <size_t m = M>
+    typename std::enable_if<1 < m,const_iterator>::type
+    cbegin() const
+    {
+        return const_iterator(this->base_data(),
+                        this->base_size(),
+                        this->shape(),
+                        this->strides(),
+                        this->offsets());
+    }
+
+    template <size_t m = M>
+    typename std::enable_if<1 < m,const_iterator>::type
+    cend() const
+    {
+        return const_iterator(this->base_data(),
+                        this->base_size(),
+                        this->shape(),
+                        this->strides(),
+                        this->offsets(),
+                        shape(0));
     }
 protected:
 public:
@@ -1709,70 +1793,6 @@ public:
         size_t off = get_offset<M, M, Base>(this->strides_, this->offsets_, indices);
         assert(off < this->base_size());
         return this->base_data_[off];
-    }
-
-    template <size_t m = M>
-    typename std::enable_if<m == 1,iterator>::type
-    begin()
-    {
-        return iterator(this->data(),this->strides_[0],0);
-    }
-
-    template <size_t m = M>
-    typename std::enable_if<m == 1,iterator>::type
-    end() 
-    {
-        return iterator(this->data(),this->strides_[0],this->strides_[0]*this->shape_[0]);
-    }
-
-    template <size_t m = M>
-    typename std::enable_if<1 < m,iterator>::type
-    begin()
-    {
-        return iterator(this->base_data(),
-                        this->base_size(),
-                        this->shape(),
-                        this->strides(),
-                        this->offsets());
-    }
-
-    template <size_t m = M>
-    typename std::enable_if<1 < m,iterator>::type
-    end() 
-    {
-        return iterator(this->base_data(),
-                        this->base_size(),
-                        this->shape(),
-                        this->strides(),
-                        this->offsets());
-    }
-
-    template <size_t m = M>
-    typename std::enable_if<m == 1,const_iterator>::type
-    begin() const
-    {
-        return const_iterator(this->data(),this->strides_[0],0);
-    }
-
-    template <size_t m = M>
-    typename std::enable_if<m == 1,const_iterator>::type
-    end() const
-    {
-        return const_iterator(this->data(),this->strides_[0],this->strides_[0]*this->shape_[0]);
-    }
-
-    template <size_t m = M>
-    typename std::enable_if<m == 1,const_iterator>::type
-    cbegin() const
-    {
-        return const_iterator(this->data(),this->strides_[0],0);
-    }
-
-    template <size_t m = M>
-    typename std::enable_if<m == 1,const_iterator>::type
-    cend() const
-    {
-        return const_iterator(this->data(),this->strides_[0],this->strides_[0]*this->shape_[0]);
     }
 };
 
