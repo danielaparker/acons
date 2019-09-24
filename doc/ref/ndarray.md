@@ -49,39 +49,33 @@ Member type                         |Definition
     ndarray(size_t i, Args... args); // (2)
 
     template <typename... Args>
-    ndarray(const Allocator& alloc, size_t i, Args... args); // (3)
+    ndarray(std::allocator_arg_t, const Allocator& alloc, size_t i, Args... args); // (3)
 
-    explicit ndarray(const std::array<size_t,N>& shape); // (4)
+    explicit ndarray(const extents_t<N>& shape); // (4)
 
-    ndarray(const std::array<size_t,N>& shape, 
-            const Allocator& alloc); // (5)
+    ndarray(std::allocator_arg_t, const Allocator& alloc, const extents_t<N>& shape); // (5)
 
-    ndarray(const std::array<size_t,N>& shape,
-            T val); // (6)
+    ndarray(const extents_t<N>& shape, T val); // (6)
 
-    ndarray(const std::array<size_t,N>& shape, 
-            T val,
-            const Allocator& alloc); // (7)
+    ndarray(std::allocator_arg_t, const Allocator& alloc, const extents_t<N>& shape, T val); // (7)
 
-    ndarray(std::initializer_list<array_item<T>> list); // (8)
+    ndarray(std::initializer_list<array_item<T>> list); // (8) 
 
-    ndarray(std::initializer_list<array_item<T>> list, 
-            const Allocator& alloc); // (9)
+    ndarray(std::allocator_arg_t, const Allocator& alloc, std::initializer_list<array_item<T>> list); // (9) 
 
     ndarray(const ndarray& other); // (10)
 
-    ndarray(const ndarray& other, const Allocator& alloc); // (11)
+    ndarray(std::allocator_arg_t, const Allocator& alloc, const ndarray& other); // (11)
 
     ndarray(ndarray&& other); // (12)
 
-    ndarray(ndarray&& other, const Allocator& alloc); // (13)
+    ndarray(std::allocator_arg_t, const Allocator& alloc, ndarray&& other); // (13)
 
     template <typename TPtr>
-    ndarray(const const_ndarray_view<T,N,Order,Base,TPtr>& av); // (14)
+    ndarray(const ndarray_view_base<T,N,Order,Base,TPtr>& av); // (14)
 
     template <typename TPtr>
-    ndarray(const const_ndarray_view<T,N,Order,Base,TPtr>& av, 
-            const Allocator& alloc); // (15)
+    ndarray(std::allocator_arg_t, const Allocator& alloc, const ndarray_view_base<T,N,Order,Base,TPtr>& av); // (15)
 
 Constructs a new N-dimensional array, optionally using a user supplied allocator.
 

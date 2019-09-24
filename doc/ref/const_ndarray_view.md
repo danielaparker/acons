@@ -45,49 +45,57 @@ Member type                         |Definition
     template <typename Allocator>
     const_ndarray_view(const ndarray<T, M, Order, Base, Allocator>& a); // (1)
 
+    template<typename OtherTPtr>
+    const_ndarray_view(const ndarray_view_base<T, M, Order, Base, OtherTPtr>& other); // (2)
+
+    const_ndarray_view(const_ndarray_view<T, M, Order, Base>&& a); // (3)
+
     template<typename Allocator>
     const_ndarray_view(const ndarray<T, M, Order, Base, Allocator>& a, 
-                       const std::array<slice,M>& slices); // (2)
+                       const std::array<slice,M>& slices); // (4)
 
     template<size_t N, typename Allocator>
     const_ndarray_view(const ndarray<T, N, Order, Base, Allocator>& a, 
-                       const std::array<size_t,N-M>& origin); // (3)
-
-    template<typename OtherTPtr>
-    const_ndarray_view(const ndarray_view_base<T, M, Order, Base, OtherTPtr>& other); // (4)
+                       const indices_t<N-M>& first_dim); // (5)
 
     template<typename OtherTPtr>
     const_ndarray_view(const ndarray_view_base<T, M, Order, Base, OtherTPtr>& other, 
-                       const std::array<slice,M>& slices); // (5)
+                       const std::array<slice,M>& slices); // (6)
 
     template<size_t m = M, size_t N, typename OtherTPtr>
     const_ndarray_view(const ndarray_view_base<T, N, Order, Base, OtherTPtr>& other, 
-                       const std::array<size_t,N-m>& origin); // (6)
+                       const indices_t<N-m>& first_dim); // (7)
 
     template<size_t N, typename Allocator>
     const_ndarray_view(const ndarray<T, N, Order, Base, Allocator>& other, 
-                       const std::array<size_t,N-M>& origin,
-                       const std::array<slice,M>& slices); // (7)
+                       const indices_t<N-M>& first_dim,
+                       const std::array<slice,M>& slices); // (8)
 
     template<size_t N, typename OtherTPtr>
     const_ndarray_view(const ndarray_view_base<T, N, Order, Base, OtherTPtr>& other, 
-                       const std::array<size_t,N-M>& origin,
-                       const std::array<slice,M>& slices); // (8)
+                       const indices_t<N-M>& first_dim,
+                       const std::array<slice,M>& slices); // (9)
 
     template<size_t N, typename Allocator>
     const_ndarray_view(const ndarray<T, N, Order, Base, Allocator>& other,
                        const std::array<slice,M>& slices, 
-                       const std::array<size_t,N-M>& origin); // (9)
+                       const indices_t<N-M>& last_dim); // (10)
 
     template<size_t N, typename OtherTPtr>
     const_ndarray_view(const ndarray_view_base<T, N, Order, Base, OtherTPtr>& other,
                        const std::array<slice,M>& slices, 
-                       const std::array<size_t,N-M>& origin); // (10)
+                       const indices_t<N-M>& last_dim); // (11)
 
-    const_ndarray_view(const T* data, const std::array<size_t,M>& shape); // (11)
+    const_ndarray_view(const T* data, const extents_t<M>& shape); // (12) 
 
     template <typename... Args>
-    const_ndarray_view(const T* data, size_t i, Args... args); // (12)
+    const_ndarray_view(const T* data, size_t i, Args... args); // (13) 
+
+    template <typename Allocator>
+    const_ndarray_view& operator=(const ndarray<T, M, Order, Base, Allocator>& a); // (14)
+
+    template<typename OtherTPtr>
+    const_ndarray_view& operator=(const ndarray_view_base<T, M, Order, Base, OtherTPtr>& other); // (15)
 
 Constructs a new M-dimensional array view.
 
