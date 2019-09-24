@@ -680,7 +680,7 @@ struct init_helper<0>
         a.init();
     }
     template <typename Array>
-    static void init(std::array<size_t, Array::ndim>&, Array& a, typename Array::const_reference val)
+    static void init(extents<Array::ndim>&, Array& a, typename Array::const_reference val)
     {
         a.init(val);
     }

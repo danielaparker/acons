@@ -31,11 +31,11 @@ struct MyAlloc
     bool operator!=(const MyAlloc&) const { return false; }
 };
  
-#if 0
 TEST_CASE("Array constructor tests")
 {
     ndarray<size_t, 2> a(extents<2>{3, 2}, 7);
-    ndarray<size_t, 2, row_major, zero_based, MyAlloc<size_t>> b(std::allocator_arg, MyAlloc<size_t>(1), extents<2>{3, 2}, 7);
+    ndarray<size_t, 2> b(extents<2>{3, 2});
+    ndarray<size_t, 2, row_major, zero_based, MyAlloc<size_t>> c(std::allocator_arg, MyAlloc<size_t>(1), extents<2>{3, 2}, 7);
 
     SECTION("initial value")
     {
@@ -47,11 +47,20 @@ TEST_CASE("Array constructor tests")
         CHECK(a(2, 1) == 7);
     }
 
+    SECTION("b")
+    {
+        CHECK(b(0, 0) == 0);
+        CHECK(b(1, 0) == 0);
+        CHECK(b(2, 0) == 0);
+        CHECK(b(0, 1) == 0);
+        CHECK(b(1, 1) == 0);
+        CHECK(b(2, 1) == 0);
+    }
+
     SECTION("Allocator")
     {
     }
 }
-#endif
 
 TEST_CASE("2D Array 4")
 {
