@@ -136,9 +136,9 @@ TEST_CASE("compare row major ndarray")
     CHECK_FALSE((a == d));
     CHECK((a != d));
 
-    ndarray_view<double, 1, row_major> u(a, { 1 }, {slice(0,2)});
-    ndarray_view<double, 1, row_major> v(c, { 1 }, {slice(0,2)});
-    ndarray_view<double, 1, row_major> w(c, { 1 }, {slice(0,2)});
+    ndarray_view<double, 1, row_major> u(a, indices_t<1>{1}, {slice(0,2)});
+    ndarray_view<double, 1, row_major> v(c, indices_t<1>{1}, {slice(0,2)});
+    ndarray_view<double, 1, row_major> w(c, indices_t<1>{1}, {slice(0,2)});
 
     CHECK_FALSE((u == v));
     CHECK((u != v));
@@ -163,9 +163,9 @@ TEST_CASE("compare column major ndarray")
     CHECK_FALSE((a == d));
     CHECK((a != d));
 
-    ndarray_view<double,1,column_major> u(a,{1},{slice(0,2)});
-    ndarray_view<double,1,column_major> v(c,{1},{slice(0,2)});
-    ndarray_view<double,1,column_major> w(c,{1},{slice(0,2)});
+    ndarray_view<double,1,column_major> u(a, indices_t<1>{1},{slice(0,2)});
+    ndarray_view<double,1,column_major> v(c, indices_t<1>{1},{slice(0,2)});
+    ndarray_view<double,1,column_major> w(c, indices_t<1>{1},{slice(0,2)});
 
     CHECK_FALSE((u == v));
     CHECK((u != v));

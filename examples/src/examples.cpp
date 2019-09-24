@@ -87,7 +87,7 @@ void example6()
     ac::ndarray<double,2> a = {{1,2,3},{3,4,5},{4,5,6}};
 
     // Slice all items from the second row
-    ac::ndarray_view<double, 1> v(a, {1});
+    ac::ndarray_view<double, 1> v(a, indices_t<1>{1});
     std::cout << v << "\n\n";
 
     // [3 4 5]
@@ -115,11 +115,11 @@ void reduction()
     ac::ndarray<double,2> a = {{0,1,2,3},{4,5,6,7},{8,9,10,11}};
 
     // Reduce the 2-dimensional array to a 1-dimensional array, along row 0
-    ac::ndarray_view<double,1> v1(a, {0});
+    ac::ndarray_view<double,1> v1(a, indices_t<1>{0});
     std::cout << "(1) " << v1 << "\n\n";
 
     // Reduce the 2-dimensional array to a 1-dimensional array, along column 2
-    ac::ndarray_view<double,1> v2(a, {ac::slice()}, {2});
+    ac::ndarray_view<double,1> v2(a, {ac::slice()}, indices_t<1>{2});
     std::cout << "(2) " << v2 << "\n\n";
 }
 
@@ -130,11 +130,11 @@ void reduction3()
     array_t a = { {{0,1,2,3},{4,5,6,7},{8,9,10,11}}, {{12,13,14,15},{16,17,18,19},{20,21,22,23}} };
 
     // Reduce the 3-dimensional array to a 2-dimensional view, along leftmost index 1
-    array_t::view<2> v1(a, {1});
+    array_t::view<2> v1(a, indices_t<1>{1});
     std::cout << "(1) " << v1 << "\n\n";
 
     // Reduce the 2-dimensional view to a 1-dimensional view, along rightmost index 2
-    array_t::view<1> v2(v1, {ac::slice()}, {2});
+    array_t::view<1> v2(v1, {ac::slice()}, indices_t<1>{2});
     std::cout << "(2) " << v2 << "\n\n";
 }
 
@@ -157,7 +157,7 @@ void row_major_zero_based_example()
     std::cout << "(2)\n" << v << "\n\n";
 
     // Construct a 2-dimensional 3 x 4 slice from the array
-    ac::ndarray_view<double,2> s(a,{1});
+    ac::ndarray_view<double,2> s(a, indices_t<1>{1});
 
     std::cout << "(3)\n" << s << "\n\n";
 
@@ -184,7 +184,7 @@ void column_major_one_based_example()
     std::cout << "(2)\n" << v << "\n\n";
 
     // Construct a 2-dimensional 3 x 4 slice from the array
-    ac::ndarray_view<double, 2, ac::column_major, ac::one_based> s(a,{2});
+    ac::ndarray_view<double, 2, ac::column_major, ac::one_based> s(a, indices_t<1>{2});
 
     std::cout << "(3)\n" << s << "\n\n";
 

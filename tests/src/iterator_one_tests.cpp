@@ -84,7 +84,7 @@ TEST_CASE("2-dim ndarray ndarray_view iterator tests")
 
     SECTION("ndarray_view row 0 slice(2,4)")
     {
-        ndarray_view<double,1> v(a,{0},{slice(2,4)});
+        ndarray_view<double,1> v(a, indices_t<1>{0},{slice(2,4)});
 
         REQUIRE(v.shape(0) == 2); 
         CHECK(v(0) == 3.0); 
@@ -97,7 +97,7 @@ TEST_CASE("2-dim ndarray ndarray_view iterator tests")
     }
     SECTION("ndarray_view row 1 slice(2,4)")
     {
-        ndarray_view<double,1> v(a,{1},{slice(2,4)});
+        ndarray_view<double,1> v(a, indices_t<1>{1},{slice(2,4)});
 
         REQUIRE(v.shape(0) == 2); 
         CHECK(v(0) == 7.0); 
@@ -119,7 +119,7 @@ TEST_CASE("2-dim column_major ndarray ndarray_view iterator tests")
 
     SECTION("ndarray_view row 0 slice(2,4)")
     {
-        ndarray_view<double,1,column_major> v(a,{0},{slice(2,4)});
+        ndarray_view<double,1,column_major> v(a, indices_t<1>{0},{slice(2,4)});
 
         REQUIRE(v.shape(0) == 2); 
         //std::cout << "v(0)\n";
@@ -135,7 +135,7 @@ TEST_CASE("2-dim column_major ndarray ndarray_view iterator tests")
 
     SECTION("ndarray_view row 0 slice(2,4)")
     {
-        ndarray_view<double,1,column_major> v(a,{0},{slice(1,5,2)});
+        ndarray_view<double,1,column_major> v(a, indices_t<1>{0},{slice(1,5,2)});
 
         REQUIRE(v.shape(0) == 2); 
         //std::cout << "v(0)\n";

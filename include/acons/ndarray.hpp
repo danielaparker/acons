@@ -221,7 +221,10 @@ public:
 } // namespace detail
 
 template <size_t N>
-using extents = detail::tuple_array<size_t, N>;
+using extents_t = detail::tuple_array<size_t, N>;
+
+template <size_t N>
+using indices_t = detail::tuple_array<size_t, N>;
 
 template <typename T, typename TPtr>
 class iterator_one
@@ -303,10 +306,10 @@ public:
 private:
     TPtr base_data_;
     size_t base_size_;
-    extents<N> shape_;
-    std::array<size_t,N> strides_;
-    std::array<size_t,N> offsets_;
-    std::array<size_t, 1> index_;
+    extents_t<N> shape_;
+    indices_t<N> strides_;
+    indices_t<N> offsets_;
+    indices_t<1> index_;
     value_type v_;
 public:
     typedef std::ptrdiff_t difference_type;
@@ -322,7 +325,7 @@ public:
         offsets_.fill(0);
     }
 
-    iterator_n_minus_1(TPtr data, size_t size, const extents<N>& shape, const std::array<size_t,N>& strides, size_t index = 0)
+    iterator_n_minus_1(TPtr data, size_t size, const extents_t<N>& shape, const indices_t<N>& strides, size_t index = 0)
         : base_data_(data), base_size_(size), shape_(shape), strides_(strides), 
           index_{index},
           v_(data,size,shape,strides, index_)
@@ -330,7 +333,7 @@ public:
         offsets_.fill(0);
     }
 
-    iterator_n_minus_1(TPtr data, size_t size, const extents<N>& shape, const std::array<size_t,N>& strides, const std::array<size_t,N>& offsets, size_t index = 0)
+    iterator_n_minus_1(TPtr data, size_t size, const extents_t<N>& shape, const indices_t<N>& strides, const indices_t<N>& offsets, size_t index = 0)
         : base_data_(data), base_size_(size), shape_(shape), strides_(strides), offsets_(offsets), 
         index_{index},
           v_(data, size, shape, strides, offsets, index_)
@@ -493,7 +496,7 @@ struct is_stateless
 
 template <size_t N, typename Base, size_t M>
 typename std::enable_if<M+1 == N, size_t>::type
-get_offset(const std::array<size_t,N>& strides, 
+get_offset(const indices_t<N>& strides, 
            size_t index) 
 {
     return Base::rebase_to_zero(index)*strides[N-1];
@@ -501,7 +504,7 @@ get_offset(const std::array<size_t,N>& strides,
 
 template <size_t N, typename Base, size_t M, typename... Indices>
 typename std::enable_if<(M+1 < N), size_t>::type
-get_offset(const std::array<size_t,N>& strides, 
+get_offset(const indices_t<N>& strides, 
            size_t index, Indices... indices)
 {
     static constexpr size_t mplus1 = M + 1;
@@ -512,8 +515,8 @@ get_offset(const std::array<size_t,N>& strides,
 
 template <size_t N, size_t M, typename Base>
 typename std::enable_if<M <= N,size_t>::type
-get_offset(const std::array<size_t,N>& strides, 
-           const std::array<size_t,M>& indices)
+get_offset(const indices_t<N>& strides, 
+           const indices_t<M>& indices)
 {
     size_t offset = 0;
     for (size_t i = 0; i < M; ++i)
@@ -526,8 +529,8 @@ get_offset(const std::array<size_t,N>& strides,
 
 template <size_t N, typename Base, size_t M>
 typename std::enable_if<M+1 == N, size_t>::type
-get_offset(const std::array<size_t,N>& strides,
-           const std::array<size_t,N>& offsets, 
+get_offset(const indices_t<N>& strides,
+           const indices_t<N>& offsets, 
            size_t index) 
 {
     size_t i = Base::rebase_to_zero(index)*strides[M] + offsets[M];
@@ -536,8 +539,8 @@ get_offset(const std::array<size_t,N>& strides,
 
 template <size_t N, typename Base, size_t M, typename... Indices>
 typename std::enable_if<(M+1 < N), size_t>::type
-get_offset(const std::array<size_t,N>& strides, 
-           const std::array<size_t, N>& offsets, 
+get_offset(const indices_t<N>& strides, 
+           const indices_t<N>& offsets, 
            size_t index, Indices... indices)
 {
     static constexpr size_t mplus1 = M + 1;
@@ -547,9 +550,9 @@ get_offset(const std::array<size_t,N>& strides,
 
 template <size_t N, size_t M, typename Base>
 typename std::enable_if<M <= N,size_t>::type
-get_offset(const std::array<size_t,N>& strides, 
-           const std::array<size_t, N>& offsets, 
-           const std::array<size_t,M>& indices)
+get_offset(const indices_t<N>& strides, 
+           const indices_t<N>& offsets, 
+           const indices_t<M>& indices)
 {
     size_t offset = 0;
     for (size_t i = 0; i < M; ++i)
@@ -563,7 +566,7 @@ get_offset(const std::array<size_t,N>& strides,
 struct row_major
 {
     template <size_t N>
-    static void calculate_strides(const extents<N>& shape, std::array<size_t,N>& strides, size_t& size)
+    static void calculate_strides(const extents_t<N>& shape, indices_t<N>& strides, size_t& size)
     {
         size = 1;
         for (size_t i = 0; i < N; ++i)
@@ -574,17 +577,17 @@ struct row_major
     }
 
     template <size_t N>
-    static void update_offsets(size_t rel, std::array<size_t,N>& offsets)
+    static void update_offsets(size_t rel, indices_t<N>& offsets)
     {
         offsets[N-1] += rel;
     }
 
     template <size_t N, typename Base>
-    static std::array<size_t,N> calculate_offsets(size_t rel,
-                                                  const std::array<size_t,N>& strides, 
+    static indices_t<N> calculate_offsets(size_t rel,
+                                                  const indices_t<N>& strides, 
                                                   const std::array<slice,N>& slices)
     {
-        std::array<size_t,N> offsets;
+        indices_t<N> offsets;
         offsets[N-1] = rel + Base::rebase_to_zero(slices[N-1].start(Base::origin())) * strides[N-1];
         for (size_t i = 0; i+1 < N; ++i)
         {
@@ -597,7 +600,7 @@ struct row_major
 struct column_major
 {
     template <size_t N>
-    static void calculate_strides(const extents<N>& shape, std::array<size_t,N>& strides, size_t& size)
+    static void calculate_strides(const extents_t<N>& shape, indices_t<N>& strides, size_t& size)
     {
         size = 1;
         for (size_t i = 0; i < N; ++i)
@@ -608,17 +611,17 @@ struct column_major
     }
 
     template <size_t N>
-    static void update_offsets(size_t rel, std::array<size_t,N>& offsets)
+    static void update_offsets(size_t rel, indices_t<N>& offsets)
     {
         offsets[0] += rel;
     }
 
     template <size_t N, typename Base>
-    static std::array<size_t,N> calculate_offsets(size_t rel,
-                                                  const std::array<size_t,N>& strides, 
+    static indices_t<N> calculate_offsets(size_t rel,
+                                                  const indices_t<N>& strides, 
                                                   const std::array<slice,N>& slices)
     {
-        std::array<size_t,N> offsets;
+        indices_t<N> offsets;
         offsets[0] = rel + Base::rebase_to_zero(slices[0].start(Base::origin())) * strides[0];
         for (size_t i = 1; i < N; ++i)
         {
@@ -729,7 +732,7 @@ struct init_helper
     using next = init_helper<Pos - 1>;
 
     template <typename Array, typename... Args>
-    static void init(extents<Array::ndim>& shape, Array& a, size_t n, Args... args)
+    static void init(extents_t<Array::ndim>& shape, Array& a, size_t n, Args... args)
     {
         shape[Array::ndim - Pos] = n;
         next::init(shape, a, args...);
@@ -740,12 +743,12 @@ template<>
 struct init_helper<0>
 {
     template <typename Array>
-    static void init(extents<Array::ndim>&, Array& a)
+    static void init(extents_t<Array::ndim>&, Array& a)
     {
         a.init();
     }
     template <typename Array>
-    static void init(extents<Array::ndim>&, Array& a, typename Array::const_reference val)
+    static void init(extents_t<Array::ndim>&, Array& a, typename Array::const_reference val)
     {
         a.init(val);
     }
@@ -778,8 +781,8 @@ private:
     pointer data_;
     size_t num_elements_;
     size_t capacity_;
-    extents<N> shape_;
-    std::array<size_t,N> strides_;
+    extents_t<N> shape_;
+    indices_t<N> strides_;
 public:
     using super_type::get_allocator;
 
@@ -804,7 +807,7 @@ public:
         init_helper<N>::init(shape_, *this, i, args ...);
     }
 
-    explicit ndarray(const extents<N>& shape)
+    explicit ndarray(const extents_t<N>& shape)
         : super_type(), 
           data_(nullptr), shape_(shape)
     {
@@ -814,7 +817,7 @@ public:
         std::fill(data_, data_+num_elements_, T());
     }
 
-    ndarray(std::allocator_arg_t, const Allocator& alloc, const extents<N>& shape)
+    ndarray(std::allocator_arg_t, const Allocator& alloc, const extents_t<N>& shape)
         : super_type(std::allocator_arg, alloc), 
           data_(nullptr), shape_(shape)
     {
@@ -824,7 +827,7 @@ public:
         std::fill(data_, data_+num_elements_, T());
     }
 
-    ndarray(const extents<N>& shape, T val)
+    ndarray(const extents_t<N>& shape, T val)
         : super_type(), 
           data_(nullptr), shape_(shape)
     {
@@ -834,7 +837,7 @@ public:
         std::fill(data_, data_+num_elements_,val);
     }
 
-    ndarray(std::allocator_arg_t, const Allocator& alloc, const extents<N>& shape, T val)
+    ndarray(std::allocator_arg_t, const Allocator& alloc, const extents_t<N>& shape, T val)
         : super_type(std::allocator_arg, alloc), 
           data_(nullptr), shape_(shape)
     {
@@ -853,7 +856,7 @@ public:
         Order::calculate_strides(shape_, strides_, num_elements_);
         capacity_ = num_elements_;
         data_ = create(capacity_, get_allocator());
-        std::array<size_t,N> indices;
+        indices_t<N> indices;
         data_from_initializer_list(list,indices,0);
     }
 
@@ -866,7 +869,7 @@ public:
         Order::calculate_strides(shape_, strides_, num_elements_);
         capacity_ = num_elements_;
         data_ = create(capacity_, get_allocator());
-        std::array<size_t,N> indices;
+        indices_t<N> indices;
         data_from_initializer_list(list,indices,0);
     }
 
@@ -1077,7 +1080,7 @@ public:
                         shape(0));
     }
 
-    void resize(const extents<N>& shape, T value = T())
+    void resize(const extents_t<N>& shape, T value = T())
     {
         T* old_data = data();
         size_t old_size = size();
@@ -1137,7 +1140,7 @@ public:
         Order::calculate_strides(shape_, strides_, num_elements_);
         capacity_ = num_elements_;
         data_ = create(capacity_, get_allocator());
-        std::array<size_t,N> indices;
+        indices_t<N> indices;
         data_from_initializer_list(list,indices,0);
         return *this;
     }
@@ -1169,9 +1172,9 @@ public:
         return capacity_;
     }
 
-    const extents<N>& shape() const {return shape_;}
+    const extents_t<N>& shape() const {return shape_;}
 
-    const std::array<size_t,N>& strides() const {return strides_;}
+    const indices_t<N>& strides() const {return strides_;}
 
     T* data()
     {
@@ -1205,7 +1208,7 @@ public:
         return data_[off];
     }
 
-    T& operator()(const std::array<size_t,N>& indices) 
+    T& operator()(const indices_t<N>& indices) 
     {
         size_t off = get_offset<N, N, Base>(strides_,indices);
 
@@ -1213,7 +1216,7 @@ public:
         return data_[off];
     }
 
-    const T& operator()(const std::array<size_t,N>& indices) const 
+    const T& operator()(const indices_t<N>& indices) const 
     {
         size_t off = get_offset<N, N, Base>(strides_,indices);
         assert(off < size());
@@ -1360,7 +1363,7 @@ private:
         }
     }
 
-    void data_from_initializer_list(const array_item<T>& init, std::array<size_t,N>& indices, size_t index)
+    void data_from_initializer_list(const array_item<T>& init, indices_t<N>& indices, size_t index)
     {
         size_t i = 0;
         for (const auto& item : init)
@@ -1394,7 +1397,7 @@ print(std::basic_ostream<CharT>& os, ndarray_view_base<T,M,Order,Base,TPtr>& v)
         {
             os << ',';
         }
-        std::array<size_t,1> a = {i};
+        indices_t<1> a{i};
         const_ndarray_view<T,M-1,Order,Base> w(v,a);
         print(os,w);
     }
@@ -1431,7 +1434,7 @@ print(std::basic_ostream<CharT>& os, ndarray<T,M,Order,Base,Allocator>& v)
         {
             os << ',';
         }
-        std::array<size_t,1> a = {i};
+        indices_t<1> a{i};
         const_ndarray_view<T,M-1,Order,Base> w(v,a);
         print(os,w);
     }
@@ -1485,9 +1488,9 @@ public:
 protected:
     TPtr base_data_;
     size_t base_size_;
-    extents<M> shape_;
-    std::array<size_t,M> strides_;
-    std::array<size_t,M> offsets_;
+    extents_t<M> shape_;
+    indices_t<M> strides_;
+    indices_t<M> offsets_;
 public:
     size_t base_size() const noexcept
     {
@@ -1504,11 +1507,11 @@ public:
         return shape(0) == 0;
     }
 
-    const extents<M>& shape() const {return shape_;}
+    const extents_t<M>& shape() const {return shape_;}
 
-    const std::array<size_t,M>& strides() const {return strides_;}
+    const indices_t<M>& strides() const {return strides_;}
 
-    const std::array<size_t,M>& offsets() const {return offsets_;}
+    const indices_t<M>& offsets() const {return offsets_;}
 
     const T* base_data() const 
     {
@@ -1552,7 +1555,7 @@ public:
         return base_data_[off];
     }
 
-    const T& operator()(const std::array<size_t,M>& indices) const 
+    const T& operator()(const indices_t<M>& indices) const 
     {
         size_t off = get_offset<M, M, Base>(strides_, offsets_, indices);
         assert(off < base_size());
@@ -1680,13 +1683,13 @@ public:
         offsets_.fill(0);
     }
 
-    ndarray_view_base(TPtr data, size_t size, const extents<M>& shape, const std::array<size_t,M>& strides)
+    ndarray_view_base(TPtr data, size_t size, const extents_t<M>& shape, const indices_t<M>& strides)
         : base_data_(data), base_size_(size), shape_(shape), strides_(strides)          
     {
         offsets_.fill(0);
     }
 
-    ndarray_view_base(TPtr data, size_t size, const extents<M>& shape, const std::array<size_t,M>& strides, const std::array<size_t,M>& offsets)
+    ndarray_view_base(TPtr data, size_t size, const extents_t<M>& shape, const indices_t<M>& strides, const indices_t<M>& offsets)
         : base_data_(data), base_size_(size), shape_(shape), strides_(strides), offsets_(offsets)          
     {
     }
@@ -1694,7 +1697,7 @@ public:
     // data
 
     template<typename OtherTPtr>
-    ndarray_view_base(OtherTPtr data, const extents<M>& shape,
+    ndarray_view_base(OtherTPtr data, const extents_t<M>& shape,
                        typename std::enable_if<std::is_convertible<OtherTPtr,TPtr>::value>::type* = 0) 
         : base_data_(data), shape_(shape)
     {
@@ -1716,8 +1719,8 @@ public:
     // first_dim
 
     template<size_t N>
-    ndarray_view_base(TPtr data, size_t size, const extents<N>& shape, const std::array<size_t,N>& strides,
-                      const std::array<size_t,N-M>& first_dim)
+    ndarray_view_base(TPtr data, size_t size, const extents_t<N>& shape, const indices_t<N>& strides,
+                      const indices_t<N-M>& first_dim)
         : base_data_(data), base_size_(size)
     {
         size_t rel = get_offset<N,N-M,Base>(strides,first_dim);
@@ -1736,8 +1739,8 @@ public:
     }
 
     template<size_t N>
-    ndarray_view_base(TPtr data, size_t size, const extents<N>& shape, const std::array<size_t,N>& strides, const std::array<size_t,N>& offsets,
-                      const std::array<size_t,N-M>& first_dim)
+    ndarray_view_base(TPtr data, size_t size, const extents_t<N>& shape, const indices_t<N>& strides, const indices_t<N>& offsets,
+                      const indices_t<N-M>& first_dim)
         : base_data_(data), base_size_(size)
     {
         //std::cout << "ndarray_view_base strides: " << other.strides() << ", offsets: " << other.offsets() << ", first_dim: " << first_dim << ", data[0] " << base_data_[0] << ", size: " << size() << "\n";
@@ -1759,8 +1762,8 @@ public:
     // first_dim, slices
 
     template<size_t N>
-    ndarray_view_base(TPtr data, size_t size, const extents<N>& shape, const std::array<size_t,N>& strides,
-                      const std::array<size_t,N-M>& first_dim,
+    ndarray_view_base(TPtr data, size_t size, const extents_t<N>& shape, const indices_t<N>& strides,
+                      const indices_t<N-M>& first_dim,
                       const std::array<slice,M>& slices)
         : base_data_(data), base_size_(size)
     {
@@ -1780,8 +1783,8 @@ public:
     }
 
     template<size_t N>
-    ndarray_view_base(TPtr data, size_t size, const extents<N>& shape, const std::array<size_t,N>& strides, const std::array<size_t,N>& offsets,
-                      const std::array<size_t,N-M>& first_dim,
+    ndarray_view_base(TPtr data, size_t size, const extents_t<N>& shape, const indices_t<N>& strides, const indices_t<N>& offsets,
+                      const indices_t<N-M>& first_dim,
                       const std::array<slice,M>& slices)
         : base_data_(data), base_size_(size)
     {
@@ -1801,14 +1804,14 @@ public:
     }
 
     template<size_t N>
-    ndarray_view_base(TPtr data, size_t size, const extents<N>& shape, const std::array<size_t,N>& strides,
+    ndarray_view_base(TPtr data, size_t size, const extents_t<N>& shape, const indices_t<N>& strides,
                       const std::array<slice,M>& slices, 
-                      const std::array<size_t,N-M>& last_dim)
+                      const indices_t<N-M>& last_dim)
         : base_data_(data), base_size_(size)
     {
         constexpr size_t K = N-M;
 
-        std::array<size_t,N> indices;
+        indices_t<N> indices;
         indices.fill(Base::origin());
         for (size_t i = 0; i < K; ++i)
         {
@@ -1830,13 +1833,13 @@ public:
     }
 
     template<size_t N>
-    ndarray_view_base(TPtr data, size_t size, const extents<N>& shape, const std::array<size_t,N>& strides, const std::array<size_t,N>& offsets,
-                      const std::array<slice,M>& slices, const std::array<size_t,N-M>& last_dim)
+    ndarray_view_base(TPtr data, size_t size, const extents_t<N>& shape, const indices_t<N>& strides, const indices_t<N>& offsets,
+                      const std::array<slice,M>& slices, const indices_t<N-M>& last_dim)
         : base_data_(data), base_size_(size)
     {
         constexpr size_t K = N-M;
 
-        std::array<size_t,N> indices;
+        indices_t<N> indices;
         indices.fill(Base::origin());
         for (size_t i = 0; i < K; ++i)
         {
@@ -1862,7 +1865,7 @@ public:
     template<typename OtherTPtr>
     ndarray_view_base& operator=(const ndarray_view_base<T, M, Order, Base, OtherTPtr>& other) = delete;
 
-    void assign(TPtr data, size_t size, const extents<M>& shape, const std::array<size_t,M>& strides)
+    void assign(TPtr data, size_t size, const extents_t<M>& shape, const indices_t<M>& strides)
     {
         base_data_ = data; 
         base_size_ = size; 
@@ -1871,7 +1874,7 @@ public:
         offsets_.fill(0);
     }
 
-    void assign(TPtr data, size_t size, const extents<M>& shape, const std::array<size_t,M>& strides, const std::array<size_t,M>& offsets)
+    void assign(TPtr data, size_t size, const extents_t<M>& shape, const indices_t<M>& strides, const indices_t<M>& offsets)
     {
         base_data_ = data; 
         base_size_ = size; 
@@ -1940,20 +1943,20 @@ public:
     ndarray_view(ndarray<T, M, Order, Base, Allocator>& a, 
                  const std::array<slice,M>& slices)
         : super_type(a.data(), a.size(), a.shape(), a.strides(),
-                     slices, std::array<size_t,0>())
+                     slices, indices_t<0>())
     {
     }
 
     ndarray_view(ndarray_view<T, M, Order, Base>& a, 
                  const std::array<slice,M>& slices)
         : super_type(a.base_data(), a.base_size(), a.shape(), a.strides(), a.offsets(),
-                     slices, std::array<size_t,0>())
+                     slices, indices_t<0>())
     {
     }
 
     template<size_t N, typename Allocator>
     ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
-                 const std::array<size_t,N-M>& first_dim)
+                 const indices_t<N-M>& first_dim)
         : super_type(a.data(), a.size(), a.shape(), a.strides(),
                      first_dim)
     {
@@ -1961,7 +1964,7 @@ public:
 
     template<size_t N>
     ndarray_view(ndarray_view<T, N, Order, Base>& a, 
-                 const std::array<size_t,N-M>& first_dim)
+                 const indices_t<N-M>& first_dim)
         : super_type(a.base_data(), a.base_size(), a.shape(), a.strides(), a.offsets(),
                      first_dim)
     {
@@ -1969,7 +1972,7 @@ public:
 
     template<size_t N, typename Allocator>
     ndarray_view(ndarray<T, N, Order, Base, Allocator>& a, 
-                 const std::array<size_t,N-M>& first_dim,
+                 const indices_t<N-M>& first_dim,
                  const std::array<slice,M>& slices)
         : super_type(a.data(), a.size(), a.shape(), a.strides(),
                      first_dim, slices)
@@ -1978,7 +1981,7 @@ public:
 
     template<size_t N>
     ndarray_view(ndarray_view<T, N, Order, Base>& a, 
-                 const std::array<size_t,N-M>& first_dim,
+                 const indices_t<N-M>& first_dim,
                  const std::array<slice,M>& slices)
         : super_type(a.base_data(), a.base_size(), a.shape(), a.strides(), a.offsets(),
                      first_dim, slices)
@@ -1988,7 +1991,7 @@ public:
     template<size_t N, typename Allocator>
     ndarray_view(ndarray<T, N, Order, Base, Allocator>& a,
                  const std::array<slice,M>& slices, 
-                 const std::array<size_t,N-M>& last_dim)
+                 const indices_t<N-M>& last_dim)
         : super_type(a.data(), a.size(), a.shape(), a.strides(),
                      slices, last_dim)
     {
@@ -1997,13 +2000,13 @@ public:
     template<size_t N>
     ndarray_view(ndarray_view<T, N, Order, Base>& a,
                  const std::array<slice,M>& slices, 
-                 const std::array<size_t,N-M>& last_dim)
+                 const indices_t<N-M>& last_dim)
         : super_type(a.base_data(), a.base_size(), a.shape(), a.strides(), a.offsets(),
                      slices, last_dim)
     {
     }
 
-    ndarray_view(T* data, const extents<M>& shape) 
+    ndarray_view(T* data, const extents_t<M>& shape) 
         : super_type(data, shape)
     {
     }
@@ -2035,7 +2038,7 @@ public:
         return this->base_data_[off];
     }
 
-    T& operator()(const std::array<size_t,M>& indices) 
+    T& operator()(const indices_t<M>& indices) 
     {
         size_t off = get_offset<M, M, Base>(this->strides_, this->offsets_, indices);
         assert(off < this->base_size());
@@ -2050,7 +2053,7 @@ public:
         return this->base_data_[off];
     }
 
-    const T& operator()(const std::array<size_t, M>& indices) const
+    const T& operator()(const indices_t<M>& indices) const
     {
         size_t off = get_offset<M, M, Base>(this->strides_, this->offsets_, indices);
         assert(off < this->base_size());
@@ -2096,13 +2099,13 @@ public:
     const_ndarray_view(const ndarray<T, M, Order, Base, Allocator>& a, 
                        const std::array<slice,M>& slices)
         : super_type(a.data(), a.size(), a.shape(), a.strides(),
-                     slices, std::array<size_t,0>())        
+                     slices, indices_t<0>())        
     {
     }
 
     template<size_t N, typename Allocator>
     const_ndarray_view(const ndarray<T, N, Order, Base, Allocator>& a, 
-                       const std::array<size_t,N-M>& first_dim)
+                       const indices_t<N-M>& first_dim)
         : super_type(a.data(), a.size(), a.shape(), a.strides(),
                      first_dim)
     {
@@ -2112,13 +2115,13 @@ public:
     const_ndarray_view(const ndarray_view_base<T, M, Order, Base, OtherTPtr>& other, 
                        const std::array<slice,M>& slices)
         : super_type(other.base_data(), other.base_size(), other.shape(), other.strides(), other.offsets(),
-                     slices, std::array<size_t,0>())        
+                     slices, indices_t<0>())        
     {
     }
 
     template<size_t m = M, size_t N, typename OtherTPtr>
     const_ndarray_view(const ndarray_view_base<T, N, Order, Base, OtherTPtr>& other, 
-                       const std::array<size_t,N-m>& first_dim)
+                       const indices_t<N-m>& first_dim)
         : super_type(other.base_data(), other.base_size(), other.shape(), other.strides(), other.offsets(),
                      first_dim)
     {
@@ -2126,7 +2129,7 @@ public:
 
     template<size_t N, typename Allocator>
     const_ndarray_view(const ndarray<T, N, Order, Base, Allocator>& other, 
-                       const std::array<size_t,N-M>& first_dim,
+                       const indices_t<N-M>& first_dim,
                        const std::array<slice,M>& slices)
         : super_type(other.data(), other.size(), other.shape(), other.strides(),
                      first_dim, slices)
@@ -2135,7 +2138,7 @@ public:
 
     template<size_t N, typename OtherTPtr>
     const_ndarray_view(const ndarray_view_base<T, N, Order, Base, OtherTPtr>& other, 
-                       const std::array<size_t,N-M>& first_dim,
+                       const indices_t<N-M>& first_dim,
                        const std::array<slice,M>& slices)
         : super_type(other.base_data(), other.base_size(), other.shape(), other.strides(), other.offsets(),
                      first_dim, slices)
@@ -2145,7 +2148,7 @@ public:
     template<size_t N, typename Allocator>
     const_ndarray_view(const ndarray<T, N, Order, Base, Allocator>& other,
                        const std::array<slice,M>& slices, 
-                       const std::array<size_t,N-M>& last_dim)
+                       const indices_t<N-M>& last_dim)
         : super_type(other.data(), other.size(), other.shape(), other.strides(),
                      slices, last_dim)
     {
@@ -2154,13 +2157,13 @@ public:
     template<size_t N, typename OtherTPtr>
     const_ndarray_view(const ndarray_view_base<T, N, Order, Base, OtherTPtr>& other,
                        const std::array<slice,M>& slices, 
-                       const std::array<size_t,N-M>& last_dim)
+                       const indices_t<N-M>& last_dim)
         : super_type(other.base_data(), other.base_size(), other.shape(), other.strides(), other.offsets(),
                      slices, last_dim)
     {
     }
 
-    const_ndarray_view(const T* data, const extents<M>& shape) 
+    const_ndarray_view(const T* data, const extents_t<M>& shape) 
         : super_type(data, shape)
     {
     }

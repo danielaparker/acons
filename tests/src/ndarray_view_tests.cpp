@@ -73,7 +73,7 @@ TEST_CASE("1-dim row_major ndarray ndarray_view size tests")
 
     SECTION("const_array_view<1>")
     {
-        an_array::const_view<1> v(a.data()+1, {2});
+        an_array::const_view<1> v(a.data()+1, indices_t<1>{2});
 
         REQUIRE(v.shape(0) == 2); 
         CHECK(v(0) == 1);
@@ -89,7 +89,7 @@ TEST_CASE("1-dim row_major ndarray ndarray_view size tests")
     }
     SECTION("array_view<1>")
     {
-        an_array::view<1> v(a.data()+1, {2});
+        an_array::view<1> v(a.data()+1, indices_t<1>{2});
 
         REQUIRE(v.shape(0) == 2); 
         CHECK(v(0) == 1);
@@ -104,7 +104,7 @@ TEST_CASE("2-dim row_major ndarray ndarray_view size tests")
 
     SECTION("size tests")
     {
-        an_array::view<1> v(a, {0}, {slice(2,4)});
+        an_array::view<1> v(a, indices_t<1>{0}, {slice(2,4)});
 
         REQUIRE(v.shape(0) == 2); 
         CHECK(v(0) == 3.0);
@@ -135,7 +135,7 @@ TEST_CASE("2-dim column_major ndarray ndarray_view size tests")
 
     SECTION("size tests")
     {
-        an_array::view<1> v(a, {0}, {slice(2,4)});
+        an_array::view<1> v(a, indices_t<1>{0}, {slice(2,4)});
 
         REQUIRE(v.shape(0) == 2); 
         CHECK(v(0) == 3.0);
@@ -180,7 +180,7 @@ TEST_CASE("3-dim 2x3x4 ndarray ndarray_view tests")
         CHECK(v3(0,1,0) == 20);
         CHECK(v3(0,1,1) == 22);
 
-        an_array::const_view<2> v2(v3,{0});
+        an_array::const_view<2> v2(v3,indices_t<1>{0});
         REQUIRE(v2.shape(0) == 2);
         REQUIRE(v2.shape(1) == 2);
         CHECK(v2(0,0) == 16);
@@ -188,7 +188,7 @@ TEST_CASE("3-dim 2x3x4 ndarray ndarray_view tests")
 
     SECTION("2-dim ndarray_view")
     {
-        an_array::view<2> v(a, {0}, {slice(1, 3), slice(0, 4, 2)});
+        an_array::view<2> v(a, indices_t<1>{0}, {slice(1, 3), slice(0, 4, 2)});
 
         REQUIRE(v.shape(0) == 2); 
         REQUIRE(v.shape(1) == 2); 
@@ -221,7 +221,7 @@ TEST_CASE("3-dim 2x3x4 const ndarray ndarray_view tests")
         CHECK(v3(0,1,1) == 22);
 
         //std::cout << "Here\n";
-        array_t::const_view<2> v2(v3,{0});
+        array_t::const_view<2> v2(v3, indices_t<1>{0});
         //std::cout << "After\n";
         REQUIRE(v2.shape(0) == 2);
         REQUIRE(v2.shape(1) == 2);
@@ -239,7 +239,7 @@ TEST_CASE("2-dim row_major ndarray ndarray_view column")
 
     SECTION("column")
     {
-        ndarray_view<double,1> v(a, {slice(1,3)}, {1});
+        ndarray_view<double,1> v(a, {slice(1,3)}, indices_t<1>{1});
 
         REQUIRE(v.shape(0) == 2); 
         CHECK(v(0) == 6.0);
@@ -257,7 +257,7 @@ TEST_CASE("3-dim 3x3x4 ndarray ndarray_view column")
 
     SECTION("size tests")
     {
-        ndarray_view<double,2> v3(a,{slice(1,2),slice(1,3)},{2});
+        ndarray_view<double,2> v3(a,{slice(1,2),slice(1,3)}, indices_t<1>{2});
 
         REQUIRE(v3.shape(0) == 1); 
         REQUIRE(v3.shape(1) == 2); 

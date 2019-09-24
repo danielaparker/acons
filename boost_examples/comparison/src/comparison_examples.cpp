@@ -109,7 +109,7 @@ void boost_example()
     // Create a 3D array that is 2 x 3 x 4
     typedef boost::multi_array<double, 3> array_type;
     typedef array_type::index index;
-    array_type a(boost::extents[2][3][4]);
+    array_type a(boost::extents_t[2][3][4]);
 
     // Assign values to the elements
     int values = 0;
@@ -203,7 +203,7 @@ void boost_example_fortran()
     // Create a 3D array that is 2 x 3 x 4
     typedef boost::multi_array<double, 3> array_type;
     typedef array_type::index index;
-    array_type a(boost::extents[2][3][4],boost::fortran_storage_order());
+    array_type a(boost::extents_t[2][3][4],boost::fortran_storage_order());
 
     // Assign values to the elements
     int values = 0;
@@ -285,7 +285,7 @@ void boost_example2()
     // Create a 2D array that is 2 x 3
     typedef boost::multi_array<double, 2> array_type;
     typedef array_type::index index;
-    array_type a(boost::extents[2][3]);
+    array_type a(boost::extents_t[2][3]);
 
     // Assign values to the elements
     int values = 0;
