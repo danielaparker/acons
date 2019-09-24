@@ -27,18 +27,19 @@ Member type                         |Definition|Notes
 `M`|The number of dimensions of the array view|
 `Order`|`row_major` or `column_major`|
 `Base`|`zero_based` or `one_based`|
+`TPtr`
 
 #### Member types
 
 Member type                         |Definition
 ------------------------------------|------------------------------
 `ndim`|The number of dimensions of the array view
-`value_type`|T
+`value_type`|If `ndim` == 1, then this is `T`, otherwise it is `ndarray_view_base<T,N-1,Order,Base,TPtr>`
 `const_reference`|const T&
 `order_type`|Order
 `base_type`|Base
 `const_iterator`|
-`iterator`|Same as `const_iterator`
+`iterator`|
 
 #### Member functions
 

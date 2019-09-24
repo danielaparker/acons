@@ -56,7 +56,7 @@ struct assignment_helper<Array,T,N,1>
 };
 
 template <class T, size_t N>
-class tuple_array
+class element_array
 {
     T elements_[N];
 
@@ -67,7 +67,7 @@ public:
     using iterator = T*;
     using const_iterator = const T*;
 
-    tuple_array(const tuple_array& other)
+    element_array(const element_array& other)
     {
 #if defined(_MSC_VER)
         std::copy(other.elements_, other.elements_ + other.size(), stdext::make_checked_array_iterator(elements_, size()));
@@ -76,7 +76,7 @@ public:
 #endif
     }
 
-    tuple_array& operator=(const tuple_array& other)
+    element_array& operator=(const element_array& other)
     {
         if (&other != this)
         {
@@ -94,10 +94,10 @@ public:
         std::fill(elements_, elements_ + size(), value);
     }
 
-    tuple_array() = default;
+    element_array() = default;
 
     template <size_t n = N, typename... Args>
-    explicit tuple_array(Args ...args)
+    explicit element_array(Args ...args)
     {
         static_assert(n == sizeof...(Args), "size mismatch");
 
@@ -1390,8 +1390,6 @@ template <typename CharT, typename T, size_t M, typename Order, typename Base, t
 typename std::enable_if<(M>1),void>::type
 print(std::basic_ostream<CharT>& os, ndarray_view_base<T,M,Order,Base,TPtr>& v)
 {
-    typedef 
-
     os << '[';
     for (size_t i = 0; i < v.shape(0); ++i)
     {
@@ -1479,7 +1477,7 @@ public:
     static constexpr size_t ndim = M;
     typedef Order order_type;
     typedef Base base_type;
-    using value_type = std::conditional_t<M == 1, T, ndarray_view<T,M-1,Order,Base>>;
+    using value_type = std::conditional_t<M == 1, T, ndarray_view_base<T,M-1,Order,Base,TPtr>>;
     typedef typename std::conditional<std::is_const<typename std::remove_pointer<TPtr>::type>::value,const T&,T&>::type reference;
     typedef const T& const_reference;
 

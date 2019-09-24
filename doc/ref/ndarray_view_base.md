@@ -30,7 +30,7 @@ Member type                         |Definition|Notes
 Member type                         |Definition
 ------------------------------------|------------------------------
 `ndim`|The number of dimensions of the array view
-`value_type`|T
+`value_type`|If `ndim` == 1, then this is `T`, otherwise it is `ndarray_view<T,N-1,Order,Base>`
 `reference`|T&
 `const_reference`|const T&
 `order_type`|Order
