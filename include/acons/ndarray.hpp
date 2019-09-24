@@ -151,7 +151,7 @@ public:
 };
 
 template <class T>
-class tuple_array<T, 0>
+class element_array<T, 0>
 {
     T elements_[1];
 
@@ -162,11 +162,11 @@ public:
     using iterator = T*;
     using const_iterator = const T*;
 
-    tuple_array() = default;
+    element_array() = default;
 
-    tuple_array(const tuple_array&) = default;
+    element_array(const element_array&) = default;
 
-    tuple_array& operator=(const tuple_array&) = default;
+    element_array& operator=(const element_array&) = default;
 
     void fill(const T& value)
     {
@@ -221,10 +221,10 @@ public:
 } // namespace detail
 
 template <size_t N>
-using extents_t = detail::tuple_array<size_t, N>;
+using extents_t = detail::element_array<size_t, N>;
 
 template <size_t N>
-using indices_t = detail::tuple_array<size_t, N>;
+using indices_t = detail::element_array<size_t, N>;
 
 template <typename T, typename TPtr>
 class iterator_one
@@ -1390,6 +1390,8 @@ template <typename CharT, typename T, size_t M, typename Order, typename Base, t
 typename std::enable_if<(M>1),void>::type
 print(std::basic_ostream<CharT>& os, ndarray_view_base<T,M,Order,Base,TPtr>& v)
 {
+    typedef 
+
     os << '[';
     for (size_t i = 0; i < v.shape(0); ++i)
     {
