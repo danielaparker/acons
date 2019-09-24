@@ -32,22 +32,26 @@ template <typename T, size_t M, typename Order = row_major, typename Base = zero
 class ndarray_view;
 namespace detail {
 
-template <size_t I, typename Array, typename Tuple>
-struct assign
+
+template<typename Array, typename T, size_t N, size_t Pos>
+struct assignment_helper
 {
-    static void execute(Array& a, Tuple const& tuple)
+    using next = assignment_helper<Array,T,N,Pos - 1>;
+
+    template <typename... Args>
+    static void init(Array& a, T item, Args... args)
     {
-        a[I] = std::get<I>(tuple);
-        assign<I - 1, Array, Tuple>::execute(a, tuple);
+        a[N - Pos] = item;
+        next::init(a, args...);
     }
 };
 
-template <typename Array, typename Tuple>
-struct assign <0, Array, Tuple>
+template<typename Array, typename T, size_t N>
+struct assignment_helper<Array,T,N,1>
 {
-    static void execute(Array& a, Tuple const& tuple)
+    static void init(Array& a, T item)
     {
-        a[0] = std::get<0>(tuple);
+        a[N - 1] = item;
     }
 };
 
@@ -97,10 +101,7 @@ public:
     {
         static_assert(n == sizeof...(Args), "size mismatch");
 
-        typedef std::tuple<Args...> tuple_array_type;
-        tuple_array_type tuple(args...);
-
-        assign<std::tuple_size<tuple_array_type>::value - 1, T[N], tuple_array_type>::execute(elements_, tuple);
+        assignment_helper<T[N],T,N,N>::init(elements_,args...);
     }
 
     constexpr size_t size() const noexcept
