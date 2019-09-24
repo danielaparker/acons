@@ -58,8 +58,10 @@ class tuple_array
 
 public:
     using value_type = T;
-    using reference = T &;
-    using const_reference = const T &;
+    using reference = T&;
+    using const_reference = const T&;
+    using iterator = T*;
+    using const_iterator = const T*;
 
     tuple_array(const tuple_array& other)
     {
@@ -115,6 +117,36 @@ public:
     {
         return elements_[i];
     }
+
+    iterator begin()
+    {
+        return elements_;
+    }
+
+    iterator end()
+    {
+        return elements_ + size();
+    }
+
+    const_iterator begin() const
+    {
+        return elements_;
+    }
+
+    const_iterator end() const
+    {
+        return elements_ + size();
+    }
+
+    const_iterator cbegin() const
+    {
+        return elements_;
+    }
+
+    const_iterator cend() const
+    {
+        return elements_ + size();
+    }
 };
 
 template <class T>
@@ -126,6 +158,8 @@ public:
     using value_type = T;
     using reference = T &;
     using const_reference = const T &;
+    using iterator = T*;
+    using const_iterator = const T*;
 
     tuple_array() = default;
 
@@ -150,6 +184,36 @@ public:
     const_reference operator[](size_t i) const
     {
         return elements_[i];
+    }
+
+    iterator begin()
+    {
+        return elements_;
+    }
+
+    iterator end()
+    {
+        return elements_ + size();
+    }
+
+    const_iterator begin() const
+    {
+        return elements_;
+    }
+
+    const_iterator end() const
+    {
+        return elements_ + size();
+    }
+
+    const_iterator cbegin() const
+    {
+        return elements_;
+    }
+
+    const_iterator cend() const
+    {
+        return elements_ + size();
     }
 };
 
