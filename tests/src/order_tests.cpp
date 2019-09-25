@@ -7,10 +7,10 @@ using namespace acons;
 
 TEST_CASE("row major stride tests")
 {
-    std::array<size_t, 2> dim = { 2,3 };
+    extents_t<2> dim{ 2,3 };
 
     size_t size = 0;
-    std::array<size_t, 2> strides;
+    indices_t<2> strides;
     row_major::calculate_strides(dim, strides, size);
 
     CHECK(size == 6);
@@ -26,10 +26,10 @@ TEST_CASE("row major stride tests")
 }
 TEST_CASE("column major stride tests")
 {
-    std::array<size_t,2> dim = {2,3};
+    extents_t<2> dim{2,3};
     
     size_t size = 0;
-    std::array<size_t,2> strides;
+    indices_t<2> strides;
     column_major::calculate_strides(dim,strides,size);
 
     CHECK(size == 6);

@@ -748,7 +748,7 @@ struct init_helper<0>
         a.init();
     }
     template <typename Array>
-    static void init(extents_t<Array::ndim>&, Array& a, typename Array::const_reference val)
+    static void init(extents_t<Array::ndim>&, Array& a, const typename Array::element_type& val)
     {
         a.init(val);
     }
@@ -761,12 +761,16 @@ class ndarray : public ndarray_base<Allocator>
 public:
     using typename super_type::allocator_type;
     using typename super_type::pointer;
+
+    using element_type = T;
     using value_type = std::conditional_t<N == 1, T, ndarray_view<T,N-1,Order,Base>>;
-    typedef T& reference;
-    typedef const T& const_reference;
+    //typedef T& reference;
+    //typedef const T& const_reference;
     static constexpr size_t ndim = N;
     typedef typename std::conditional<N==1,iterator_one<T,T*>,iterator_n_minus_1<T,N,Order,Base,T*>>::type iterator;
     typedef typename std::conditional<N==1,iterator_one<T,const T*>,iterator_n_minus_1<T,N,Order,Base,const T*>>::type const_iterator;
+    using reference = typename iterator::reference;
+    using const_reference = std::conditional_t<N == 1, const T&, ndarray_view_base<T,N-1,Order,Base,const T*>>;
     typedef Order order_type;
     typedef Base base_type;
 
@@ -1477,12 +1481,14 @@ public:
     static constexpr size_t ndim = M;
     typedef Order order_type;
     typedef Base base_type;
+    using element_type = T;
     using value_type = std::conditional_t<M == 1, T, ndarray_view_base<T,M-1,Order,Base,TPtr>>;
-    typedef typename std::conditional<std::is_const<typename std::remove_pointer<TPtr>::type>::value,const T&,T&>::type reference;
-    typedef const T& const_reference;
 
     typedef typename std::conditional<M==1,iterator_one<T,TPtr>,iterator_n_minus_1<T,M,Order,Base,TPtr>>::type iterator;
     typedef typename std::conditional<M==1,iterator_one<T,const T*>,iterator_n_minus_1<T,M,Order,Base,const T*>>::type const_iterator;
+
+    using reference = typename iterator::reference;
+    using const_reference = std::conditional_t<M == 1, T, ndarray_view_base<T,M-1,Order,Base,const T*>>;
 
     template <size_t K> using const_view = const_ndarray_view<T,K,Order,Base>;
 protected:

@@ -85,7 +85,7 @@ TEST_CASE("constructor 2b")
 
 TEST_CASE("constructor 2c")
 {
-    ndarray<double,3> a(std::allocator<double>(),1,2,3);
+    ndarray<double,3> a(std::allocator_arg, std::allocator<double>(),1,2,3);
 
     double x = 0;
     for (size_t i = 0; i < a.shape(0); ++i)
@@ -113,7 +113,7 @@ TEST_CASE("constructor 2c")
 
 TEST_CASE("constructor 2d")
 {
-    ndarray<double,3> a(std::allocator<double>(), 1,2,3,10.0);
+    ndarray<double,3> a(std::allocator_arg, std::allocator<double>(), 1,2,3,10.0);
 
     CHECK_FALSE(a.empty());
     CHECK(a.size() == 6);
@@ -129,7 +129,7 @@ TEST_CASE("constructor 2d")
 
 TEST_CASE("constructor 3")
 {
-    std::array<size_t,3> dim{ 1,2,3 };
+    indices_t<3> dim{ 1,2,3 };
     ndarray<double, 3> a(dim);
 
     double x = 0;
@@ -158,9 +158,8 @@ TEST_CASE("constructor 3")
 
 TEST_CASE("constructor 4")
 {
-    std::array<size_t,3> dim{ 1,2,3 };
-    ndarray<double, 3> a(dim,
-                         std::allocator<double>());
+    extents_t<3> dim{ 1,2,3 };
+    ndarray<double, 3> a(std::allocator_arg, std::allocator<double>(), dim);
 
     double x = 0;
     for (size_t i = 0; i < a.shape(0); ++i)
@@ -188,7 +187,7 @@ TEST_CASE("constructor 4")
 
 TEST_CASE("constructor 5")
 {
-    std::array<size_t,3> dim{ 1,2,3 };
+    extents_t<3> dim{ 1,2,3 };
     ndarray<double, 3> a(dim, 10.0);
 
     CHECK_FALSE(a.empty());
@@ -205,8 +204,8 @@ TEST_CASE("constructor 5")
 
 TEST_CASE("constructor 6")
 {
-    std::array<size_t,3> dim{ 1,2,3 };
-    ndarray<double, 3> a(dim, 10.0, std::allocator<double>());
+    extents_t<3> dim{ 1,2,3 };
+    ndarray<double, 3> a(std::allocator_arg, std::allocator<double>(), dim, 10.0);
 
     CHECK_FALSE(a.empty());
     CHECK(a.size() == 6);
@@ -238,7 +237,7 @@ TEST_CASE("constructor 7")
 
 TEST_CASE("constructor 8")
 {
-    ndarray<double, 3> a({{{0,1,2},{3,4,5}}}, std::allocator<double>());
+    ndarray<double, 3> a(std::allocator_arg, std::allocator<double>(), {{{0,1,2},{3,4,5}}});
 
     CHECK_FALSE(a.empty());
     CHECK(a.size() == 6);
@@ -304,7 +303,7 @@ TEST_CASE("constructor 12")
 {
     ndarray<double, 3> a = {{{0,1,2},{3,4,5}}};
 
-    ndarray<double, 3> b(std::move(a), std::allocator<double>());
+    ndarray<double, 3> b(std::allocator_arg, std::allocator<double>(), std::move(a));
 
     CHECK_FALSE(b.empty());
     CHECK(b.size() == 6);
@@ -393,20 +392,6 @@ TEST_CASE("indexing operator 3")
             a(i,j) = init++;
         }
     }
-
-    for (size_t i = 0; i < a.shape(0); ++i)
-    {
-        std::array<size_t,1> dim = {i};
-        ndarray_view<double,1> w(a,dim);
-        //std::cout << w(0) << " " << w(1) << "\n";
-        auto it = make_row_major_iterator(w);
-        auto last = end(it);
-        while (it != last)
-        {
-            std::cout << *it++ << " ";
-        }
-        std::cout << "\n";
-    }
 }
 
 TEST_CASE("shrink row_major array")
@@ -414,7 +399,7 @@ TEST_CASE("shrink row_major array")
     ndarray<double,2,row_major> a = {{0, 1}, {2, 3}};
     double* oldp = a.data();
 
-    a.resize({2,1});
+    a.resize(extents_t<2>{2,1});
 
     CHECK(a.shape(0) == 2);
     CHECK(a.shape(1) == 1);
@@ -429,7 +414,7 @@ TEST_CASE("shrink column_major array")
     ndarray<double,2,column_major> a = {{0, 1}, {2, 3}};
     double* oldp = a.data();
 
-    a.resize({2,1});
+    a.resize(extents_t<2>{2,1});
 
     CHECK(a.shape(0) == 2);
     CHECK(a.shape(1) == 1);
@@ -444,7 +429,7 @@ TEST_CASE("enlarge row_major array with default fill")
     ndarray<double,2,row_major> a = {{0, 1}, {2, 3}};
     double* oldp = a.data();
 
-    a.resize({2,3});
+    a.resize(extents_t<2>{2,3});
 
     CHECK(a.shape(0) == 2);
     CHECK(a.shape(1) == 3);
@@ -463,7 +448,7 @@ TEST_CASE("enlarge row_major array with specified fill")
     ndarray<double,2,row_major> a = {{0, 1}, {2, 3}};
     double* oldp = a.data();
 
-    a.resize({2,3}, 9);
+    a.resize(extents_t<2>{2,3}, 9);
 
     CHECK(a.shape(0) == 2);
     CHECK(a.shape(1) == 3);
