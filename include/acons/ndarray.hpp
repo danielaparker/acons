@@ -720,7 +720,7 @@ protected:
     ndarray_base()
     {
     }
-    ndarray_base(std::allocator_arg_t, const Allocator& alloc)
+    ndarray_base(const Allocator& alloc)
         : allocator_(alloc)
     {
     }
@@ -806,7 +806,7 @@ public:
     }
     template <typename... Args>
     ndarray(std::allocator_arg_t, const Allocator& alloc, size_t i, Args... args)
-        : super_type(std::allocator_arg, alloc) 
+        : super_type(alloc) 
     {
         init_helper<N>::init(shape_, *this, i, args ...);
     }
@@ -822,7 +822,7 @@ public:
     }
 
     ndarray(std::allocator_arg_t, const Allocator& alloc, const extents_t<N>& shape)
-        : super_type(std::allocator_arg, alloc), 
+        : super_type(alloc), 
           data_(nullptr), shape_(shape)
     {
         Order::calculate_strides(shape_, strides_, num_elements_);
@@ -842,7 +842,7 @@ public:
     }
 
     ndarray(std::allocator_arg_t, const Allocator& alloc, const extents_t<N>& shape, T val)
-        : super_type(std::allocator_arg, alloc), 
+        : super_type(alloc), 
           data_(nullptr), shape_(shape)
     {
         Order::calculate_strides(shape_, strides_, num_elements_);
@@ -865,7 +865,7 @@ public:
     }
 
     ndarray(std::allocator_arg_t, const Allocator& alloc, std::initializer_list<array_item<T>> list) 
-        : super_type(std::allocator_arg, alloc)
+        : super_type(alloc)
     {
         dim_from_initializer_list(list, 0);
 
@@ -878,7 +878,7 @@ public:
     }
 
     ndarray(const ndarray& other)
-        : super_type(std::allocator_arg,std::allocator_traits<allocator_type>::select_on_container_copy_construction(other.get_allocator())), 
+        : super_type(std::allocator_traits<allocator_type>::select_on_container_copy_construction(other.get_allocator())), 
           data_(nullptr), num_elements_(other.size()), capacity_(0), shape_(other.shape_), strides_(other.strides_)          
     {
         capacity_ = num_elements_;
@@ -892,7 +892,7 @@ public:
     }
 
     ndarray(std::allocator_arg_t, const Allocator& alloc, const ndarray& other)
-        : super_type(std::allocator_arg, alloc), 
+        : super_type(alloc), 
           data_(nullptr), num_elements_(other.size()), shape_(other.shape_), strides_(other.strides_)          
     {
         capacity_ = num_elements_;
@@ -906,7 +906,7 @@ public:
     }
 
     ndarray(ndarray&& other)
-        : super_type(other.get_allocator()), 
+        : super_type(other.get_allocator()),
           data_(other.data_), num_elements_(other.num_elements_), capacity_(other.capacity_), shape_(other.shape_), strides_(other.strides_)          
     {
         other.data_ = nullptr;
@@ -917,7 +917,7 @@ public:
     }
 
     ndarray(std::allocator_arg_t, const Allocator& alloc, ndarray&& other)
-        : super_type(std::allocator_arg, alloc), 
+        : super_type(alloc), 
           data_(nullptr), num_elements_(other.size()), capacity_(other.capacity_), shape_(other.shape_), strides_(other.strides_)          
     {
         if (alloc == other.get_allocator())
@@ -959,7 +959,7 @@ public:
 
     template <typename TPtr>
     ndarray(std::allocator_arg_t, const Allocator& alloc, const ndarray_view_base<T,N,Order,Base,TPtr>& av)
-        : super_type(std::allocator_arg, alloc), 
+        : super_type(alloc), 
           data_(nullptr), num_elements_(0), capacity_(0), shape_(av.shape_), strides_(av.strides_)          
     {
         num_elements_ = av.size();
@@ -979,21 +979,21 @@ public:
     }
 
     template <size_t m = N>
-    typename std::enable_if<m == 1,const_iterator>::type
+    typename std::enable_if<m == 1,iterator>::type
     begin()
     {
         return iterator(this->data(),this->strides_[0],0);
     }
 
     template <size_t m = N>
-    typename std::enable_if<m == 1,const_iterator>::type
+    typename std::enable_if<m == 1,iterator>::type
     end() 
     {
         return iterator(this->data(),this->strides_[0],this->strides_[0]*this->shape_[0]);
     }
 
     template <size_t m = N>
-    typename std::enable_if<1 < m,const_iterator>::type
+    typename std::enable_if<1 < m,iterator>::type
     begin()
     {
         return iterator(this->base_data(),
@@ -1003,7 +1003,7 @@ public:
     }
 
     template <size_t m = N>
-    typename std::enable_if<1 < m,const_iterator>::type
+    typename std::enable_if<1 < m,iterator>::type
     end() 
     {
         return iterator(this->base_data(),

@@ -5,6 +5,8 @@
 
 using namespace acons;
 
+#if 0
+
 struct state
 {
     size_t first;
@@ -121,3 +123,4 @@ TEST_CASE("4 x 5 new iterator tests")
         iterate_n(shape, strides, offsets, n, stack);
     }
 }
+#endif
