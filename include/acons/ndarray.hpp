@@ -764,8 +764,6 @@ public:
 
     using element_type = T;
     using value_type = std::conditional_t<N == 1, T, ndarray_view<T,N-1,Order,Base>>;
-    //typedef T& reference;
-    //typedef const T& const_reference;
     static constexpr size_t ndim = N;
     typedef typename std::conditional<N==1,iterator_one<T,T*>,iterator_n_minus_1<T,N,Order,Base,T*>>::type iterator;
     typedef typename std::conditional<N==1,iterator_one<T,const T*>,iterator_n_minus_1<T,N,Order,Base,const T*>>::type const_iterator;
